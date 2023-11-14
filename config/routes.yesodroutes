@@ -1,0 +1,10 @@
+ /                             HomeR           GET
+
+ /admin                        AdminR          GET POST
+-- /admin/auth                   AdminAuthR      GET POST
+ /admin/new-listing            NewListingR         POST
+ /admin/ical/import/#ListingId ImportCalendarR     POST
+ /ical/export/#UUID            ExportCalendarR GET
+
+ /auth                         AuthR           Auth getAuth
+-- /static                       StaticR         Static getStatic

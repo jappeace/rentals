@@ -1,0 +1,13 @@
+Listing
+  title       Text
+  description Text
+Calendar
+  listing     ListingId
+  calendar    VCalendar
+  uuid        UUID
+  UniqueCalendar uuid
+
+User
+  email       Text
+  password    Text
+  UniqueEmail email
