@@ -1,1 +1,13 @@
+port:
+
 admin:
+  - username:
+    password:
+
+database:
+  user:
+  password:
+  host:
+  port:
+  databise:
+  poolsize:
