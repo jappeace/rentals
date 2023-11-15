@@ -38,6 +38,7 @@ import           Database.Persist
 import           Database.Persist.Quasi
 import           Database.Persist.Sql       (ConnectionPool, runSqlPool)
 import           Database.Persist.Sqlite
+import           Text.Blaze
 import           Text.Hamlet
 import           Text.ICalendar
 import           Text.Read                  (readMaybe)
@@ -111,6 +112,13 @@ instance ToTypedContent VCalendar where
   toTypedContent = TypedContent "text/calendar; charset=utf-8" . toContent
 
 mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
+
+-----------------------------------------------------------------------------------------
+-- ToMarkup instances
+-----------------------------------------------------------------------------------------
+instance ToMarkup Money where
+  toMarkup = toMarkup . showFixed False . unMoney
+  preEscapedToMarkup = preEscapedToMarkup . showFixed False . unMoney
 
 -----------------------------------------------------------------------------------------
 -- YesodAuth instances

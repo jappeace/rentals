@@ -1,0 +1,6 @@
+<div>
+  $forall Entity lid l <- pageItems $ pagesCurrent pages
+    <div>#{listingTitle l}
+    <div>#{listingDescription l}
+    <div>#{listingPrice l}
+^{ellipsed 5 pages}
