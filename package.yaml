@@ -1,6 +1,9 @@
 name:    rentals
 version: "0.0.0"
 
+default-extensions:
+- OverloadedStrings
+
 dependencies:
 - base
 - yesod
@@ -17,6 +20,7 @@ dependencies:
 - data-default
 - text
 - aeson
+- case-insensitive
 - mtl
 - random
 - transformers

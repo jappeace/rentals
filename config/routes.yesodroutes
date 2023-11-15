@@ -2,7 +2,8 @@
 
  /admin                        AdminR          GET POST
 -- /admin/auth                   AdminAuthR      GET POST
- /admin/new-listing            NewListingR         POST
+ /admin/listing/new            NewListingR     GET POST
+!/admin/listing/#ListingId     ListingR        GET
  /admin/ical/import/#ListingId ImportCalendarR     POST
  /ical/export/#UUID            ExportCalendarR GET
 

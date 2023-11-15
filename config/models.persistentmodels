@@ -2,12 +2,12 @@ Listing
   title       Text
   description Text
   price       Money
-  active      Bool
 Calendar
   listing     ListingId
   calendar    VCalendar
   uuid        UUID
   UniqueCalendar uuid
+  UniqueListing listing
 
 User
   email       Text

@@ -1,7 +1,5 @@
 <div>
-  $forall Entity lid l <- pageItems $ pagesCurrent pages
+  $forall Entity lid l <- listings
     <div>#{listingTitle l}
     <div>#{listingDescription l}
     <div>#{listingPrice l}
-$if amount > 10
-  ^{ellipsed 5 pages}

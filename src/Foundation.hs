@@ -51,6 +51,7 @@ data App = App
   }
 
 newtype Money = Money { unMoney :: Centi }
+  deriving (Num, Fractional)
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
