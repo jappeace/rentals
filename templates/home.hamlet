@@ -3,4 +3,5 @@
     <div>#{listingTitle l}
     <div>#{listingDescription l}
     <div>#{listingPrice l}
-^{ellipsed 5 pages}
+$if amount > 10
+  ^{ellipsed 5 pages}
