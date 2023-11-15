@@ -28,7 +28,7 @@ mkYesodDispatch "App" resourcesApp
 
 appMain :: IO ()
 appMain = do
-  settings <- loadYamlSettingsArgs [] useEnv
+  settings <- loadYamlSettings ["config/settings.yml"] [] useEnv
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
     warp (appPort settings) $ App settings pool
