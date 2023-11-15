@@ -1,6 +1,7 @@
 Listing
   title       Text
   description Text
+  price       Money
 Calendar
   listing     ListingId
   calendar    VCalendar

@@ -25,6 +25,7 @@ import Yesod.Persist
 import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Data.ByteString            as BS
 import           Data.Default               (def)
+import           Data.Fixed
 import           Data.Kind                  (Type)
 import           Data.List                  (find)
 import           Data.Maybe                 (isJust)
@@ -47,6 +48,8 @@ data App = App
   { appSettings :: AppSettings
   , appConnPool :: ConnectionPool
   }
+
+newtype Money = Money { unMoney :: Centi }
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
@@ -76,7 +79,14 @@ instance PersistField UUID where
       Nothing -> Left "Failed to create UUID from Text"
 instance PersistFieldSql UUID where
   sqlType _ = SqlString
-
+-----------------------------------------------------------------------------------------
+instance PersistField Money where
+  -- TODO: make double sure that this is precise enough, safe, to deal with money values
+  toPersistValue = PersistInt64 . fromIntegral . fromEnum . unMoney
+  fromPersistValue (PersistInt64 money) = Right . Money . toEnum . fromIntegral $ money
+instance PersistFieldSql Money where
+  sqlType _ = SqlInt64
+-----------------------------------------------------------------------------------------
 instance YesodPersist App where
   type YesodPersistBackend App = SqlBackend
   runDB action = getYesod >>= runSqlPool action . appConnPool
