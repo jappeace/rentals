@@ -12,6 +12,7 @@ import           Control.Monad.Except
 import qualified Data.ByteString            as BS
 import           Data.Either
 import           Data.List.Extra            (breakEnd)
+import qualified Data.Map.Strict            as M
 import qualified Data.Text                  as T
 import qualified Data.Text.Lazy             as LT
 import qualified Data.Text.Lazy.Encoding    as LTE
@@ -40,14 +41,18 @@ postImportCalendarR lid = do
           | x >= 400 -> sendResponseStatus status400 (error "todo" :: Html)
         200 -> do
           ical <- parseCalendar $ ics ^. W.responseBody
+          runDB $ do
+            mcalendar <- getBy $ UniqueListing lid
+            case mcalendar of
+              Just (Entity cid calendar) -> do
+                let mergedEvents    = M.union
+                      (vcEvents $ calendarCalendar calendar)
+                      (vcEvents ical)
+                let mergedCalendars =
+                      (calendarCalendar calendar) {vcEvents = mergedEvents}
 
-          runDB . fix $ \tryAgain -> do
-            uuid   <- liftIO randomIO
-            result <- insertBy $ Calendar lid ical uuid
-            either (const tryAgain) pure result
-            -- case success of
-            --   Right entityCalendar -> pure entityCalendar
-            --   Left _ -> tryAgain
+                Just <$> update cid [CalendarCalendar =. mergedCalendars]
+              Nothing -> pure Nothing
 
           return (error "todo")
 
