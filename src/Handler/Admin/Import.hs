@@ -13,6 +13,7 @@ import qualified Data.ByteString            as BS
 import           Data.Either
 import           Data.List.Extra            (breakEnd)
 import qualified Data.Map.Strict            as M
+import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Lazy             as LT
 import qualified Data.Text.Lazy.Encoding    as LTE
@@ -36,27 +37,42 @@ postImportCalendarR lid = do
       ics <- liftIO . W.get . T.unpack $ listing
 
       case ics ^. W.responseStatus . W.statusCode of
-        x | x >= 500 -> sendResponseStatus status503 (error "todo" :: Html)
-
-          | x >= 400 -> sendResponseStatus status400 (error "todo" :: Html)
+        s | s >= 500 -> do
+          setMessage $ toHtml ("The source for the provided URI is currently unavailable, please try again later" :: Text)
+          redirectWith status500 $ ListingR lid
+          | s >= 400 -> do
+          setMessage $ toHtml ("Failed to import iCalendar, please check the provided URI and try again" :: Text)
+          redirectWith status400 $ ListingR lid
         200 -> do
-          ical <- parseCalendar $ ics ^. W.responseBody
-          runDB $ do
-            mcalendar <- getBy $ UniqueListing lid
-            case mcalendar of
-              Just (Entity cid calendar) -> do
-                let mergedEvents    = M.union
-                      (vcEvents $ calendarCalendar calendar)
-                      (vcEvents ical)
-                let mergedCalendars =
-                      (calendarCalendar calendar) {vcEvents = mergedEvents}
+          eical <- parseCalendar $ ics ^. W.responseBody
+          case eical of
+            Right ical -> do
+              msuccess <- runDB $ do
+                mcalendar <- getBy $ UniqueListing lid
+                -- merges the events in the calendar already stored
+                -- with the events from the incoming calendar
+                case mcalendar of
+                  Just (Entity cid calendar) -> do
+                    let mergedEvents    = M.union
+                          (vcEvents $ calendarCalendar calendar)
+                          (vcEvents ical)
+                    let mergedCalendars =
+                          (calendarCalendar calendar) {vcEvents = mergedEvents}
 
-                Just <$> update cid [CalendarCalendar =. mergedCalendars]
-              Nothing -> pure Nothing
+                    Just <$> update cid [CalendarCalendar =. mergedCalendars]
+                  Nothing -> pure Nothing
 
-          return (error "todo")
+              setMessage $ toHtml ("Failed to import iCalendar, please try again" :: Text)
+              redirectWith status500 $ ListingR lid
 
-        _ -> do
-          (error "todo")
-    Nothing -> (error "todo")
+            Left err -> do
+              setMessage $ toHtml ("Failed to process iCalendar, it is malformed: " <> err)
+              redirectWith status500 $ ListingR lid
+
+        s -> do
+          setMessage $ toHtml ("An error has ocurred: " <> (T.pack $ show s))
+          redirectWith status500 $ ListingR lid
+    Nothing -> do
+      setMessage $ toHtml ("The provided URI is invalid, please check the provided URI and try again" :: Text)
+      redirectWith status400 $ ListingR lid
 

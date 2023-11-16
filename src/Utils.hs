@@ -6,14 +6,15 @@ import Foundation
 import qualified Data.ByteString.Lazy as LBS
 import           Data.CaseInsensitive
 import           Data.Default         (def)
+import           Data.Text            (Text)
+import qualified Data.Text            as T
 import           Data.Version
 import           Text.ICalendar
 
-parseCalendar :: LBS.ByteString -> Handler VCalendar
+parseCalendar :: LBS.ByteString -> Handler (Either Text VCalendar)
 parseCalendar c = do
-  case parseICalendar def "." c of
-    Right (pc:_, _) -> return pc
-    Left err -> undefined
+  -- TODO: what is the FilePath in the parsing function exactly for?
+  pure . either (Left . T.pack) (Right . head . fst) . parseICalendar def "." $ c
 
 printCalendar :: VCalendar -> Handler LBS.ByteString
 printCalendar c = do
