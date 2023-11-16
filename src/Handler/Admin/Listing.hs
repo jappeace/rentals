@@ -10,10 +10,13 @@ import           Network.HTTP.Types.Status
 import           System.Random
 
 getListingR :: ListingId -> Handler Html
-getListingR lid = undefined
+getListingR lid = do
+  mlisting <- runDB $ get lid
+  defaultLayout $(whamletFile "templates/admin/listing.hamlet")
 
 getNewListingR :: Handler Html
-getNewListingR = undefined
+getNewListingR = do
+  defaultLayout $(whamletFile "templates/admin/new-listing.hamlet")
 
 postNewListingR :: Handler Html
 postNewListingR = do
@@ -25,8 +28,8 @@ postNewListingR = do
   (lid, mcid) <- runDB $ do
     lid  <- insert listing
     uuid <- liftIO randomIO
-    cid  <- insertUnique $ Calendar lid emptyVCalendar uuid
-    pure (lid, cid)
+    mcid <- insertUnique $ Calendar lid emptyVCalendar uuid
+    pure (lid, mcid)
 
   case mcid of
     Just cid -> do

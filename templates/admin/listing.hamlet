@@ -1,0 +1,5 @@
+<div>
+  $maybe l <- mlisting
+    <div>#{listingTitle l}
+    <div>#{listingDescription l}
+    <div>#{listingPrice l}

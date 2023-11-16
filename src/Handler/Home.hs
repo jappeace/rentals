@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Handler.Home where
 
 import Foundation

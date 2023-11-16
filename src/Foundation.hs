@@ -181,7 +181,7 @@ instance Yesod App where
   makeSessionBackend _ = Just <$> defaultClientSessionBackend
     (30 * 24 * 60) "config/client_session_key.aes"
 
-  isAuthorized HomeR _ = pure Authorized
+  isAuthorized _ _ = pure Authorized
 
   defaultLayout contents = do
     pc <- widgetToPageContent contents

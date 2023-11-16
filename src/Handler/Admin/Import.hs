@@ -38,16 +38,16 @@ postImportCalendarR lid = do
 
       case ics ^. W.responseStatus . W.statusCode of
         s | s >= 500 -> do
-          setMessage $ toHtml ("The source for the provided URI is currently unavailable, please try again later" :: Text)
-          redirectWith status500 $ ListingR lid
+            sendResponseStatus status500 $ toEncoding
+              ("The source for the provided URI is currently unavailable, please try again later" :: Text)
           | s >= 400 -> do
-          setMessage $ toHtml ("Failed to import iCalendar, please check the provided URI and try again" :: Text)
-          redirectWith status400 $ ListingR lid
+            sendResponseStatus status400 $ toEncoding
+              ("Failed to import iCalendar, please check the provided URI and try again" :: Text)
         200 -> do
           eical <- parseCalendar $ ics ^. W.responseBody
           case eical of
             Right ical -> do
-              msuccess <- runDB $ do
+              runDB $ do
                 mcalendar <- getBy $ UniqueListing lid
                 -- merges the events in the calendar already stored
                 -- with the events from the incoming calendar
@@ -59,20 +59,20 @@ postImportCalendarR lid = do
                     let mergedCalendars =
                           (calendarCalendar calendar) {vcEvents = mergedEvents}
 
-                    Just <$> update cid [CalendarCalendar =. mergedCalendars]
-                  Nothing -> pure Nothing
+                    update cid [CalendarCalendar =. mergedCalendars]
+                    sendResponseStatus status204 ()
 
-              setMessage $ toHtml ("Failed to import iCalendar, please try again" :: Text)
-              redirectWith status500 $ ListingR lid
+                  Nothing -> sendResponseStatus status500 $ toEncoding
+                    ("Listing calendar not found, this should not happen" :: Text)
 
             Left err -> do
-              setMessage $ toHtml ("Failed to process iCalendar, it is malformed: " <> err)
-              redirectWith status500 $ ListingR lid
+              sendResponseStatus status500 $ toEncoding
+                ("Failed to process iCalendar, it is malformed: " <> err)
 
         s -> do
-          setMessage $ toHtml ("An error has ocurred: " <> (T.pack $ show s))
-          redirectWith status500 $ ListingR lid
-    Nothing -> do
-      setMessage $ toHtml ("The provided URI is invalid, please check the provided URI and try again" :: Text)
-      redirectWith status400 $ ListingR lid
+          sendResponseStatus status500 $ toEncoding
+            ("An error has ocurred: " <> (T.pack $ show s))
 
+    Nothing -> do
+      sendResponseStatus status400 $ toEncoding
+        ("The provided URI is invalid, please check the provided URI and try again" :: Text)
