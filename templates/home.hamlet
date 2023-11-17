@@ -1,5 +1,11 @@
-<div>
+<div class="row justify-content-center g-3">
   $forall Entity lid l <- listings
-    <div>#{listingTitle l}
-    <div>#{listingDescription l}
-    <div>#{listingPrice l}
+    <div class="col-md-4">
+      <div class="card">
+        <img src="..." class="card-img-top" alt="...">
+        <div class="card-body">
+          <h5 class="card-title">#{listingTitle l}
+          <p class="card-text">#{listingDescription l}
+          <div class="d-flex justify-content-between">
+            <a href="@{ListingR lid}" class="btn btn-primary">Book
+            <span class="fs-4">$#{listingPrice l}

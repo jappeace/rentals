@@ -1,11 +1,16 @@
-<form method="POST">
-  <label>
-    <span>Title
-    <input name="title">
-  <label>
-    <span>Description
-    <input name="description">
-  <label>
-    <span>Price
-    <input name="price" type="number" step=".01">
-  <button>save
+<div class="row">
+  <div class="col-md-6">
+    <form method="POST">
+      <label class="d-block mb-3">
+        <span>Title
+        <input name="title" class="form-control">
+      <label class="d-block mb-3">
+        <span>Description
+        <textarea name="description" class="form-control">
+      <label class="d-block mb-3">
+        <span>Price
+        <div class="input-group">
+          <span class="input-group-text">$
+          <input name="price" type="number" step=".01" class="form-control">
+      <div class="mb-3">
+        <button class="btn btn-primary">submit
