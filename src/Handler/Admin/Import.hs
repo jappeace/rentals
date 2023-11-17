@@ -33,45 +33,8 @@ postImportCalendarR lid = do
   -- Try and parse the provided Airbnb calendar URI
   case URI.parseURI . T.unpack $ listing of
     Just l -> do
-      -- Hit it up and retrieve the .ics file
-      ics <- liftIO . W.get . T.unpack $ listing
-
-      case ics ^. W.responseStatus . W.statusCode of
-        s | s >= 500 -> do
-            sendResponseStatus status500 $ toEncoding
-              ("The source for the provided URI is currently unavailable, please try again later" :: Text)
-          | s >= 400 -> do
-            sendResponseStatus status400 $ toEncoding
-              ("Failed to import iCalendar, please check the provided URI and try again" :: Text)
-        200 -> do
-          eical <- parseCalendar $ ics ^. W.responseBody
-          case eical of
-            Right ical -> do
-              runDB $ do
-                mcalendar <- getBy $ UniqueListing lid
-                -- merges the events in the calendar already stored
-                -- with the events from the incoming calendar
-                case mcalendar of
-                  Just (Entity cid calendar) -> do
-                    let mergedEvents    = M.union
-                          (vcEvents $ calendarCalendar calendar)
-                          (vcEvents ical)
-                    let mergedCalendars =
-                          (calendarCalendar calendar) {vcEvents = mergedEvents}
-
-                    update cid [CalendarCalendar =. mergedCalendars]
-                    sendResponseStatus status204 ()
-
-                  Nothing -> sendResponseStatus status500 $ toEncoding
-                    ("Listing calendar not found, this should not happen" :: Text)
-
-            Left err -> do
-              sendResponseStatus status500 $ toEncoding
-                ("Failed to process iCalendar, it is malformed: " <> err)
-
-        s -> do
-          sendResponseStatus status500 $ toEncoding
-            ("An error has ocurred: " <> (T.pack $ show s))
+      runDB $ update cid [CalendarImports =. (l : calendarImports calendar)]
+      sendResponseStatus status204 ()
 
     Nothing -> do
       sendResponseStatus status400 $ toEncoding

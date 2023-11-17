@@ -17,6 +17,7 @@ dependencies:
 - persistent-sqlite
 - resourcet
 - containers
+- unbounded-delays
 - monad-logger
 - bytestring
 - data-default
