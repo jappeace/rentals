@@ -6,34 +6,38 @@ import Yesod
 import Utils
 
 import           Data.Text                 (Text)
+import qualified Data.Text                 as T
+import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
 import           System.Random
+import           Text.Slugify
 
 getAdminListingR :: ListingId -> Handler Html
 getAdminListingR lid = do
   mlisting <- runDB $ get lid
   defaultLayout $(whamletFile "templates/admin/listing.hamlet")
 
-getAdminNewListingR :: Handler Html
-getAdminNewListingR = do
-  defaultLayout $(whamletFile "templates/admin/new-listing.hamlet")
-
-postAdminNewListingR :: Handler Html
+postAdminNewListingR :: Handler TypedContent
 postAdminNewListingR = do
   listing <- runInputPost $ Listing
     <$> ireq textField "title"
     <*> (unTextarea <$> ireq textareaField "description")
     <*> (realToFrac <$> ireq doubleField "price")
+    <*> pure (Slug "")
 
-  (lid, mcid) <- runDB $ do
+  (slug, mcid) <- runDB $ do
     lid  <- insert listing
+
+    let slug = Slug . slugify $ (listingTitle listing)
+          <> " " <> (T.pack . show $ fromSqlKey lid)
+    update lid [ListingSlug =. slug]
+
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid emptyVCalendar uuid
-    pure (lid, mcid)
+    mcid <- insertUnique $ Calendar lid emptyVCalendar [] uuid
+
+    pure (slug, mcid)
 
   case mcid of
-    Just cid -> do
-      redirectWith status201 $ ListingR lid
-    Nothing  -> do
-      setMessage $ toHtml ("Failed to generate unique identifier, please try again" :: Text)
-      redirectWith status500 AdminNewListingR
+    Just cid -> sendResponseStatus status201 . toEncoding $ unSlug slug
+    Nothing  -> sendResponseStatus status500 $ toEncoding
+      ("Failed to generate unique identifier, please try again" :: Text)

@@ -1,8 +1,8 @@
  /                             HomeR            GET
- /listing/#ListingId           ListingR         GET
+ /listing/#Slug                ListingR         GET
 
  /admin                        AdminR           GET POST
- /admin/listing/new            AdminNewListingR GET POST
+ /admin/listing/new            AdminNewListingR     POST
 !/admin/listing/#ListingId     AdminListingR    GET
  /admin/ical/import/#ListingId ImportCalendarR      POST
  /ical/export/#UUID            ExportCalendarR  GET

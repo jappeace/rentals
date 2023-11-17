@@ -38,6 +38,7 @@ import           Database.Persist
 import           Database.Persist.Quasi
 import           Database.Persist.Sql       (ConnectionPool, runSqlPool)
 import           Database.Persist.Sqlite
+import           Network.URI
 import           Text.Blaze
 import           Text.Hamlet
 import           Text.ICalendar
@@ -52,6 +53,9 @@ data App = App
 
 newtype Money = Money { unMoney :: Centi }
   deriving (Num, Fractional)
+
+newtype Slug = Slug { unSlug :: Text }
+  deriving (Eq, Show, Read)
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
@@ -89,6 +93,21 @@ instance PersistField Money where
 instance PersistFieldSql Money where
   sqlType _ = SqlInt64
 -----------------------------------------------------------------------------------------
+instance PersistField URI where
+  toPersistValue uri = PersistText . T.pack $ (uriToString id uri) ""
+  fromPersistValue (PersistText uri) =
+    case parseURI . T.unpack $ uri of
+      Just uri' -> Right uri'
+      Nothing -> Left "Failed to create URI from Text"
+instance PersistFieldSql URI where
+  sqlType _ = SqlString
+-----------------------------------------------------------------------------------------
+instance PersistField Slug where
+  toPersistValue = PersistText . unSlug
+  fromPersistValue (PersistText slug) = Right $ Slug slug
+instance PersistFieldSql Slug where
+  sqlType _ = SqlString
+-----------------------------------------------------------------------------------------
 instance YesodPersist App where
   type YesodPersistBackend App = SqlBackend
   runDB action = getYesod >>= runSqlPool action . appConnPool
@@ -103,6 +122,10 @@ instance PathPiece UUID where
 instance PathPiece (Either Text UserId) where
   toPathPiece = T.pack . show
   fromPathPiece = readMaybe . T.unpack
+-----------------------------------------------------------------------------------------
+instance PathPiece Slug where
+  toPathPiece = toPathPiece . unSlug
+  fromPathPiece = fmap Slug . fromPathPiece
 
 -----------------------------------------------------------------------------------------
 -- Content instances

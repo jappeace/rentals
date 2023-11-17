@@ -22,6 +22,13 @@ packages:
       size: 565
   original:
     hackage: mime-0.4.0.2
+- completed:
+    hackage: slugify-0.1.0.1@sha256:0764c30a5d6d6342ca055a97f0a7b4279a26b42b9483b73420d1b364d3f8fb38,1396
+    pantry-tree:
+      sha256: b7487e9693763afa43969a77686f16177a27faae13876073b4d92f02522dc4a1
+      size: 431
+  original:
+    hackage: slugify-0.1.0.1
 snapshots:
 - completed:
     sha256: fb482b8e2d5d061cdda4ba1da2957c012740c893a5ee1c1b99001adae7b1fbe7

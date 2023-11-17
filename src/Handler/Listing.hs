@@ -7,5 +7,5 @@ import Utils
 
 import Text.Hamlet
 
-getListingR :: ListingId -> Handler Html
+getListingR :: Slug -> Handler Html
 getListingR = undefined

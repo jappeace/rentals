@@ -21,6 +21,7 @@ dependencies:
 - bytestring
 - data-default
 - text
+- slugify
 - aeson
 - case-insensitive
 - mtl

@@ -2,9 +2,12 @@ Listing
   title       Text
   description Text
   price       Money
+  slug        Slug
+  UniqueSlug slug
 Calendar
   listing     ListingId
   calendar    VCalendar
+  imports     [URI]
   uuid        UUID
   UniqueCalendar uuid
   UniqueListing listing
