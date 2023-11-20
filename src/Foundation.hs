@@ -42,6 +42,7 @@ import           Network.URI
 import           Text.Blaze
 import           Text.Hamlet
 import           Text.ICalendar
+import           Text.Julius
 import           Text.Read                  (readMaybe)
 
 import Settings
@@ -209,4 +210,6 @@ instance Yesod App where
   defaultLayout contents = do
     pc <- widgetToPageContent contents
     messages <- getMessage
-    withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
+    withUrlRenderer $ do
+      $(juliusFile "templates/script/form-handler.julius")
+      $(hamletFile "templates/default-layout.hamlet")

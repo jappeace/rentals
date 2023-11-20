@@ -27,15 +27,19 @@ import           Text.ICalendar
 
 postImportCalendarR :: ListingId -> Handler TypedContent
 postImportCalendarR lid = do
-  _ <- runDB $ get404 lid
+  mCalendar <- runDB . getBy $ UniqueListing lid
   listing <- runInputPost $ ireq textField "listing"
 
-  -- Try and parse the provided Airbnb calendar URI
-  case URI.parseURI . T.unpack $ listing of
-    Just l -> do
-      runDB $ update cid [CalendarImports =. (l : calendarImports calendar)]
-      sendResponseStatus status204 ()
+  case mCalendar of
+    -- Try and parse the provided Airbnb calendar URI
+    Just (Entity cid calendar) -> case URI.parseURI . T.unpack $ listing of
+      Just l -> do
+        runDB $ update cid [CalendarImports =. (l : calendarImports calendar)]
+        sendResponseStatus status204 ()
 
-    Nothing -> do
-      sendResponseStatus status400 $ toEncoding
-        ("The provided URI is invalid, please check the provided URI and try again" :: Text)
+      Nothing ->
+        sendResponseStatus status400 $ toEncoding
+          ("The provided URI is invalid, please check the provided URI and try again" :: Text)
+    Nothing ->
+      sendResponseStatus status404 $ toEncoding
+        ("The requested listing does not exist, please check the identifier and try again" :: Text)
