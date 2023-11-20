@@ -3,7 +3,7 @@
 
  /admin                        AdminR           GET POST
  /admin/listing/new            AdminNewListingR     POST
-!/admin/listing/#ListingId     AdminListingR    GET
+!/admin/listing/#ListingId     AdminListingR    GET      PUT
  /admin/ical/import/#ListingId ImportCalendarR      POST
  /ical/export/#UUID            ExportCalendarR  GET
 

@@ -17,6 +17,26 @@ getAdminListingR lid = do
   mlisting <- runDB $ get lid
   defaultLayout $(whamletFile "templates/admin/listing.hamlet")
 
+putAdminListingR :: ListingId -> Handler TypedContent
+putAdminListingR lid = do
+  mListing <- runDB $ get lid
+  case mListing of
+    Just _ -> do
+      uListing <- runInputPost $ Listing
+        <$> ireq textField "title"
+        <*> (unTextarea <$> ireq textareaField "description")
+        <*> (realToFrac <$> ireq doubleField "price")
+        <*> pure (Slug "")
+
+      let slug = Slug . slugify $ (listingTitle uListing)
+            <> " " <> (T.pack . show $ fromSqlKey lid)
+
+      runDB . replace lid $ uListing {listingSlug = slug}
+      sendResponseStatus status204 ()
+
+    Nothing -> sendResponseStatus status404 $ toEncoding
+      ("The target listing does not exist, please check the identifier and try again" :: Text)
+
 postAdminNewListingR :: Handler TypedContent
 postAdminNewListingR = do
   listing <- runInputPost $ Listing
