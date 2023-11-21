@@ -28,6 +28,8 @@ import           Data.Default               (def)
 import           Data.Fixed
 import           Data.Kind                  (Type)
 import           Data.List                  (find)
+import           Data.Map.Strict            (Map)
+import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (isJust)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -51,6 +53,9 @@ data App = App
   { appSettings :: AppSettings
   , appConnPool :: ConnectionPool
   }
+
+data CalendarSource = Airbnb | Vrbo
+  deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 newtype Money = Money { unMoney :: Centi }
   deriving (Num, Fractional)
@@ -103,6 +108,12 @@ instance PersistField URI where
 instance PersistFieldSql URI where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
+instance PersistField (Map CalendarSource URI) where
+  toPersistValue = toPersistValue . M.mapKeys (T.pack . show)
+  fromPersistValue = fmap (M.mapKeys (read . T.unpack)) . fromPersistValue
+instance PersistFieldSql (Map CalendarSource URI) where
+  sqlType _ = SqlString
+-----------------------------------------------------------------------------------------
 instance PersistField Slug where
   toPersistValue = PersistText . unSlug
   fromPersistValue (PersistText slug) = Right $ Slug slug
@@ -144,6 +155,14 @@ mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
 instance ToMarkup Money where
   toMarkup = toMarkup . showFixed False . unMoney
   preEscapedToMarkup = preEscapedToMarkup . showFixed False . unMoney
+-----------------------------------------------------------------------------------------
+instance ToMarkup Slug where
+  toMarkup = toMarkup . unSlug
+  preEscapedToMarkup = preEscapedToMarkup . unSlug
+-----------------------------------------------------------------------------------------
+instance ToMarkup URI where
+  toMarkup v = toMarkup $ (uriToString id v) ""
+  preEscapedToMarkup v = preEscapedToMarkup $ (uriToString id v) ""
 
 -----------------------------------------------------------------------------------------
 -- YesodAuth instances

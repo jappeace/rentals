@@ -1,5 +1,63 @@
-<div>
-  $maybe l <- mlisting
-    <div>#{listingTitle l}
-    <div>#{listingDescription l}
-    <div>#{listingPrice l}
+<div class="row gx-0 mb-3">
+  <div class="col-6 border-bottom border-secondary-subtle">
+    <span class="fs-4">edit listing - #{fromSqlKey lid}
+  <div class="col-6 border-bottom border-secondary-subtle">
+    <span class="fs-4">images
+<div class="row">
+  <div class="col-md-6">
+    <div class="row">
+      <div class="col-md-12">
+        <form method="POST" action=@{AdminListingR lid}?_method=PUT id="edit-listing">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="row">
+                <label class="d-block mb-3 col-md-8">
+                  <span>title
+                  <input name="title" class="form-control" value=#{listingTitle l}>
+                <label class="d-block mb-3 col-md-4">
+                  <span>price
+                  <div class="input-group">
+                    <span class="input-group-text">$
+                    <input name="price" type="number" step=".01" class="form-control" value=#{listingPrice l}>
+            <div class="col-md-12">
+              <div class="row justify-content-between">
+                <label class="d-block mb-3 col-md-10">
+                  <span>description
+                  <textarea name="description" class="form-control">#{listingDescription l}
+                <div class="mb-3 col-md-2">
+                  <span class="text-white">save
+                  <div class="d-grid">
+                    <button class="btn btn-primary">save
+      <div class="col-md-12">
+        <div class="row gx-0 mb-3">
+          <div class="col-12 border-bottom border-secondary-subtle">
+            <span class="fs-4">import calendars
+        <form method="POST" action=@{ImportCalendarR lid} id="import-calendar">
+          <div class="row">
+            <label class="d-block mb-3 col-md-3">
+              <span class="text-white">source
+              <select class="form-select" name="source-uri">
+                <option>
+                $forall s <- sources
+                  <option value=#{show s}>#{show s}
+            <label class="d-block mb-3 col-md-9">
+              <span>ical uri
+              <div class="input-group">
+                <span class="input-group-text">.ics
+                <input name="calendar-uri" class="form-control">
+                <button class="btn btn-primary">import
+        $if (length (calendarImports c) > 0)
+          <div class="row gx-0 mb-3">
+            <div class="col-12 border-bottom border-secondary-subtle">
+              <span class="fs-5">remove calendars
+          $forall (s, uri) <- M.assocs (calendarImports c)
+            <div class="col-12">
+              <form method="POST" action=@{AdminListingR lid}?_method=DELETE id="remove-import">
+                <div class="row gx-0 justify-content-between">
+                  <div class="col-12">
+                    <div class="input-group mb-2">
+                      <span class="input-group-text">#{show s}
+                      <input readonly class="form-control" disabled readonly value=#{uri}>
+                      <button class="btn btn-danger">
+                        <i class="bi bi-trash">
+

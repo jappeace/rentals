@@ -7,7 +7,7 @@ Listing
 Calendar
   listing     ListingId
   calendar    VCalendar
-  imports     [URI]
+  imports     (Map CalendarSource URI)
   uuid        UUID
   UniqueCalendar uuid
   UniqueListing listing

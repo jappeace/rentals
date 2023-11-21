@@ -1,9 +1,10 @@
 <div class="row gx-0 mb-3">
-  <div class="col-12 border-bottom border-secondary-subtle">
-    <span class="fs-3">new listing
-^{newListing}
+  <div class="col-6 border-bottom border-secondary-subtle">
+    <span class="fs-4">new listing
 
-<div class="row gx-0 mb-3">
-  <div class="col-12 border-bottom border-secondary-subtle">
-    <span class="fs-3">listings
-^{listingsWidget}
+  <div class="col-6 border-bottom border-secondary-subtle">
+    <span class="fs-4">listings
+
+<div class="row g-3 mb-3">
+  ^{newListing}
+  ^{listingsWidget}

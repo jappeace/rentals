@@ -1,10 +1,10 @@
- /                             HomeR            GET
- /listing/#Slug                ListingR         GET
+ /                                    HomeR                 GET
+ /listing/#Slug                       ListingR              GET
 
- /admin                        AdminR           GET POST
- /admin/listing/new            AdminNewListingR     POST
-!/admin/listing/#ListingId     AdminListingR    GET      PUT
- /admin/ical/import/#ListingId ImportCalendarR      POST
- /ical/export/#UUID            ExportCalendarR  GET
+ /admin                               AdminR                GET POST
+ /admin/listing/new                   AdminNewListingR          POST
+!/admin/listing/#ListingId            AdminListingR         GET      PUT
+ /admin/ical/import/#ListingId        ImportCalendarR           POST     DELETE
+ /ical/export/#UUID                   ExportCalendarR       GET
 
- /auth                         AuthR            Auth getAuth
+ /auth                                AuthR                 Auth getAuth

@@ -1,42 +1,10 @@
-<div class="row">
-  <div class="col-md-8">
-    <div class="row g-3">
-      $forall Entity lid l <- listings
-        <div class="col-md-6">
-          <div class="card">
-            <img src="..." class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">#{listingTitle l}
-              <p class="card-text">#{listingDescription l}
-              <div class="d-flex justify-content-between">
-                <button class="btn btn-primary" type="button">edit
-                <span class="fs-4">$#{listingPrice l}
-
-        <div class="modal" tabindex="-1">
-          <div class="modal-dialogue">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">editing listing
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close">
-              <div class="modal-body">
-                <form method="POST" action=@{AdminListingR lid}?_method=PUT id="edit-listing">
-                  <div class="row">
-                    <div class="col-md-12">
-                      <div class="row">
-                        <label class="d-block mb-3 col-md-8">
-                          <span>title
-                          <input name="title" class="form-control" value=#{listingTitle l}>
-                        <label class="d-block mb-3 col-md-4">
-                          <span>price
-                          <div class="input-group">
-                            <span class="input-group-text">$
-                            <input name="price" type="number" step=".01" class="form-control" value=#{listingPrice l}>
-                    <div class="col-md-12">
-                      <div class="row justify-content-between">
-                        <label class="d-block mb-3 col-md-10">
-                          <span>description
-                          <textarea name="description" class="form-control" value=#{listingDescription l}>
-                        <div class="mb-3 col-md-2">
-                          <span class="text-white">submit
-                          <div class="d-grid">
-                            <button class="btn btn-primary">submit
+$forall Entity lid l <- listings
+  <div class="col-md-3">
+    <div class="card">
+      <img src="..." class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title">#{listingTitle l}
+        <p class="card-text text-truncate">#{listingDescription l}
+        <div class="d-flex justify-content-between">
+          <a class="btn btn-primary" href=@{AdminListingR lid}>edit
+          <span class="fs-4">$#{listingPrice l}

@@ -7,6 +7,7 @@ import Utils
 
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
+import qualified Data.Map.Strict           as M
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
 import           System.Random
@@ -14,7 +15,9 @@ import           Text.Slugify
 
 getAdminListingR :: ListingId -> Handler Html
 getAdminListingR lid = do
-  mlisting <- runDB $ get lid
+  l <- runDB $ get404 lid
+  (Entity _ c) <- runDB . getBy404 $ UniqueListing lid
+  let sources = [Airbnb ..]
   defaultLayout $(whamletFile "templates/admin/listing.hamlet")
 
 putAdminListingR :: ListingId -> Handler TypedContent
@@ -53,7 +56,7 @@ postAdminNewListingR = do
     update lid [ListingSlug =. slug]
 
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid emptyVCalendar [] uuid
+    mcid <- insertUnique $ Calendar lid emptyVCalendar M.empty uuid
 
     pure (slug, mcid)
 

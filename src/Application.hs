@@ -46,7 +46,7 @@ appMain = do
 
     void . forkIO . forever . runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool ->
       liftIO . runResourceT . flip runSqlPool pool $ do
-        calendars <- selectList [CalendarImports !=. []] []
+        calendars <- selectList [CalendarImports !=. M.empty] []
 
         for calendars $ \(Entity cid calendar) ->
           for (calendarImports calendar) $ \import' -> do
