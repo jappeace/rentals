@@ -29,14 +29,14 @@ postImportCalendarR :: ListingId -> Handler TypedContent
 postImportCalendarR lid = do
   mCalendar <- runDB . getBy $ UniqueListing lid
   (sourceURI, calendarURI) <- runInputPost $ (,)
-    <$> (read . T.unpack  <$> ireq textField "source-uri")
+    <$> (read . T.unpack <$> ireq textField "source-uri")
     <*> ireq urlField "calendar-uri"
 
   case mCalendar of
     -- Try and parse the provided Airbnb calendar URI
     Just (Entity cid calendar) -> case URI.parseURI . T.unpack $ calendarURI of
       Just l -> do
-        runDB $ update cid [CalendarImports =. (M.insert sourceURI l $ calendarImports calendar)]
+        runDB $ update cid [CalendarImports =. (M.insertWith const sourceURI l $ calendarImports calendar)]
         sendResponseStatus status204 ()
 
       Nothing ->
@@ -47,4 +47,13 @@ postImportCalendarR lid = do
         ("The requested listing does not exist, please check the identifier and try again" :: Text)
 
 deleteImportCalendarR :: ListingId -> Handler TypedContent
-deleteImportCalendarR lid = undefined
+deleteImportCalendarR lid = do
+  sourceURI <- runInputPost (read . T.unpack <$> ireq urlField "calendar-uri")
+  mCalendar <- runDB . getBy $ UniqueListing lid
+  case mCalendar of
+    Just (Entity cid calendar) -> do
+      runDB $ update cid [CalendarImports =. (M.delete sourceURI $ calendarImports calendar)]
+      sendResponseStatus status204 ()
+    Nothing ->
+      sendResponseStatus status404 $ toEncoding
+        ("The requested listing does not exist, please check the identifier and try again" :: Text)

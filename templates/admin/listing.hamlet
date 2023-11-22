@@ -52,12 +52,13 @@
               <span class="fs-5">remove calendars
           $forall (s, uri) <- M.assocs (calendarImports c)
             <div class="col-12">
-              <form method="POST" action=@{AdminListingR lid}?_method=DELETE id="remove-import">
+              <form method="POST" action=@{ImportCalendarR lid}?_method=DELETE id="remove-import">
+                <input name="source-uri" value=#{show s} readonly class="d-none">
                 <div class="row gx-0 justify-content-between">
                   <div class="col-12">
                     <div class="input-group mb-2">
                       <span class="input-group-text">#{show s}
-                      <input readonly class="form-control" disabled readonly value=#{uri}>
+                      <input name="calendar-uri" class="form-control" disabled readonly value=#{uri}>
                       <button class="btn btn-danger">
                         <i class="bi bi-trash">
 
