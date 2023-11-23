@@ -1,0 +1,25 @@
+window.addEventListener("load", (e) => {
+  const today = function() {
+    return new Date().toLocaleDateString(undefined, {
+      year: "numeric", month: "2-digit", day: "2-digit"
+    });
+  };
+
+  const blockedDates = #{blockedDates};
+
+  $("#admin-datepicker #datepicker").datepicker({
+    datesDisabled: blockedDates,
+    maxViewMode: 2,
+    multidate: true,
+    beforeShowDay: (date) => {
+
+    }
+  });
+  $("#admin-datepicker #datepicker").datepicker().on("changeDate load", () => {
+    $("#admin-datepicker form button").val(() => {
+      return $("#admin-datepicker #datepicker").datepicker("getDates").map((x) => {
+        return String(x.getFullYear()) + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+      });
+    });
+  });
+});

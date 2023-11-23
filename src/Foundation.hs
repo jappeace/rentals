@@ -227,8 +227,8 @@ instance Yesod App where
   isAuthorized _ _ = pure Authorized
 
   defaultLayout contents = do
-    pc <- widgetToPageContent contents
+    pc <- widgetToPageContent $ do
+      toWidgetHead $(juliusFile "templates/script/form-handler.julius")
+      contents
     messages <- getMessage
-    withUrlRenderer $ do
-      $(juliusFile "templates/script/form-handler.julius")
-      $(hamletFile "templates/default-layout.hamlet")
+    withUrlRenderer $(hamletFile "templates/default-layout.hamlet")

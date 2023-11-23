@@ -28,6 +28,19 @@
                   <span class="text-white">save
                   <div class="d-grid">
                     <button class="btn btn-primary">save
+
+      <div class="col-md-12">
+        <div class="row gx-0 mb-3">
+          <div class="col-12 border-bottom border-secondary-subtle">
+            <span class="fs-5">listing calendar
+        <div class="row mb-3">
+          <div id="admin-datepicker">
+            <div id="datepicker">
+            <form id="date-blocking">
+              <div class="d-grid">
+                <button name="dates" class="btn btn-primary text-nowrap mt-2">update dates
+          <div class="col-md-auto">
+
       <div class="col-md-12">
         <div class="row gx-0 mb-3">
           <div class="col-12 border-bottom border-secondary-subtle">
@@ -46,6 +59,7 @@
                 <span class="input-group-text">.ics
                 <input name="calendar-uri" class="form-control">
                 <button class="btn btn-primary">import
+
         $if (length (calendarImports c) > 0)
           <div class="row gx-0 mb-3">
             <div class="col-12 border-bottom border-secondary-subtle">

@@ -5,12 +5,18 @@ import Yesod
 
 import Utils
 
+import qualified Data.Map.Strict           as M
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
-import qualified Data.Map.Strict           as M
+import qualified Data.Text.Lazy            as LT
+import           Data.Time.Calendar
+import           Data.Traversable
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
 import           System.Random
+import           Text.ICalendar
+import           Text.Julius
+import           Text.Lucius
 import           Text.Slugify
 
 getAdminListingR :: ListingId -> Handler Html
@@ -18,7 +24,19 @@ getAdminListingR lid = do
   l <- runDB $ get404 lid
   (Entity _ c) <- runDB . getBy404 $ UniqueListing lid
   let sources = [Airbnb ..]
-  defaultLayout $(whamletFile "templates/admin/listing.hamlet")
+
+  let blockedDates = toJSON . mconcat . for (M.toAscList . vcEvents . calendarCalendar $ c) $ \(_, e) ->
+        case (veDTStart e, veDTEndDuration e) of
+          (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) ->
+            [start .. end]
+          (Just (DTStartDate (Date start) _), _) ->
+            [start]
+          _ -> []
+
+  defaultLayout $ do
+    toWidgetHead $(juliusFile "templates/script/admin-datepicker.julius")
+    toWidgetHead $(luciusFile "templates/style/admin.lucius")
+    $(whamletFile "templates/admin/listing.hamlet")
 
 putAdminListingR :: ListingId -> Handler TypedContent
 putAdminListingR lid = do
