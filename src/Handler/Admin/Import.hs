@@ -10,6 +10,7 @@ import           Control.Lens               ((^.), to)
 import           Control.Monad
 import           Control.Monad.Except
 import qualified Data.ByteString            as BS
+import           Data.Default               (def)
 import           Data.Either
 import           Data.List.Extra            (breakEnd)
 import qualified Data.Map.Strict            as M
@@ -27,33 +28,31 @@ import           Text.ICalendar
 
 postImportCalendarR :: ListingId -> Handler TypedContent
 postImportCalendarR lid = do
-  mCalendar <- runDB . getBy $ UniqueListing lid
-  (sourceURI, calendarURI) <- runInputPost $ (,)
-    <$> (read . T.unpack <$> ireq textField "source-uri")
+  (calendarSource, calendarURI) <- runInputPost $ (,)
+    <$> (read . T.unpack <$> ireq textField "calendar-source")
     <*> ireq urlField "calendar-uri"
 
-  case mCalendar of
-    -- Try and parse the provided Airbnb calendar URI
-    Just (Entity cid calendar) -> case URI.parseURI . T.unpack $ calendarURI of
-      Just l -> do
-        runDB $ update cid [CalendarImports =. (M.insertWith const sourceURI l $ calendarImports calendar)]
-        sendResponseStatus status204 ()
+  runDB $ get404 lid
+  -- Try and parse the provided Airbnb calendar URI
+  case URI.parseURI . T.unpack $ calendarURI of
+    Just l -> do
+      ics <- liftIO . W.get $ T.unpack calendarURI
+      case parseICalendar def "logs/ical-errors" $ ics ^. W.responseBody of
+        Right (ical:_, _) -> do
+          uuid <- liftIO randomIO
+          runDB . insert $ Calendar lid ical calendarSource (Just l) uuid
+          sendResponseStatus status204 ()
+        Left err -> do
+          liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+          sendResponseStatus status503 $ toEncoding
+            ("The retrieved iCalendar is malformed and could not be parsed: " <> T.pack err)
 
-      Nothing ->
-        sendResponseStatus status400 $ toEncoding
-          ("The provided URI is invalid, please check the provided URI and try again" :: Text)
     Nothing ->
-      sendResponseStatus status404 $ toEncoding
-        ("The requested listing does not exist, please check the identifier and try again" :: Text)
+      sendResponseStatus status400 $ toEncoding
+        ("The provided URI is invalid, please check the provided URI and try again" :: Text)
 
 deleteImportCalendarR :: ListingId -> Handler TypedContent
 deleteImportCalendarR lid = do
-  sourceURI <- runInputPost (read . T.unpack <$> ireq urlField "calendar-uri")
-  mCalendar <- runDB . getBy $ UniqueListing lid
-  case mCalendar of
-    Just (Entity cid calendar) -> do
-      runDB $ update cid [CalendarImports =. (M.delete sourceURI $ calendarImports calendar)]
-      sendResponseStatus status204 ()
-    Nothing ->
-      sendResponseStatus status404 $ toEncoding
-        ("The requested listing does not exist, please check the identifier and try again" :: Text)
+  sourceURI <- runInputPost (read . T.unpack <$> ireq textField "source-uri")
+  runDB . deleteBy $ UniqueImport lid sourceURI
+  sendResponseStatus status204 ()

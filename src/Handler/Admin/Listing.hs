@@ -22,16 +22,17 @@ import           Text.Slugify
 getAdminListingR :: ListingId -> Handler Html
 getAdminListingR lid = do
   l <- runDB $ get404 lid
-  (Entity _ c) <- runDB . getBy404 $ UniqueListing lid
+  calendars <- runDB $ selectList [CalendarListing ==. lid] []
   let sources = [Airbnb ..]
 
-  let blockedDates = toJSON . mconcat . for (M.toAscList . vcEvents . calendarCalendar $ c) $ \(_, e) ->
-        case (veDTStart e, veDTEndDuration e) of
-          (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) ->
-            [start .. end]
-          (Just (DTStartDate (Date start) _), _) ->
-            [start]
-          _ -> []
+  let blockedDates = toJSON . for calendars $ \(Entity _ c) ->
+        for (M.elems . vcEvents $ calendarCalendar c) $ \e ->
+          case (veDTStart e, veDTEndDuration e) of
+            (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) ->
+              [start .. end]
+            (Just (DTStartDate (Date start) _), _) ->
+              [start]
+            _ -> []
 
   defaultLayout $ do
     toWidgetHead $(juliusFile "templates/script/admin-datepicker.julius")
@@ -74,7 +75,7 @@ postAdminNewListingR = do
     update lid [ListingSlug =. slug]
 
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid emptyVCalendar M.empty uuid
+    mcid <- insertUnique $ Calendar lid emptyVCalendar Local Nothing uuid
 
     pure (slug, mcid)
 

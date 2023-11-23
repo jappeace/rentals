@@ -49,7 +49,7 @@
           <div class="row">
             <label class="d-block mb-3 col-md-3">
               <span class="text-white">source
-              <select class="form-select" name="source-uri">
+              <select class="form-select" name="calendar-source">
                 <option>
                 $forall s <- sources
                   <option value=#{show s}>#{show s}
@@ -60,19 +60,20 @@
                 <input name="calendar-uri" class="form-control">
                 <button class="btn btn-primary">import
 
-        $if (length (calendarImports c) > 0)
+        $if (length calendars > 0)
           <div class="row gx-0 mb-3">
             <div class="col-12 border-bottom border-secondary-subtle">
               <span class="fs-5">remove calendars
-          $forall (s, uri) <- M.assocs (calendarImports c)
-            <div class="col-12">
-              <form method="POST" action=@{ImportCalendarR lid}?_method=DELETE id="remove-import">
-                <input name="source-uri" value=#{show s} readonly class="d-none">
-                <div class="row gx-0 justify-content-between">
-                  <div class="col-12">
-                    <div class="input-group mb-2">
-                      <span class="input-group-text">#{show s}
-                      <input name="calendar-uri" class="form-control" disabled readonly value=#{uri}>
-                      <button class="btn btn-danger">
-                        <i class="bi bi-trash">
+          $forall (Entity _ c) <- calendars
+            $maybe uri <- calendarImportUri c
+              <div class="col-12">
+                <form method="POST" action=@{ImportCalendarR lid}?_method=DELETE id="remove-import">
+                  <input name="calendar-source" value=#{show (calendarImportSource c)} readonly class="d-none">
+                  <div class="row gx-0 justify-content-between">
+                    <div class="col-12">
+                      <div class="input-group mb-2">
+                        <span class="input-group-text">#{show (calendarImportSource c)}
+                        <input name="calendar-uri" class="form-control" disabled readonly value=#{uri}>
+                        <button class="btn btn-danger">
+                          <i class="bi bi-trash">
 

@@ -18,6 +18,7 @@ dependencies:
 - resourcet
 - time
 - containers
+- directory
 - unbounded-delays
 - monad-logger
 - bytestring

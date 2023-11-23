@@ -22,6 +22,7 @@ import Yesod.Auth.Message
 import Yesod.Auth.Hardcoded
 import Yesod.Persist
 
+import           Control.Arrow
 import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Data.ByteString            as BS
 import           Data.Default               (def)
@@ -45,7 +46,7 @@ import           Text.Blaze
 import           Text.Hamlet
 import           Text.ICalendar
 import           Text.Julius
-import           Text.Read                  (readMaybe)
+import           Text.Read                  (readMaybe, readEither)
 
 import Settings
 
@@ -54,7 +55,7 @@ data App = App
   , appConnPool :: ConnectionPool
   }
 
-data CalendarSource = Airbnb | Vrbo
+data CalendarSource = Local | Airbnb | Vrbo
   deriving (Eq, Ord, Enum, Bounded, Show, Read)
 
 newtype Money = Money { unMoney :: Centi }
@@ -108,10 +109,10 @@ instance PersistField URI where
 instance PersistFieldSql URI where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField (Map CalendarSource URI) where
-  toPersistValue = toPersistValue . M.mapKeys (T.pack . show)
-  fromPersistValue = fmap (M.mapKeys (read . T.unpack)) . fromPersistValue
-instance PersistFieldSql (Map CalendarSource URI) where
+instance PersistField CalendarSource where
+  toPersistValue = PersistText . T.pack . show
+  fromPersistValue (PersistText cs) = left T.pack . readEither $ T.unpack cs
+instance PersistFieldSql CalendarSource where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 instance PersistField Slug where

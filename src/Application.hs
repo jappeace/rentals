@@ -25,6 +25,7 @@ import           Database.Persist.TH
 import           Database.Persist.Sqlite
 import           Network.URI
 import qualified Network.Wreq                    as W
+import           System.Directory
 import           Text.ICalendar
 
 import Handler.Admin
@@ -41,17 +42,25 @@ mkYesodDispatch "App" resourcesApp
 appMain :: IO ()
 appMain = do
   settings <- loadYamlSettings ["config/settings.yml"] [] useEnv
+
+  logExists <- doesFileExist "logs/ical-errors"
+  when (not logExists) $ do
+    createDirectoryIfMissing True "logs"
+    writeFile "logs/ical-errors" mempty
+
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
 
     void . forkIO . forever . runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool ->
       liftIO . runResourceT . flip runSqlPool pool $ do
-        calendars <- selectList [CalendarImports !=. M.empty] []
+        calendars <- selectList [CalendarImportUri !=. Nothing] []
 
         for calendars $ \(Entity cid calendar) ->
-          for (calendarImports calendar) $ \import' -> do
+          for (calendarImportUri calendar) $ \(import') -> do
             ics <- liftIO . W.get $ (uriToString id import') ""
-            let eical = fmap (head . fst) . parseICalendar def "." $ ics ^. W.responseBody
+            let eical = fmap (head . fst)
+                  . parseICalendar def "logs/ical-errors"
+                  $ ics ^. W.responseBody
             sequence_ $ eical <&> \ical -> do
               let mergedEvents    = M.union
                     (vcEvents $ calendarCalendar calendar)

@@ -1,18 +1,19 @@
 Listing
-  title       Text
-  description Text
-  price       Money
-  slug        Slug
+  title        Text
+  description  Text
+  price        Money
+  slug         Slug
   UniqueSlug slug
 Calendar
-  listing     ListingId
-  calendar    VCalendar
-  imports     (Map CalendarSource URI)
-  uuid        UUID
+  listing      ListingId
+  calendar     VCalendar
+  importSource CalendarSource
+  importUri    URI Maybe
+  uuid         UUID
   UniqueCalendar uuid
-  UniqueListing listing
+  UniqueImport listing importSource
 
 User
-  email       Text
-  password    Text
+  email        Text
+  password     Text
   UniqueEmail email
