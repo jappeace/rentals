@@ -25,6 +25,7 @@ import Yesod.Persist
 import           Control.Arrow
 import           Control.Monad.Trans.Reader (ReaderT)
 import qualified Data.ByteString            as BS
+import           Data.Time.Calendar
 import           Data.Default               (def)
 import           Data.Fixed
 import           Data.Kind                  (Type)
@@ -82,6 +83,15 @@ instance PersistField VCalendar where
       Right (parsedCal:_, _) -> Right parsedCal
       Left err -> Left . T.pack $ err
 instance PersistFieldSql VCalendar where
+  sqlType _ = SqlString
+-----------------------------------------------------------------------------------------
+instance PersistField VEvent where
+  toPersistValue = PersistByteString . BS.toStrict . printICalendar def
+  fromPersistValue (PersistByteString textCal) =
+    case parseICalendar def "." $ BS.fromStrict textCal of
+      Right (parsedCal:_, _) -> Right parsedCal
+      Left err -> Left . T.pack $ err
+instance PersistFieldSql VEvent where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 instance PersistField UUID where

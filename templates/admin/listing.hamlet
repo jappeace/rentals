@@ -36,7 +36,7 @@
         <div class="row mb-3">
           <div id="admin-datepicker">
             <div id="datepicker">
-            <form id="date-blocking">
+            <form method="POST" action=@{AdminListingBlockedDatesR lid}?_method=PUT id="date-blocking">
               <div class="d-grid">
                 <button name="dates" class="btn btn-primary text-nowrap mt-2">update dates
           <div class="col-md-auto">
@@ -45,7 +45,7 @@
         <div class="row gx-0 mb-3">
           <div class="col-12 border-bottom border-secondary-subtle">
             <span class="fs-4">import calendars
-        <form method="POST" action=@{ImportCalendarR lid} id="import-calendar">
+        <form method="POST" action=@{CalendarImportR lid} id="import-calendar">
           <div class="row">
             <label class="d-block mb-3 col-md-3">
               <span class="text-white">source
@@ -67,7 +67,7 @@
           $forall (Entity _ c) <- calendars
             $maybe uri <- calendarImportUri c
               <div class="col-12">
-                <form method="POST" action=@{ImportCalendarR lid}?_method=DELETE id="remove-import">
+                <form method="POST" action=@{CalendarImportR lid}?_method=DELETE id="remove-import">
                   <input name="calendar-source" value=#{show (calendarImportSource c)} readonly class="d-none">
                   <div class="row gx-0 justify-content-between">
                     <div class="col-12">

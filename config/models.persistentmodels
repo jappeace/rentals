@@ -9,9 +9,17 @@ Calendar
   calendar     VCalendar
   importSource CalendarSource
   importUri    URI Maybe
-  uuid         UUID
-  UniqueCalendar uuid
+  uuid         UUID Maybe
   UniqueImport listing importSource
+Event
+  calendar     CalendarId
+  event        VEvent
+  start        Day
+  uuid         UUID
+  transparency Bool
+  summary      Text
+  UniqueStart calendar start
+
 
 User
   email        Text

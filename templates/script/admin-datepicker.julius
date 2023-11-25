@@ -8,12 +8,10 @@ window.addEventListener("load", (e) => {
   const blockedDates = #{blockedDates};
 
   $("#admin-datepicker #datepicker").datepicker({
+    format: "yyyy-MM-dd",
     datesDisabled: blockedDates,
     maxViewMode: 2,
-    multidate: true,
-    beforeShowDay: (date) => {
-
-    }
+    multidate: true
   });
   $("#admin-datepicker #datepicker").datepicker().on("changeDate load", () => {
     $("#admin-datepicker form button").val(() => {

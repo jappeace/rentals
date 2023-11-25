@@ -26,8 +26,8 @@ import qualified Network.Wreq               as W
 import           System.Random
 import           Text.ICalendar
 
-postImportCalendarR :: ListingId -> Handler TypedContent
-postImportCalendarR lid = do
+postCalendarImportR :: ListingId -> Handler TypedContent
+postCalendarImportR lid = do
   (calendarSource, calendarURI) <- runInputPost $ (,)
     <$> (read . T.unpack <$> ireq textField "calendar-source")
     <*> ireq urlField "calendar-uri"
@@ -39,8 +39,7 @@ postImportCalendarR lid = do
       ics <- liftIO . W.get $ T.unpack calendarURI
       case parseICalendar def "logs/ical-errors" $ ics ^. W.responseBody of
         Right (ical:_, _) -> do
-          uuid <- liftIO randomIO
-          runDB . insert $ Calendar lid ical calendarSource (Just l) uuid
+          runDB . insert $ Calendar lid ical calendarSource (Just l) Nothing
           sendResponseStatus status204 ()
         Left err -> do
           liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
@@ -51,8 +50,8 @@ postImportCalendarR lid = do
       sendResponseStatus status400 $ toEncoding
         ("The provided URI is invalid, please check the provided URI and try again" :: Text)
 
-deleteImportCalendarR :: ListingId -> Handler TypedContent
-deleteImportCalendarR lid = do
+deleteCalendarImportR :: ListingId -> Handler TypedContent
+deleteCalendarImportR lid = do
   sourceURI <- runInputPost (read . T.unpack <$> ireq textField "source-uri")
   runDB . deleteBy $ UniqueImport lid sourceURI
   sendResponseStatus status204 ()

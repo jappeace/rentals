@@ -58,18 +58,11 @@ appMain = do
         for calendars $ \(Entity cid calendar) ->
           for (calendarImportUri calendar) $ \(import') -> do
             ics <- liftIO . W.get $ (uriToString id import') ""
-            let eical = fmap (head . fst)
-                  . parseICalendar def "logs/ical-errors"
-                  $ ics ^. W.responseBody
-            sequence_ $ eical <&> \ical -> do
-              let mergedEvents    = M.union
-                    (vcEvents $ calendarCalendar calendar)
-                    (vcEvents ical)
-              let mergedCalendars =
-                    (calendarCalendar calendar) {vcEvents = mergedEvents}
-
-              update cid [CalendarCalendar =. mergedCalendars]
-
+            case parseICalendar def "logs/ical-errors" $ ics ^. W.responseBody of
+              Right (ical:_, _) ->
+                update cid [CalendarCalendar =. ical]
+              Left err ->
+                liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
         liftIO . delay $ 60 * 60 * 1000 * 1000
 
     warp (appPort settings) $ App settings pool

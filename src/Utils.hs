@@ -8,7 +8,11 @@ import           Data.CaseInsensitive
 import           Data.Default         (def)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
+import qualified Data.Text.Lazy       as LT
+import           Data.Time.Clock
+import           Data.UUID
 import           Data.Version
+import           System.Random
 import           Text.ICalendar
 
 parseCalendar :: LBS.ByteString -> Handler (Either Text VCalendar)
@@ -34,3 +38,55 @@ emptyVCalendar = VCalendar
   , vcFreeBusys  = mempty
   , vcOtherComps = mempty
   }
+
+newVEvent :: UTCTime -> UUID -> Handler VEvent
+newVEvent currentTime uuid = VEvent
+  { veDTStamp       = DTStamp currentTime def
+  , veUID           = UID (LT.fromStrict . toText $ uuid) def
+  , veClass         = Class Private def
+  , veDTStart       = Nothing
+  , veCreated       = Nothing
+  , veDescription   = Nothing
+  , veGeo           = Nothing
+  , veLastMod       = Nothing
+  , veLocation      = Nothing
+  , veOrganizer     = Nothing
+  , vePriority      = Priority 0 def
+  , veSeq           = Sequence 0 def
+  , veStatus        = Nothing
+  , veSummary       = Nothing
+  , veTransp        = Opaque def
+  , veUrl           = Nothing
+  , veRecurId       = Nothing
+  , veRRule         = mempty
+  , veDTEndDuration = Nothing
+  , veAttach        = mempty
+  , veAttendee      = mempty
+  , veCategories    = mempty
+  , veComment       = mempty
+  , veContact       = mempty
+  , veExDate        = mempty
+  , veRStatus       = mempty
+  , veRelated       = mempty
+  , veResources     = mempty
+  , veRDate         = mempty
+  , veAlarms        = mempty
+  , veOther         = mempty
+  }
+
+addVEventToVCalendar :: VCalendar -> VEvent -> VCalendar
+addVEventToVCalendar cal evn
+  | M.member (veUID evn, Nothing) (cal vcEvents) = cal
+  | otherwise = cal {vcEvents = M.insert (veUID evn, Nothing) evn (vcEvents cal)}
+
+removeVEventFromVCalendar :: VCalendar -> VEvent -> VCalendar
+removeVEventFromVCalendar cal evn = cal {vcEvents = M.delete (veUID evn, Nothing) (vcEvents cal)}
+
+removeVEventAtDateFromVCalendar :: VCalendar -> Day -> VCalendar
+removeVEventAtDateFromVCalendar cal day = do
+  -- if the date is different from the desired day, keep it in the list
+  let updatedCalendar = flip M.filter (vcEvents cal) $ \ev ->
+        case veDTStart ev of
+          DTStartDate (Date d) _ -> d /= day
+          _ -> True
+  cal {vcEvents = updatedCalendar}

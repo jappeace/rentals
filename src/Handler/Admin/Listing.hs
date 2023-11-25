@@ -5,6 +5,7 @@ import Yesod
 
 import Utils
 
+import           Data.List.Extra           (wordsBy)
 import qualified Data.Map.Strict           as M
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
@@ -25,7 +26,7 @@ getAdminListingR lid = do
   calendars <- runDB $ selectList [CalendarListing ==. lid] []
   let sources = [Airbnb ..]
 
-  let blockedDates = toJSON . for calendars $ \(Entity _ c) ->
+  let blockedDates = toJSON . mconcat . mconcat . for calendars $ \(Entity _ c) ->
         for (M.elems . vcEvents $ calendarCalendar c) $ \e ->
           case (veDTStart e, veDTEndDuration e) of
             (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) ->
@@ -59,8 +60,38 @@ putAdminListingR lid = do
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
 
-postAdminNewListingR :: Handler TypedContent
-postAdminNewListingR = do
+putAdminListingBlockDateR :: ListingId -> Handler TypedContent
+putAdminListingBlockDateR lid = do
+  day  <- parseCheckJsonBody
+  ct   <- liftIO getCurrentTime
+  uuid <- liftIO randomIO
+  evn  <- newVEvent ct uuid
+    {veDTStart = DTStartDate (Date day) def}
+
+  runDB $ do
+    mCal <- getBy $ UniqueImport lid Local
+    case mCal of
+      Just (Entity cid cal) -> do
+        insert_ $ Event cid evn uid' False "Unavailable (Local)"
+        update cid [CalendarCalendar =. addVEventToVCalendar (calendarCalendar cal) evn]
+      Nothing -> sendResponseStatus status404 $ toEncoding
+        ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+putAdminListingUnblockDateR :: ListingId -> Handler TypedContent
+putAdminListingUnblockDateR lid = do
+  day <- parseCheckJsonBody
+
+  runDB $ do
+    mCal <- getBy $ UniqueImport lid Local
+    case mCal of
+      Just (Entity cid cal) -> do
+        update cid [CalendarCalendar =. removeVEventAtDateFromVCalendar (calendarCalendar cal) day]
+        deleteBy $ UniqueStart cid day
+      Nothing -> Nothing -> sendResponseStatus status404 $ toEncoding
+        ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+postAdminListingNewR :: Handler TypedContent
+postAdminListingNewR = do
   listing <- runInputPost $ Listing
     <$> ireq textField "title"
     <*> (unTextarea <$> ireq textareaField "description")
@@ -75,7 +106,7 @@ postAdminNewListingR = do
     update lid [ListingSlug =. slug]
 
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid emptyVCalendar Local Nothing uuid
+    mcid <- insertUnique $ Calendar lid emptyVCalendar Local Nothing (Just uuid)
 
     pure (slug, mcid)
 
