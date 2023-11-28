@@ -6,9 +6,11 @@ import Foundation
 import qualified Data.ByteString.Lazy as LBS
 import           Data.CaseInsensitive
 import           Data.Default         (def)
+import qualified Data.Map.Strict      as M
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as LT
+import           Data.Time.Calendar
 import           Data.Time.Clock
 import           Data.UUID
 import           Data.Version
@@ -39,7 +41,7 @@ emptyVCalendar = VCalendar
   , vcOtherComps = mempty
   }
 
-newVEvent :: UTCTime -> UUID -> Handler VEvent
+newVEvent :: UTCTime -> UUID -> VEvent
 newVEvent currentTime uuid = VEvent
   { veDTStamp       = DTStamp currentTime def
   , veUID           = UID (LT.fromStrict . toText $ uuid) def
@@ -76,17 +78,17 @@ newVEvent currentTime uuid = VEvent
 
 addVEventToVCalendar :: VCalendar -> VEvent -> VCalendar
 addVEventToVCalendar cal evn
-  | M.member (veUID evn, Nothing) (cal vcEvents) = cal
-  | otherwise = cal {vcEvents = M.insert (veUID evn, Nothing) evn (vcEvents cal)}
+  | M.member (uidValue (veUID evn), Nothing) (vcEvents cal) = cal
+  | otherwise = cal {vcEvents = M.insert (uidValue (veUID evn), Nothing) evn (vcEvents cal)}
 
 removeVEventFromVCalendar :: VCalendar -> VEvent -> VCalendar
-removeVEventFromVCalendar cal evn = cal {vcEvents = M.delete (veUID evn, Nothing) (vcEvents cal)}
+removeVEventFromVCalendar cal evn = cal {vcEvents = M.delete (uidValue (veUID evn), Nothing) (vcEvents cal)}
 
 removeVEventAtDateFromVCalendar :: VCalendar -> Day -> VCalendar
 removeVEventAtDateFromVCalendar cal day = do
   -- if the date is different from the desired day, keep it in the list
   let updatedCalendar = flip M.filter (vcEvents cal) $ \ev ->
         case veDTStart ev of
-          DTStartDate (Date d) _ -> d /= day
+          Just (DTStartDate (Date d) _) -> d /= day
           _ -> True
   cal {vcEvents = updatedCalendar}

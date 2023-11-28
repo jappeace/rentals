@@ -24,6 +24,7 @@ import Yesod.Persist
 
 import           Control.Arrow
 import           Control.Monad.Trans.Reader (ReaderT)
+import           Data.Aeson.TH              (deriveJSON, defaultOptions)
 import qualified Data.ByteString            as BS
 import           Data.Time.Calendar
 import           Data.Default               (def)
@@ -56,14 +57,17 @@ data App = App
   , appConnPool :: ConnectionPool
   }
 
-data CalendarSource = Local | Airbnb | Vrbo
+data Source = Local | Airbnb | Vrbo
   deriving (Eq, Ord, Enum, Bounded, Show, Read)
+$(deriveJSON defaultOptions ''Source)
 
 newtype Money = Money { unMoney :: Centi }
   deriving (Num, Fractional)
+$(deriveJSON defaultOptions ''Money)
 
 newtype Slug = Slug { unSlug :: Text }
   deriving (Eq, Show, Read)
+$(deriveJSON defaultOptions ''Slug)
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
@@ -85,14 +89,14 @@ instance PersistField VCalendar where
 instance PersistFieldSql VCalendar where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField VEvent where
-  toPersistValue = PersistByteString . BS.toStrict . printICalendar def
-  fromPersistValue (PersistByteString textCal) =
-    case parseICalendar def "." $ BS.fromStrict textCal of
-      Right (parsedCal:_, _) -> Right parsedCal
-      Left err -> Left . T.pack $ err
-instance PersistFieldSql VEvent where
-  sqlType _ = SqlString
+-- instance PersistField VEvent where
+--   toPersistValue = PersistByteString . BS.toStrict . printICalendar def
+--   fromPersistValue (PersistByteString textCal) =
+--     case parseICalendar def "." $ BS.fromStrict textCal of
+--       Right (parsedCal:_, _) -> Right parsedCal
+--       Left err -> Left . T.pack $ err
+-- instance PersistFieldSql VEvent where
+--   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 instance PersistField UUID where
   toPersistValue = PersistText . UUID.toText
@@ -119,10 +123,10 @@ instance PersistField URI where
 instance PersistFieldSql URI where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField CalendarSource where
+instance PersistField Source where
   toPersistValue = PersistText . T.pack . show
   fromPersistValue (PersistText cs) = left T.pack . readEither $ T.unpack cs
-instance PersistFieldSql CalendarSource where
+instance PersistFieldSql Source where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 instance PersistField Slug where
@@ -157,6 +161,11 @@ instance ToContent VCalendar where
   toContent = toContent . printICalendar def
 instance ToTypedContent VCalendar where
   toTypedContent = TypedContent "text/calendar; charset=utf-8" . toContent
+-----------------------------------------------------------------------------------------
+instance ToContent Listing where
+  toContent = toContent . toJSON
+instance ToTypedContent Listing where
+  toTypedContent = TypedContent "application/json; charset=utf-8" . toContent
 
 mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
 

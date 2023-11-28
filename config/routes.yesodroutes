@@ -5,6 +5,7 @@
  /view/admin/listing                     ViewAdminListingR           GET
 
  /admin                                  AdminR                      GET POST
+ /admin/listing/sources                  AdminListingSourcesR        GET
  /admin/listing/new                      AdminListingNewR                     PUT
 !/admin/listing/#ListingId               AdminListingR               GET      PUT
  /admin/listing/#ListingId/block-day     AdminListingBlockDateR               PUT

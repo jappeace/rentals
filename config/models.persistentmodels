@@ -1,25 +1,41 @@
-Listing
-  title        Text
-  description  Text
-  price        Money
-  slug         Slug
-  UniqueSlug slug
-Calendar
-  listing      ListingId
-  calendar     VCalendar
-  importSource CalendarSource
-  importUri    URI Maybe
-  uuid         UUID Maybe
-  UniqueImport listing importSource
-Event
-  calendar     CalendarId
-  event        VEvent
-  start        Day
-  uuid         UUID
-  transparency Bool
-  summary      Text
-  UniqueStart calendar start
+Listing json
+  title          Text
+  description    Text
+  price          Money
+  slug           Slug
 
+  UniqueSlug slug
+
+Calendar
+  listing        ListingId
+  uuid           UUID
+
+  UniqueCalendar listing
+  UniqueUUID uuid
+
+Event
+  -- app details
+  calendar       CalendarId
+  source         Source
+  uuid           Text
+
+  -- booking details
+  start          Day
+  end            Day
+  description    Text Maybe
+
+  -- meta details
+  summary        Text Maybe        -- meta description of the event entry
+  opaque         Bool default=true -- opaque to busy searches?
+
+  UniqueEvent calendar start
+
+Import
+  calendar       CalendarId
+  source         Source
+  uri            URI
+
+  UniqueImport calendar source
 
 User
   email        Text

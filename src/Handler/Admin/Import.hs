@@ -9,6 +9,7 @@ import Utils
 import           Control.Lens               ((^.), to)
 import           Control.Monad
 import           Control.Monad.Except
+import           Data.Aeson                 (Result(..))
 import qualified Data.ByteString            as BS
 import           Data.Default               (def)
 import           Data.Either
@@ -26,32 +27,55 @@ import qualified Network.Wreq               as W
 import           System.Random
 import           Text.ICalendar
 
-postCalendarImportR :: ListingId -> Handler TypedContent
-postCalendarImportR lid = do
-  (calendarSource, calendarURI) <- runInputPost $ (,)
-    <$> (read . T.unpack <$> ireq textField "calendar-source")
-    <*> ireq urlField "calendar-uri"
+putAdminListingImportR :: ListingId -> Handler TypedContent
+putAdminListingImportR lid = do
+  requestBody <- parseCheckJsonBody
 
-  runDB $ get404 lid
-  -- Try and parse the provided Airbnb calendar URI
-  case URI.parseURI . T.unpack $ calendarURI of
-    Just l -> do
-      ics <- liftIO . W.get $ T.unpack calendarURI
-      case parseICalendar def "logs/ical-errors" $ ics ^. W.responseBody of
-        Right (ical:_, _) -> do
-          runDB . insert $ Calendar lid ical calendarSource (Just l) Nothing
-          sendResponseStatus status204 ()
-        Left err -> do
-          liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
-          sendResponseStatus status503 $ toEncoding
-            ("The retrieved iCalendar is malformed and could not be parsed: " <> T.pack err)
+  case requestBody of
+    Success (source, uri) -> do
+      mCalendar <- runDB . getBy $ UniqueCalendar lid
+      case mCalendar of
+        Just (Entity cid _) -> do
+          -- Try and parse the provided Airbnb calendar URI
+          case URI.parseURI . T.unpack $ uri of
+            Just l -> do
+              ics <- liftIO . W.get $ T.unpack uri
 
-    Nothing ->
-      sendResponseStatus status400 $ toEncoding
-        ("The provided URI is invalid, please check the provided URI and try again" :: Text)
+              let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
+              case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
+                Right _ -> do
+                  runDB . insert $ Import cid source l
+                  sendResponseStatus status204 ()
 
-deleteCalendarImportR :: ListingId -> Handler TypedContent
-deleteCalendarImportR lid = do
-  sourceURI <- runInputPost (read . T.unpack <$> ireq textField "source-uri")
-  runDB . deleteBy $ UniqueImport lid sourceURI
-  sendResponseStatus status204 ()
+                Left err -> do
+                  liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+                  sendResponseStatus status503 $ toEncoding
+                    ("The retrieved iCalendar is malformed and could not be parsed: " <> T.pack err)
+
+            Nothing -> sendResponseStatus status400 $ toEncoding
+              ("The provided URI is invalid, please check the provided URI and try again" :: Text)
+
+        Nothing -> sendResponseStatus status404 $ toEncoding
+          ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+    Error err -> sendResponseStatus status400 $ toEncoding
+      ("Unable to parse the request body: " <> err)
+
+deleteAdminListingImportR :: ListingId -> Handler TypedContent
+deleteAdminListingImportR lid = do
+  requestBody <- parseCheckJsonBody
+
+  case requestBody of
+    Success source -> do
+      runDB $ do
+        mCalendar <- getBy $ UniqueCalendar lid
+
+        case mCalendar of
+          Just (Entity cid _) -> deleteBy $ UniqueImport cid source
+          Nothing -> sendResponseStatus status404 $ toEncoding
+            ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+      sendResponseStatus status204 ()
+
+    Error err -> sendResponseStatus status400 $ toEncoding
+      ("Unable to parse the request body: " <> err)

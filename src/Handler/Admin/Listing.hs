@@ -5,6 +5,7 @@ import Yesod
 
 import Utils
 
+import           Data.Aeson                (Result(..))
 import           Data.List.Extra           (wordsBy)
 import qualified Data.Map.Strict           as M
 import           Data.Text                 (Text)
@@ -12,6 +13,7 @@ import qualified Data.Text                 as T
 import qualified Data.Text.Lazy            as LT
 import           Data.Time.Calendar
 import           Data.Traversable
+import           Data.UUID
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
 import           System.Random
@@ -20,25 +22,23 @@ import           Text.Julius
 import           Text.Lucius
 import           Text.Slugify
 
-getAdminListingR :: ListingId -> Handler Html
+getAdminListingR :: ListingId -> Handler TypedContent
 getAdminListingR lid = do
-  l <- runDB $ get404 lid
-  calendars <- runDB $ selectList [CalendarListing ==. lid] []
-  let sources = [Airbnb ..]
+  mlisting <- runDB $ get lid
 
-  let blockedDates = toJSON . mconcat . mconcat . for calendars $ \(Entity _ c) ->
-        for (M.elems . vcEvents $ calendarCalendar c) $ \e ->
-          case (veDTStart e, veDTEndDuration e) of
-            (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) ->
-              [start .. end]
-            (Just (DTStartDate (Date start) _), _) ->
-              [start]
-            _ -> []
+  case mlisting of
+    Just listing -> sendResponseStatus status200 listing
+    Nothing -> sendResponseStatus status404 $ toEncoding
+      ("The target listing does not exist, please check the identifier and try again" :: Text)
 
-  defaultLayout $ do
-    toWidgetHead $(juliusFile "templates/script/admin-datepicker.julius")
-    toWidgetHead $(luciusFile "templates/style/admin.lucius")
-    $(whamletFile "templates/admin/listing.hamlet")
+  -- defaultLayout $ do
+  --   toWidgetHead $(juliusFile "templates/script/admin-datepicker.julius")
+  --   toWidgetHead $(luciusFile "templates/style/admin.lucius")
+  --   $(whamletFile "templates/admin/listing.hamlet")
+
+getAdminListingSourcesR :: Handler TypedContent
+getAdminListingSourcesR = do
+  sendResponseStatus status200 $ toEncoding [Airbnb ..]
 
 putAdminListingR :: ListingId -> Handler TypedContent
 putAdminListingR lid = do
@@ -62,36 +62,48 @@ putAdminListingR lid = do
 
 putAdminListingBlockDateR :: ListingId -> Handler TypedContent
 putAdminListingBlockDateR lid = do
-  day  <- parseCheckJsonBody
-  ct   <- liftIO getCurrentTime
-  uuid <- liftIO randomIO
-  evn  <- newVEvent ct uuid
-    {veDTStart = DTStartDate (Date day) def}
+  requestBody <- parseCheckJsonBody
+  -- ct   <- liftIO getCurrentTime
+  -- evn  <- newVEvent ct uuid
+  --   {veDTStart = DTStartDate (Date day) def}
 
-  runDB $ do
-    mCal <- getBy $ UniqueImport lid Local
-    case mCal of
-      Just (Entity cid cal) -> do
-        insert_ $ Event cid evn uid' False "Unavailable (Local)"
-        update cid [CalendarCalendar =. addVEventToVCalendar (calendarCalendar cal) evn]
-      Nothing -> sendResponseStatus status404 $ toEncoding
-        ("The target listing does not exist, please check the identifier and try again" :: Text)
+  case requestBody of
+    Success day -> runDB $ do
+      mcalendar <- getBy $ UniqueCalendar lid
+
+      case mcalendar of
+        Just (Entity cid _) -> do
+          uuid <- toText <$> liftIO randomIO
+          insert_ $ Event cid Local uuid
+            day day Nothing (Just "Unavailable (Local)") True
+          sendResponseStatus status204 ()
+
+        Nothing -> sendResponseStatus status404 $ toEncoding
+          ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+    Error err -> sendResponseStatus status400 $ toEncoding
+      ("Unable to parse the request body: " <> err)
 
 putAdminListingUnblockDateR :: ListingId -> Handler TypedContent
 putAdminListingUnblockDateR lid = do
-  day <- parseCheckJsonBody
+  requestBody <- parseCheckJsonBody
 
-  runDB $ do
-    mCal <- getBy $ UniqueImport lid Local
-    case mCal of
-      Just (Entity cid cal) -> do
-        update cid [CalendarCalendar =. removeVEventAtDateFromVCalendar (calendarCalendar cal) day]
-        deleteBy $ UniqueStart cid day
-      Nothing -> Nothing -> sendResponseStatus status404 $ toEncoding
-        ("The target listing does not exist, please check the identifier and try again" :: Text)
+  case requestBody of
+    Success day -> runDB $ do
+      mcalendar <- getBy $ UniqueCalendar lid
+      case mcalendar of
+        Just (Entity cid _) -> do
+          deleteBy $ UniqueEvent cid day
+          sendResponseStatus status204 ()
 
-postAdminListingNewR :: Handler TypedContent
-postAdminListingNewR = do
+        Nothing -> sendResponseStatus status404 $ toEncoding
+          ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+    Error err -> sendResponseStatus status400 $ toEncoding
+      ("Unable to parse the request body: " <> err)
+
+putAdminListingNewR :: Handler TypedContent
+putAdminListingNewR = do
   listing <- runInputPost $ Listing
     <$> ireq textField "title"
     <*> (unTextarea <$> ireq textareaField "description")
@@ -106,7 +118,7 @@ postAdminListingNewR = do
     update lid [ListingSlug =. slug]
 
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid emptyVCalendar Local Nothing (Just uuid)
+    mcid <- insertUnique $ Calendar lid uuid
 
     pure (slug, mcid)
 

@@ -19,6 +19,7 @@ import           Control.Monad.Trans.Resource    (runResourceT)
 import           Data.Default                    (def)
 import           Data.Functor
 import qualified Data.Map.Strict                 as M
+import qualified Data.Text.Lazy                  as LT
 import           Data.Traversable
 import           Database.Persist
 import           Database.Persist.TH
@@ -53,16 +54,35 @@ appMain = do
 
     void . forkIO . forever . runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool ->
       liftIO . runResourceT . flip runSqlPool pool $ do
-        calendars <- selectList [CalendarImportUri !=. Nothing] []
+        imports <- selectList [] []
 
-        for calendars $ \(Entity cid calendar) ->
-          for (calendarImportUri calendar) $ \(import') -> do
-            ics <- liftIO . W.get $ (uriToString id import') ""
-            case parseICalendar def "logs/ical-errors" $ ics ^. W.responseBody of
-              Right (ical:_, _) ->
-                update cid [CalendarCalendar =. ical]
-              Left err ->
-                liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+        for imports $ \(Entity _ (Import cid source uri)) -> do
+          let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
+          ics <- liftIO . W.get $ (uriToString id uri) ""
+
+          case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
+            Right (ical:_, _) -> do
+              void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
+                let uuid        = LT.toStrict . uidValue $ veUID e
+                    mdates      = case (veDTStart e, veDTEndDuration e) of
+                      (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
+                      (Just (DTStartDate (Date start) _), _) -> Just (start, start)
+                      _ -> Nothing
+                    description = fmap (LT.toStrict . descriptionValue) $ veDescription e
+                    summary     = fmap (LT.toStrict . summaryValue) $ veSummary e
+                    opacity     = case veTransp e of
+                      Opaque      _ -> True
+                      Transparent _ -> False
+
+                case mdates of
+                  Just (start, end) -> do
+                    void . insertBy $ Event
+                      cid source uuid start end description summary opacity
+                  Nothing -> pure ()
+
+            Left err ->
+              liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+
         liftIO . delay $ 60 * 60 * 1000 * 1000
 
     warp (appPort settings) $ App settings pool
