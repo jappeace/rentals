@@ -5,11 +5,9 @@ window.addEventListener("load", (e) => {
     });
   };
 
-  const blockedDates = #{blockedDates};
-
   $("#admin-datepicker #datepicker").datepicker({
     format: "yyyy-MM-dd",
-    datesDisabled: blockedDates,
+    datesDisabled: #{show blockedDates},
     maxViewMode: 2,
     multidate: true
   });

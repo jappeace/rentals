@@ -31,11 +31,6 @@ getAdminListingR lid = do
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
 
-  -- defaultLayout $ do
-  --   toWidgetHead $(juliusFile "templates/script/admin-datepicker.julius")
-  --   toWidgetHead $(luciusFile "templates/style/admin.lucius")
-  --   $(whamletFile "templates/admin/listing.hamlet")
-
 getAdminListingSourcesR :: Handler TypedContent
 getAdminListingSourcesR = do
   sendResponseStatus status200 $ toEncoding [Airbnb ..]
@@ -45,16 +40,12 @@ putAdminListingR lid = do
   mListing <- runDB $ get lid
   case mListing of
     Just _ -> do
-      uListing <- runInputPost $ Listing
-        <$> ireq textField "title"
-        <*> (unTextarea <$> ireq textareaField "description")
-        <*> (realToFrac <$> ireq doubleField "price")
-        <*> pure (Slug "")
+      listing <- parseJsonBody'
 
-      let slug = Slug . slugify $ (listingTitle uListing)
+      let slug = Slug . slugify $ (listingTitle listing)
             <> " " <> (T.pack . show $ fromSqlKey lid)
 
-      runDB . replace lid $ uListing {listingSlug = slug}
+      runDB . replace lid $ listing {listingSlug = slug}
       sendResponseStatus status204 ()
 
     Nothing -> sendResponseStatus status404 $ toEncoding
@@ -62,53 +53,39 @@ putAdminListingR lid = do
 
 putAdminListingBlockDateR :: ListingId -> Handler TypedContent
 putAdminListingBlockDateR lid = do
-  requestBody <- parseCheckJsonBody
-  -- ct   <- liftIO getCurrentTime
-  -- evn  <- newVEvent ct uuid
-  --   {veDTStart = DTStartDate (Date day) def}
+  day <- parseJsonBody'
 
-  case requestBody of
-    Success day -> runDB $ do
-      mcalendar <- getBy $ UniqueCalendar lid
+  runDB $ do
+    mcalendar <- getBy $ UniqueCalendar lid
 
-      case mcalendar of
-        Just (Entity cid _) -> do
-          uuid <- toText <$> liftIO randomIO
-          insert_ $ Event cid Local uuid
-            day day Nothing (Just "Unavailable (Local)") True
-          sendResponseStatus status204 ()
+    case mcalendar of
+      Just (Entity cid _) -> do
+        uuid <- toText <$> liftIO randomIO
+        insert_ $ Event cid Local uuid
+          day day Nothing (Just "Unavailable (Local)") True
+        sendResponseStatus status204 ()
 
-        Nothing -> sendResponseStatus status404 $ toEncoding
-          ("The target listing does not exist, please check the identifier and try again" :: Text)
-
-    Error err -> sendResponseStatus status400 $ toEncoding
-      ("Unable to parse the request body: " <> err)
+      Nothing -> sendResponseStatus status404 $ toEncoding
+        ("The target listing does not exist, please check the identifier and try again" :: Text)
 
 putAdminListingUnblockDateR :: ListingId -> Handler TypedContent
 putAdminListingUnblockDateR lid = do
-  requestBody <- parseCheckJsonBody
+  day <- parseJsonBody'
 
-  case requestBody of
-    Success day -> runDB $ do
-      mcalendar <- getBy $ UniqueCalendar lid
-      case mcalendar of
-        Just (Entity cid _) -> do
-          deleteBy $ UniqueEvent cid day
-          sendResponseStatus status204 ()
+  runDB $ do
+    mcalendar <- getBy $ UniqueCalendar lid
 
-        Nothing -> sendResponseStatus status404 $ toEncoding
-          ("The target listing does not exist, please check the identifier and try again" :: Text)
+    case mcalendar of
+      Just (Entity cid _) -> do
+        deleteBy $ UniqueEvent cid day
+        sendResponseStatus status204 ()
 
-    Error err -> sendResponseStatus status400 $ toEncoding
-      ("Unable to parse the request body: " <> err)
+      Nothing -> sendResponseStatus status404 $ toEncoding
+        ("The target listing does not exist, please check the identifier and try again" :: Text)
 
 putAdminListingNewR :: Handler TypedContent
 putAdminListingNewR = do
-  listing <- runInputPost $ Listing
-    <$> ireq textField "title"
-    <*> (unTextarea <$> ireq textareaField "description")
-    <*> (realToFrac <$> ireq doubleField "price")
-    <*> pure (Slug "")
+  listing <- parseJsonBody'
 
   (slug, mcid) <- runDB $ do
     lid  <- insert listing

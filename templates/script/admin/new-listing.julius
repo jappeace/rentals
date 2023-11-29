@@ -1,0 +1,23 @@
+window.addEventListener("load", function() {
+  let form = document.getElementById("new-listing");
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let req = new XMLHttpRequest();
+    req.addEventListener("load", function() {
+
+    });
+    req.open("PUT", form.action);
+    req.setRequestHeader("Content-type", "application/json");
+
+    req.send(JSON.stringify({
+      "title"      : form.title.value,
+      "description": form.description.value,
+      "price"      : Number(form.price.value),
+      "slug"       : ""
+    }));
+
+    return false;
+  });
+});

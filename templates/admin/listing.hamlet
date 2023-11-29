@@ -7,7 +7,7 @@
   <div class="col-md-6">
     <div class="row">
       <div class="col-md-12">
-        <form method="POST" action=@{AdminListingR lid}?_method=PUT id="edit-listing">
+        <form action=@{AdminListingR lid} id="edit-listing">
           <div class="row">
             <div class="col-md-12">
               <div class="row">
@@ -36,16 +36,13 @@
         <div class="row mb-3">
           <div id="admin-datepicker">
             <div id="datepicker">
-            <form method="POST" action=@{AdminListingBlockedDatesR lid}?_method=PUT id="date-blocking">
-              <div class="d-grid">
-                <button name="dates" class="btn btn-primary text-nowrap mt-2">update dates
           <div class="col-md-auto">
 
       <div class="col-md-12">
         <div class="row gx-0 mb-3">
           <div class="col-12 border-bottom border-secondary-subtle">
             <span class="fs-4">import calendars
-        <form method="POST" action=@{CalendarImportR lid} id="import-calendar">
+        <form action=@{AdminListingImportR lid} id="import-calendar">
           <div class="row">
             <label class="d-block mb-3 col-md-3">
               <span class="text-white">source
@@ -60,20 +57,19 @@
                 <input name="calendar-uri" class="form-control">
                 <button class="btn btn-primary">import
 
-        $if (length calendars > 0)
+        $if (length is > 0)
           <div class="row gx-0 mb-3">
             <div class="col-12 border-bottom border-secondary-subtle">
               <span class="fs-5">remove calendars
-          $forall (Entity _ c) <- calendars
-            $maybe uri <- calendarImportUri c
-              <div class="col-12">
-                <form method="POST" action=@{CalendarImportR lid}?_method=DELETE id="remove-import">
-                  <input name="calendar-source" value=#{show (calendarImportSource c)} readonly class="d-none">
-                  <div class="row gx-0 justify-content-between">
-                    <div class="col-12">
-                      <div class="input-group mb-2">
-                        <span class="input-group-text">#{show (calendarImportSource c)}
-                        <input name="calendar-uri" class="form-control" disabled readonly value=#{uri}>
-                        <button class="btn btn-danger">
-                          <i class="bi bi-trash">
+          $forall (Entity _ i) <- is
+            <div class="col-12">
+              <form action=@{AdminListingImportR lid} id="remove-import">
+                <input name="calendar-source" value=#{show (importSource i)} readonly class="d-none">
+                <div class="row gx-0 justify-content-between">
+                  <div class="col-12">
+                    <div class="input-group mb-2">
+                      <span class="input-group-text">#{show (importSource i)}
+                      <input name="calendar-uri" class="form-control" disabled readonly value=#{importUri i}>
+                      <button class="btn btn-danger">
+                        <i class="bi bi-trash">
 

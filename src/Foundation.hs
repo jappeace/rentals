@@ -24,7 +24,7 @@ import Yesod.Persist
 
 import           Control.Arrow
 import           Control.Monad.Trans.Reader (ReaderT)
-import           Data.Aeson.TH              (deriveJSON, defaultOptions)
+import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
 import qualified Data.ByteString            as BS
 import           Data.Time.Calendar
 import           Data.Default               (def)
@@ -46,6 +46,7 @@ import           Database.Persist.Sqlite
 import           Network.URI
 import           Text.Blaze
 import           Text.Hamlet
+import           Text.Lucius
 import           Text.ICalendar
 import           Text.Julius
 import           Text.Read                  (readMaybe, readEither)
@@ -57,17 +58,21 @@ data App = App
   , appConnPool :: ConnectionPool
   }
 
+-----------------------------------------------------------------------------------------
+-- Types
+-----------------------------------------------------------------------------------------
 data Source = Local | Airbnb | Vrbo
   deriving (Eq, Ord, Enum, Bounded, Show, Read)
-$(deriveJSON defaultOptions ''Source)
-
+$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Source)
+-----------------------------------------------------------------------------------------
 newtype Money = Money { unMoney :: Centi }
   deriving (Num, Fractional)
-$(deriveJSON defaultOptions ''Money)
-
+$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Money)
+-----------------------------------------------------------------------------------------
 newtype Slug = Slug { unSlug :: Text }
   deriving (Eq, Show, Read)
-$(deriveJSON defaultOptions ''Slug)
+$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Slug)
+-----------------------------------------------------------------------------------------
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
@@ -88,15 +93,6 @@ instance PersistField VCalendar where
       Left err -> Left . T.pack $ err
 instance PersistFieldSql VCalendar where
   sqlType _ = SqlString
------------------------------------------------------------------------------------------
--- instance PersistField VEvent where
---   toPersistValue = PersistByteString . BS.toStrict . printICalendar def
---   fromPersistValue (PersistByteString textCal) =
---     case parseICalendar def "." $ BS.fromStrict textCal of
---       Right (parsedCal:_, _) -> Right parsedCal
---       Left err -> Left . T.pack $ err
--- instance PersistFieldSql VEvent where
---   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 instance PersistField UUID where
   toPersistValue = PersistText . UUID.toText
@@ -247,8 +243,12 @@ instance Yesod App where
   isAuthorized _ _ = pure Authorized
 
   defaultLayout contents = do
-    pc <- widgetToPageContent $ do
-      toWidgetHead $(juliusFile "templates/script/form-handler.julius")
-      contents
+    pc <- widgetToPageContent contents
     messages <- getMessage
     withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
+
+defaultAdminLayout :: WidgetFor App () -> Handler Html
+defaultAdminLayout w = defaultLayout $ do
+  toWidgetHead $(luciusFile "templates/style/admin.lucius")
+  w
+

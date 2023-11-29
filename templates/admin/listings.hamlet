@@ -6,5 +6,5 @@ $forall Entity lid l <- listings
         <h5 class="card-title">#{listingTitle l}
         <p class="card-text text-truncate">#{listingDescription l}
         <div class="d-flex justify-content-between">
-          <a class="btn btn-primary" href=@{AdminListingR lid}>edit
+          <a class="btn btn-primary" href=@{ViewAdminListingR (listingSlug l)}>edit
           <span class="fs-4">$#{listingPrice l}

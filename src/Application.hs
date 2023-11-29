@@ -29,12 +29,12 @@ import qualified Network.Wreq                    as W
 import           System.Directory
 import           Text.ICalendar
 
-import Handler.Admin
 import Handler.Admin.Listing
 import Handler.Admin.Export
 import Handler.Admin.Import
 import Handler.Home
 import Handler.Listing
+import Handler.View.Admin
 
 import Settings
 
