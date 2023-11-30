@@ -31,6 +31,7 @@ dependencies:
 - mtl
 - random
 - transformers
+- http-client
 - http-types
 - network-uri
 - extra

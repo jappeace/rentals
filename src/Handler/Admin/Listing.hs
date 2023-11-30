@@ -46,7 +46,8 @@ putAdminListingR lid = do
             <> " " <> (T.pack . show $ fromSqlKey lid)
 
       runDB . replace lid $ listing {listingSlug = slug}
-      sendResponseStatus status204 ()
+
+      sendResponseStatus status200 $ toEncoding slug
 
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
@@ -100,6 +101,9 @@ putAdminListingNewR = do
     pure (slug, mcid)
 
   case mcid of
-    Just cid -> sendResponseStatus status201 . toEncoding $ unSlug slug
+    Just cid -> do
+      render <- getUrlRender
+      sendResponseStatus status201 . toEncoding $
+        (render $ ViewAdminListingR slug)
     Nothing  -> sendResponseStatus status500 $ toEncoding
       ("Failed to generate unique identifier, please try again" :: Text)

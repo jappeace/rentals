@@ -11,10 +11,9 @@ getViewAdminR :: Handler Html
 getViewAdminR = do
   listings <- runDB $ selectList [] [Asc ListingTitle]
 
-  let newListing     = $(whamletFile "templates/admin/new-listing.hamlet")
-      listingsWidget = $(whamletFile "templates/admin/listings.hamlet")
+  let newListingWidget = $(whamletFile "templates/admin/new-listing.hamlet")
+      listingsWidget   = $(whamletFile "templates/admin/listings.hamlet")
   defaultAdminLayout $ do
-    toWidgetHead $(juliusFile "templates/script/admin/new-listing.julius")
     $(whamletFile "templates/admin.hamlet")
 
 getViewAdminListingR :: Slug -> Handler Html

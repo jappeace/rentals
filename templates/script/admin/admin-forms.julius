@@ -1,0 +1,80 @@
+window.addEventListener("load", function() {
+  let importCalendarForm = document.getElementById("import-calendar");
+  if (importCalendarForm) {
+    importCalendarForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let req = new XMLHttpRequest();
+      req.addEventListener("load", function() {
+        if (req.status == 204) {
+          window.location.reload();
+        } else {
+          importCalendarForm.elements.uri.classList.add("is-invalid");
+          document.getElementById("import-error").textContent = req.responseText;
+        }
+      });
+      req.open("PUT", importCalendarForm.action);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Accept", "applicatio/json");
+
+      req.send(JSON.stringify([
+        importCalendarForm.elements.source.value,
+        importCalendarForm.elements.uri.value
+      ]));
+
+      return false;
+    });
+  }
+
+  let newListingForm = document.getElementById("new-listing");
+  if (newListingForm) {
+    newListingForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let req = new XMLHttpRequest();
+      req.addEventListener("load", function() {
+        if (req.status == 201) {
+          window.location.assign(req.responseText);
+        }
+      });
+      req.open("PUT", newListingForm.action);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Accept", "applicatio/json");
+
+      req.send(JSON.stringify({
+        "title"      : newListingForm.elements.title.value,
+        "description": newListingForm.elements.description.value,
+        "price"      : Number(newListingForm.elements.price.value),
+        "slug"       : ""
+      }));
+
+      return false;
+    });
+  }
+
+  let editListingForm = document.getElementById("edit-listing");
+  if (editListingForm) {
+    editListingForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let req = new XMLHttpRequest();
+      req.addEventListener("load", function() {
+        if (req.status == 200) {
+          window.location.replace(req.responseText.slice(1, -1));
+        }
+      });
+      req.open("PUT", editListingForm.action);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Accept", "applicatio/json");
+
+      req.send(JSON.stringify({
+        "title"      : editListingForm.elements.title.value,
+        "description": editListingForm.elements.description.value,
+        "price"      : Number(editListingForm.elements.price.value),
+        "slug"       : ""
+      }));
+
+      return false;
+    });
+  }
+});

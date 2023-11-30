@@ -46,16 +46,18 @@
           <div class="row">
             <label class="d-block mb-3 col-md-3">
               <span class="text-white">source
-              <select class="form-select" name="calendar-source">
+              <select class="form-select" name="source">
                 <option>
                 $forall s <- sources
                   <option value=#{show s}>#{show s}
             <label class="d-block mb-3 col-md-9">
               <span>ical uri
-              <div class="input-group">
+              <div class="input-group has-validation">
                 <span class="input-group-text">.ics
-                <input name="calendar-uri" class="form-control">
+                <input name="uri" class="form-control" aria-describedby="import-error">
                 <button class="btn btn-primary">import
+                <div id="import-error" class="invalid-feedback">
+
 
         $if (length is > 0)
           <div class="row gx-0 mb-3">

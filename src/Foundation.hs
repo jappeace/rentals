@@ -249,6 +249,7 @@ instance Yesod App where
 
 defaultAdminLayout :: WidgetFor App () -> Handler Html
 defaultAdminLayout w = defaultLayout $ do
+  toWidgetHead $(juliusFile "templates/script/admin/admin-forms.julius")
   toWidgetHead $(luciusFile "templates/style/admin.lucius")
   w
 

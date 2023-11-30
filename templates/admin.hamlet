@@ -6,5 +6,5 @@
     <span class="fs-4">listings
 
 <div class="row g-3 mb-3">
-  ^{newListing}
+  ^{newListingWidget}
   ^{listingsWidget}
