@@ -25,12 +25,12 @@ getViewAdminListingR slug = do
     is                      <- selectList [ImportCalendar ==. cid] []
     pure (l, c, is)
 
-  (blockedDates, usedDates) <- runDB $ do
-    bd <- selectList [EventCalendar ==. cid, EventSummary ==. (Just "Unavailable (Local)")] []
-    ud <- selectList [EventCalendar ==. cid, EventSummary !=. (Just "Unavailable (Local)")] []
+  (manuallyBlockedDates, blockedDates) <- runDB $ do
+    mbd <- selectList [EventCalendar ==. cid, EventSummary ==. (Just "Unavailable (Local)")] []
+    bd  <- selectList [EventCalendar ==. cid, EventSummary !=. (Just "Unavailable (Local)")] []
     pure
-      ( map (showGregorian . eventStart . entityVal) bd
-      , map (showGregorian . eventStart . entityVal) ud
+      ( map (showGregorian . eventStart . entityVal) mbd
+      , map (\(Entity _ ev) -> (showGregorian . eventStart $ ev, eventSource ev)) bd
       )
 
   defaultAdminLayout $ do

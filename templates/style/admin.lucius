@@ -2,3 +2,20 @@
   width: 235px
 }
 
+#datepicker .is-manually-blocked {
+  background-color: #FF4444 !important;
+  color: #FFFFFF !important;
+}
+#datepicker .is-blocked.local {
+  background-color: #666666 !important;
+  color: #FFFFFF !important;
+}
+#datepicker .is-blocked.airbnb {
+  background-color: #FF385C !important;
+  color: #FFFFFF !important;
+}
+#datepicker .is-blocked.vrbo {
+  background-color: #245ABC !important;
+  color: #FFFFFF !important;
+}
+

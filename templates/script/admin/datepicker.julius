@@ -5,17 +5,48 @@ window.addEventListener("load", (e) => {
     });
   };
 
-  $("#admin-datepicker #datepicker").datepicker({
+  var manuallyBlockedDates = #{toJSON manuallyBlockedDates};
+  const adminDatepicker = $("#admin-datepicker #datepicker").datepicker({
     format: "yyyy-MM-dd",
-    datesDisabled: #{show blockedDates},
+    datesDisabled: #{toJSON (map fst blockedDates)},
     maxViewMode: 2,
-    multidate: true
+    multidate: true,
+    beforeShowDay: function(date) {
+      switch (#{toJSON blockedDates}.find((e) => e[0] === date)) {
+        case "Local":  return {classes: "is-blocked local"};
+        case "Airbnb": return {classes: "is-blocked airbnb"};
+        case "Vrbo":   return {classes: "is-blocked vrbo"};
+      }
+      if (manuallyBlockedDates.find((e) => e === date) != null) {
+        return {classes: "is-manually-blocked"};
+      }
+    }
   });
-  $("#admin-datepicker #datepicker").datepicker().on("changeDate load", () => {
-    $("#admin-datepicker form button").val(() => {
-      return $("#admin-datepicker #datepicker").datepicker("getDates").map((x) => {
-        return String(x.getFullYear()) + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
-      });
+  adminDatepicker.on("changeDate", (e) => {
+    let req = new XMLHttpRequest();
+
+    let action;
+    if (manuallyBlockedDates.find((d) => d == e.date) != null) {
+      manuallyBlockedDates = manuallyBlockedDates.filter((d) => d != e.date);
+      action = "@{AdminListingUnblockDateR lid}";
+    } else {
+      manuallyBlockedDates.push(e.date);
+      action = "@{AdminListingBlockDateR lid}";
+    }
+
+    req.addEventListener("load", function() {
+      if (req.status == 204) {
+        adminDatepicker.update();
+      }
     });
+    req.open("PUT", action);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Accept", "application/json");
+
+    req.send(JSON.stringify(
+      String(e.date.getFullYear()) + "-" +
+      String(e.date.getMonth() + 1).padStart(2, "0") + "-" +
+      String(e.date.getDate()).padStart(2, "0")
+    ));
   });
 });
