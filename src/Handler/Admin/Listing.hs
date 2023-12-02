@@ -52,44 +52,26 @@ putAdminListingR lid = do
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
 
-putAdminListingBlockDateR :: ListingId -> Handler TypedContent
-putAdminListingBlockDateR lid = do
-  day <- parseJsonBody'
-
-  eEvent <- runDB $ do
-    mcalendar <- getBy $ UniqueCalendar lid
-
-    case mcalendar of
-      Just (Entity cid _) -> do
-        uuid <- toText <$> liftIO randomIO
-        insertBy $ Event cid Local uuid
-          day day Nothing (Just "Unavailable (Local)") True
-
-      Nothing -> sendResponseStatus status404 $ toEncoding
-        ("The target listing does not exist, please check the identifier and try again" :: Text)
-
-  case eEvent of
-    Right eid ->
-      sendResponseStatus status201 $ toEncoding eid
-    Left _ ->
-      sendResponseStatus status409 $ toEncoding
-        ("The target date is already blocked" :: Text)
-
-
-putAdminListingUnblockDateR :: ListingId -> Handler TypedContent
-putAdminListingUnblockDateR lid = do
-  day <- parseJsonBody'
+putAdminListingUpdateBlockedDatesR :: ListingId -> Handler TypedContent
+putAdminListingUpdateBlockedDatesR lid = do
+  days <- parseJsonBody' :: Handler [Day]
 
   runDB $ do
     mcalendar <- getBy $ UniqueCalendar lid
 
     case mcalendar of
       Just (Entity cid _) -> do
-        deleteBy $ UniqueEvent cid day
-        sendResponseStatus status204 ()
+        deleteWhere [EventCalendar ==. cid, EventStart /<-. days]
+
+        for days $ \day -> do
+          uuid <- toText <$> liftIO randomIO
+          insertBy $ Event cid Local uuid
+            day day Nothing (Just "Unavailable (Local)") True
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+  sendResponseStatus status204 ()
 
 putAdminListingNewR :: Handler TypedContent
 putAdminListingNewR = do

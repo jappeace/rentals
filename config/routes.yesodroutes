@@ -1,16 +1,15 @@
- /                                       HomeR                       GET
- /listing/#Slug                          ListingR                    GET
------------------------------------------------------------------------------------------
- /view/admin                             ViewAdminR                  GET
- /view/admin/listing/#Slug               ViewAdminListingR           GET
+ /                                              HomeR                           GET
+ /listing/#Slug                                 ListingR                        GET
+---------------------------------------------------------------------------------------------------
+ /view/admin                                    ViewAdminR                      GET
+ /view/admin/listing/#Slug                      ViewAdminListingR               GET
 
- /admin/listing/sources                  AdminListingSourcesR        GET
- /admin/listing/new                      AdminListingNewR                     PUT
-!/admin/listing/#ListingId               AdminListingR               GET      PUT
- /admin/listing/#ListingId/block-day     AdminListingBlockDateR               PUT
- /admin/listing/#ListingId/unblock-day   AdminListingUnblockDateR             PUT
- /admin/listing/#ListingId/import        AdminListingImportR                  PUT DELETE
+ /admin/listing/sources                         AdminListingSourcesR            GET
+ /admin/listing/new                             AdminListingNewR                         PUT
+!/admin/listing/#ListingId                      AdminListingR                   GET      PUT
+ /admin/listing/#ListingId/update-blocked-dates AdminListingUpdateBlockedDatesR          PUT
+ /admin/listing/#ListingId/import               AdminListingImportR                      PUT DELETE
 
- /ical/export/#UUID                      CalendarExportR             GET
------------------------------------------------------------------------------------------
- /auth                                   AuthR                       Auth getAuth
+ /ical/export/#UUID                             CalendarExportR                 GET
+---------------------------------------------------------------------------------------------------
+ /auth                                          AuthR                           Auth getAuth

@@ -32,7 +32,7 @@ getCalendarExportR uuid = do
               , veDTEndDuration = Just . Left $ DTEndDate (Date (eventEnd event)) def
               , veDescription = fmap (\d -> Description (LT.fromStrict d) Nothing Nothing def) $ eventDescription event
               , veSummary = fmap (\d -> Summary (LT.fromStrict d) Nothing Nothing def) $ eventSummary event
-              , veTransp = if eventOpaque event then Opaque def else Transparent def
+              , veTransp = Opaque def
               }
 
       pure $ foldl' appendEvents vcalendar events

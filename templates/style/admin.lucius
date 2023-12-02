@@ -2,19 +2,19 @@
   width: 235px
 }
 
-#datepicker .is-manually-blocked {
+#datepicker td.active {
   background-color: #FF4444 !important;
   color: #FFFFFF !important;
 }
-#datepicker .is-blocked.local {
+#datepicker td.local {
   background-color: #666666 !important;
   color: #FFFFFF !important;
 }
-#datepicker .is-blocked.airbnb {
+#datepicker td.airbnb {
   background-color: #FF385C !important;
   color: #FFFFFF !important;
 }
-#datepicker .is-blocked.vrbo {
+#datepicker td.vrbo {
   background-color: #245ABC !important;
   color: #FFFFFF !important;
 }

@@ -25,8 +25,8 @@ Event
   description    Text Maybe
 
   -- meta details
-  summary        Text Maybe        -- meta description of the event entry
-  opaque         Bool default=true -- opaque to busy searches?
+  summary        Text Maybe         -- meta description of the event entry
+  blocked        Bool default=false -- manually blocked?
 
   UniqueEvent calendar start
 

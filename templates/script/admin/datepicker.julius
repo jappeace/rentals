@@ -5,48 +5,37 @@ window.addEventListener("load", (e) => {
     });
   };
 
-  var manuallyBlockedDates = #{toJSON manuallyBlockedDates};
   const adminDatepicker = $("#admin-datepicker #datepicker").datepicker({
     format: "yyyy-MM-dd",
-    datesDisabled: #{toJSON (map fst blockedDates)},
+    datesDisabled: #{toJSON (map fst bookedDates)},
     maxViewMode: 2,
     multidate: true,
     beforeShowDay: function(date) {
-      switch (#{toJSON blockedDates}.find((e) => e[0] === date)) {
-        case "Local":  return {classes: "is-blocked local"};
-        case "Airbnb": return {classes: "is-blocked airbnb"};
-        case "Vrbo":   return {classes: "is-blocked vrbo"};
-      }
-      if (manuallyBlockedDates.find((e) => e === date) != null) {
-        return {classes: "is-manually-blocked"};
+      let targetDate = #{toJSON bookedDates}.find((e) => new Date(e[0] === date));
+      if (!!targetDate) {
+        switch (targetDate[1]) {
+          case "Local":  return {enabled: false, classes: "local"};
+          case "Airbnb": return {enabled: false, classes: "airbnb"};
+          case "Vrbo":   return {enabled: false, classes: "vrbo"};
+        }
       }
     }
   });
-  adminDatepicker.on("changeDate", (e) => {
+
+  adminDatepicker.datepicker("setDates", #{toJSON blockedDates});
+
+  let updateBlockedDatesForm = document.getElementById("update-blocked-dates");
+  updateBlockedDatesForm.addEventListener("submit", function(e) {
+    e.preventDefault();
     let req = new XMLHttpRequest();
 
-    let action;
-    if (manuallyBlockedDates.find((d) => d == e.date) != null) {
-      manuallyBlockedDates = manuallyBlockedDates.filter((d) => d != e.date);
-      action = "@{AdminListingUnblockDateR lid}";
-    } else {
-      manuallyBlockedDates.push(e.date);
-      action = "@{AdminListingBlockDateR lid}";
-    }
-
-    req.addEventListener("load", function() {
-      if (req.status == 204) {
-        adminDatepicker.update();
-      }
-    });
-    req.open("PUT", action);
+    req.open("PUT", updateBlockedDatesForm.action);
     req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("Accept", "application/json");
 
-    req.send(JSON.stringify(
-      String(e.date.getFullYear()) + "-" +
-      String(e.date.getMonth() + 1).padStart(2, "0") + "-" +
-      String(e.date.getDate()).padStart(2, "0")
-    ));
+    console.log(adminDatepicker.datepicker("getDates"));
+    req.send(JSON.stringify(adminDatepicker.datepicker("getDates").map(function(d) {
+      return String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    })));
   });
 });
