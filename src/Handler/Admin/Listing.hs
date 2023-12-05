@@ -16,6 +16,7 @@ import           Data.Traversable
 import           Data.UUID
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
+import           System.FilePath
 import           System.Random
 import           Text.ICalendar
 import           Text.Julius
@@ -51,6 +52,24 @@ putAdminListingR lid = do
 
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+getImageR :: UUID -> Handler TypedContent
+getImageR uuid = sendFile "image/webm" $ "images" </> toString uuid
+
+putAdminListingImageR :: ListingId -> Handler TypedContent
+putAdminListingImageR lid = do
+  imgFiles <- lookupFiles "images"
+  imgs     <- for imgFiles $ \imgFile -> do
+    uuid <- liftIO randomIO
+    liftIO $ fileMove imgFile ("images" </> toString uuid)
+
+    runDB . insert $ ListingImage lid uuid
+    pure uuid
+
+  sendResponseStatus status201 $ toEncoding imgs
+
+deleteAdminListingImageR :: ListingId -> Handler TypedContent
+deleteAdminListingImageR lid = undefined
 
 putAdminListingUpdateBlockedDatesR :: ListingId -> Handler TypedContent
 putAdminListingUpdateBlockedDatesR lid = do

@@ -49,6 +49,8 @@ appMain = do
     createDirectoryIfMissing True "logs"
     writeFile "logs/ical-errors" mempty
 
+  createDirectoryIfMissing True "images"
+
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
 

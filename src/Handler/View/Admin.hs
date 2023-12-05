@@ -19,11 +19,12 @@ getViewAdminR = do
 getViewAdminListingR :: Slug -> Handler Html
 getViewAdminListingR slug = do
   let sources = [Airbnb ..]
-  (Entity lid l, Entity cid c, is) <- runDB $ do
+  (Entity lid l, Entity cid c, is, imgs) <- runDB $ do
     l@(Entity lid listing)  <- getBy404 $ UniqueSlug slug
     c@(Entity cid calendar) <- getBy404 $ UniqueCalendar lid
     is                      <- selectList [ImportCalendar ==. cid] []
-    pure (l, c, is)
+    imgs                    <- selectList [ListingImageEvent ==. lid] []
+    pure (l, c, is, imgs)
 
   (blockedDates, bookedDates) <- runDB $ do
     mbd <- selectList [EventCalendar ==. cid, EventBlocked ==. True] []

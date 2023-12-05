@@ -1,4 +1,38 @@
 window.addEventListener("load", function() {
+  let uploadImageForm = document.getElementById("upload-image");
+  if (uploadImageForm) {
+    uploadImageForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let req = new XMLHttpRequest();
+      let fd  = new FormData();
+      req.addEventListener("load", function() {
+        if (req.status == 201) {
+          let imageContainerElement   = document.createElement("div");
+          imageContainerElement.class = "col-md-6";
+
+          let imageElement   = document.createElement("img");
+          imageElement.class = "img-fluid rounded";
+          imageElement.src   = @{ImageR UUID.nil}.slice(0, -36) + req.responseText;
+
+          let imageArea = document.getElementById("image-area");
+          imageContainerElement.append(imageElement);
+          imageArea.insertAdjacentElement("afterend", imageContainerElement);
+        }
+      });
+      req.open("PUT", uploadImageForm.action);
+      req.setRequestHeader("Content-type", "multipart/form-data");
+      req.setRequestHeader("Accept", "application/json");
+
+      for (let img in uploadImageForm.elements.image.files) {
+        fd.append("images", img);
+      }
+      req.send(fd);
+
+      return false;
+    });
+  }
+
   let importCalendarForm = document.getElementById("import-calendar");
   if (importCalendarForm) {
     importCalendarForm.addEventListener("submit", function(e) {

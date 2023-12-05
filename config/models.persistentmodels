@@ -6,6 +6,12 @@ Listing json
 
   UniqueSlug slug
 
+ListingImage
+  event          ListingId
+  uuid           UUID
+
+  UniqueImage    uuid
+
 Calendar
   listing        ListingId
   uuid           UUID

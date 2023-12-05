@@ -1,11 +1,9 @@
-<div class="row gx-0 mb-3">
-  <div class="col-6 border-bottom border-secondary-subtle">
-    <span class="fs-4">edit listing - #{fromSqlKey lid}
-  <div class="col-6 border-bottom border-secondary-subtle">
-    <span class="fs-4">images
 <div class="row">
   <div class="col-md-6">
     <div class="row">
+      <div class="col-12 mb-3 border-bottom border-secondary-subtle">
+        <span class="fs-4">edit listing - #{fromSqlKey lid}
+
       <div class="col-md-12">
         <form action=@{AdminListingR lid} id="edit-listing">
           <div class="row">
@@ -61,7 +59,6 @@
                 <button class="btn btn-primary">import
                 <div id="import-error" class="invalid-feedback">
 
-
         $if (length is > 0)
           <div class="row gx-0 mb-3">
             <div class="col-12 border-bottom border-secondary-subtle">
@@ -77,4 +74,24 @@
                       <input name="calendar-uri" class="form-control" disabled readonly value=#{importUri i}>
                       <button class="btn btn-danger">
                         <i class="bi bi-trash">
+
+  <div class="col-md-6">
+    <div class="row">
+      <div class="col-12 mb-3 border-bottom border-secondary-subtle">
+        <span class="fs-4">images
+
+      <div class="col-12">
+        <form action=@{AdminListingImageR lid} id="upload-image">
+          <label class="d-block mb-3">
+            <span>image upload
+            <div class="input-group">
+              <input name="image" class="form-control" type="file" multiple>
+              <button class="btn btn-primary">upload
+
+      <div><span class="text-white">images
+      <div id="image-area">
+        $forall Entity _ img <- imgs
+          <div class="col-md-6">
+            <img class="img-fluid rounded" src=@{ImageR (listingImageUuid img)}>
+
 
