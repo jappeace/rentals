@@ -73,6 +73,10 @@ newtype Slug = Slug { unSlug :: Text }
   deriving (Eq, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Slug)
 -----------------------------------------------------------------------------------------
+newtype ICS = ICS { unICS :: UUID }
+  deriving (Eq, Show, Read)
+$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
+-----------------------------------------------------------------------------------------
 
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
@@ -139,8 +143,12 @@ instance YesodPersist App where
 -- PathPiece instances
 -----------------------------------------------------------------------------------------
 instance PathPiece UUID where
-  toPathPiece uuid = (UUID.toText uuid) <> ".ics"
-  fromPathPiece p = UUID.fromText . T.drop 4 $ p
+  toPathPiece uuid = UUID.toText uuid
+  fromPathPiece p = UUID.fromText p
+-----------------------------------------------------------------------------------------
+instance PathPiece ICS where
+  toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
+  fromPathPiece p = fmap ICS . UUID.fromText . T.drop 4 $ p
 -----------------------------------------------------------------------------------------
 instance PathPiece (Either Text UserId) where
   toPathPiece = T.pack . show

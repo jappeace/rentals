@@ -8,24 +8,26 @@ window.addEventListener("load", function() {
       let fd  = new FormData();
       req.addEventListener("load", function() {
         if (req.status == 201) {
-          let imageContainerElement   = document.createElement("div");
-          imageContainerElement.class = "col-md-6";
+          for (img in JSON.parse(req.responseText)) {
+            let imageContainerElement   = document.createElement("div");
+            imageContainerElement.class = "col-md-6";
 
-          let imageElement   = document.createElement("img");
-          imageElement.class = "img-fluid rounded";
-          imageElement.src   = @{ImageR UUID.nil}.slice(0, -36) + req.responseText;
+            let imageElement   = document.createElement("img");
+            imageElement.class = "img-fluid rounded";
+            imageElement.src   = "@{ImageR UUID.nil}".slice(0, -40) + img;
 
-          let imageArea = document.getElementById("image-area");
-          imageContainerElement.append(imageElement);
-          imageArea.insertAdjacentElement("afterend", imageContainerElement);
+            let imageArea = document.getElementById("image-area");
+            imageContainerElement.append(imageElement);
+            imageArea.insertAdjacentElement("afterend", imageContainerElement);
+          }
         }
       });
       req.open("PUT", uploadImageForm.action);
-      req.setRequestHeader("Content-type", "multipart/form-data");
+      // req.setRequestHeader("Content-type", "multipart/form-data");
       req.setRequestHeader("Accept", "application/json");
 
-      for (let img in uploadImageForm.elements.image.files) {
-        fd.append("images", img);
+      for (const file of uploadImageForm.elements.image.files) {
+        fd.append("images", file);
       }
       req.send(fd);
 

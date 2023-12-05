@@ -24,3 +24,4 @@ cabal.sandbox.config
 \#*
 rentals.cabal
 logs/*
+images/*

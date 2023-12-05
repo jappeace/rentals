@@ -16,8 +16,8 @@ import           System.Random
 
 import Utils
 
-getCalendarExportR :: UUID -> Handler VCalendar
-getCalendarExportR uuid = do
+getCalendarExportR :: ICS -> Handler VCalendar
+getCalendarExportR (ICS uuid) = do
   mcalendar <- runDB . getBy $ UniqueUUID uuid
   case mcalendar of
     Just (Entity cid calendar) -> do

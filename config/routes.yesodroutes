@@ -11,7 +11,7 @@
  /admin/listing/#ListingId/update-blocked-dates AdminListingUpdateBlockedDatesR          PUT
  /admin/listing/#ListingId/import               AdminListingImportR                      PUT DELETE
 
- /ical/export/#UUID                             CalendarExportR                 GET
+ /ical/export/#ICS                              CalendarExportR                 GET
 ---------------------------------------------------------------------------------------------------
  /image/#UUID                                   ImageR                          GET
  /auth                                          AuthR                           Auth getAuth

@@ -16,6 +16,7 @@ import           Data.Traversable
 import           Data.UUID
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
+import           System.Directory
 import           System.FilePath
 import           System.Random
 import           Text.ICalendar
@@ -63,10 +64,20 @@ putAdminListingImageR lid = do
     uuid <- liftIO randomIO
     liftIO $ fileMove imgFile ("images" </> toString uuid)
 
-    runDB . insert $ ListingImage lid uuid
-    pure uuid
+    exists <- liftIO . doesFileExist $ "images" </> toString uuid
+    if exists
+      then do
+        runDB . insert_ $ ListingImage lid uuid
+        pure uuid
+      else
+        pure nil
 
-  sendResponseStatus status201 $ toEncoding imgs
+  case filter (/= nil) imgs of
+    [] -> sendResponseStatus status400 $ toEncoding
+      ("No images found under they key <images>." :: Text)
+    x | length x /= length imgs -> sendResponseStatus status500 $ toEncoding
+      ("An error has occurred and the image could not be stored." :: Text)
+      | otherwise -> sendResponseStatus status201 $ toEncoding imgs
 
 deleteAdminListingImageR :: ListingId -> Handler TypedContent
 deleteAdminListingImageR lid = undefined
