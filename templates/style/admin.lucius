@@ -1,22 +1,29 @@
-#admin-datepicker {
-  width: 235px
+.col.admin-datepicker {
+  flex: 0 0 210px !important;
+}
+.admin-datepicker .datepicker {
+  width: 210px !important;
 }
 
-#datepicker td.active {
-  background-color: #FF4444 !important;
+#datepicker-block td.active {
+  background-color: #FF6767 !important;
   color: #FFFFFF !important;
 }
-#datepicker td.local {
+#datepicker-block td.local {
   background-color: #666666 !important;
   color: #FFFFFF !important;
 }
-#datepicker td.airbnb {
+#datepicker-block td.airbnb {
   background-color: #FF385C !important;
   color: #FFFFFF !important;
 }
-#datepicker td.vrbo {
+#datepicker-block td.vrbo {
   background-color: #245ABC !important;
   color: #FFFFFF !important;
+}
+
+#datepicker-price td.active {
+  background-color: #74E874 !important;
 }
 
 #image-area ~ div .image {

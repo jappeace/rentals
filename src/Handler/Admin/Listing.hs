@@ -91,12 +91,12 @@ putAdminListingUpdateBlockedDatesR lid = do
 
     case mcalendar of
       Just (Entity cid _) -> do
-        deleteWhere [EventCalendar ==. cid, EventStart /<-. days]
+        updateWhere [EventCalendar ==. cid, EventStart /<-. days] [EventBlocked =. False]
 
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
-          insertBy $ Event cid Local uuid
-            day day Nothing (Just "Unavailable (Local)") True
+          flip upsert [EventBlocked =. False] $ Event cid Local uuid
+            day day Nothing Nothing (Just "Unavailable (Local)") True False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
@@ -126,3 +126,26 @@ putAdminListingNewR = do
         (render $ ViewAdminListingR slug)
     Nothing  -> sendResponseStatus status500 $ toEncoding
       ("Failed to generate unique identifier, please try again" :: Text)
+
+putAdminListingUpdateDayPriceR :: ListingId -> Handler TypedContent
+putAdminListingUpdateDayPriceR lid = do
+  (day, price) <- parseJsonBody'
+
+  runDB $ do
+    mCal <- getBy $ UniqueCalendar lid
+
+    case mCal of
+      Just (Entity cid _) -> do
+        mEvn <- getBy $ UniqueEvent cid day
+
+        case mEvn of
+          Just (Entity eid _) ->
+            update eid [EventPrice =. Just price]
+          Nothing -> do
+            uuid <- toText <$> liftIO randomIO
+            insert_ $ Event cid Local uuid day day (Just price) Nothing Nothing False False
+
+      Nothing -> sendResponseStatus status404 $ toEncoding
+        ("The target listing does not exist, please check the identifier and try again" :: Text)
+
+  sendResponseStatus status204 ()

@@ -10,6 +10,7 @@
  /admin/listing/#ListingId/image                AdminListingImageR                       PUT DELETE
  /admin/listing/#ListingId/update-blocked-dates AdminListingUpdateBlockedDatesR          PUT
  /admin/listing/#ListingId/import               AdminListingImportR                      PUT DELETE
+ /admin/listing/#ListingId/update-day-price     AdminListingUpdateDayPriceR              PUT
 
  /ical/export/#ICS                              CalendarExportR                 GET
 ---------------------------------------------------------------------------------------------------

@@ -1,10 +1,45 @@
-<div class="row gx-0 mb-3">
-  <div class="col-6 border-bottom border-secondary-subtle">
-    <span class="fs-4">new listing
+<div class="row">
+  <div class="col-md-6">
+    <div class="row">
+      <div class="col-12 mb-3 border-bottom border-secondary-subtle">
+        <span class="fs-4">new listing
 
-  <div class="col-6 border-bottom border-secondary-subtle">
-    <span class="fs-4">listings
+      <div class="col-md-12">
+        <form action=@{AdminListingNewR} id="new-listing">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="row">
+                <label class="d-block mb-3 col-md-8">
+                  <span>title
+                  <input name="title" class="form-control">
+                <label class="d-block mb-3 col-md-4">
+                  <span>price
+                  <div class="input-group">
+                    <span class="input-group-text">$
+                    <input name="price" type="number" step=".01" class="form-control">
+            <div class="col-md-12">
+              <div class="row justify-content-between">
+                <label class="d-block mb-3 col-md-10">
+                  <span>description
+                  <textarea name="description" class="form-control">
+                <div class="mb-3 col-md-2">
+                  <span class="text-white">submit
+                  <div class="d-grid">
+                    <button class="btn btn-primary">submit
 
-<div class="row g-3 mb-3">
-  ^{newListingWidget}
-  ^{listingsWidget}
+  <div class="col-md-6">
+    <div class="row">
+      <div class="col-12 mb-3 border-bottom border-secondary-subtle">
+        <span class="fs-4">listings
+
+      $forall (Entity lid l, mImg) <- listings
+        <div class="col-md-6">
+          <div class="card">
+            $maybe img <- mImg
+              <img src=@{ImageR img} class="card-img-top" alt="listing picture">
+            <div class="card-body">
+              <h5 class="card-title">#{listingTitle l}
+              <p class="card-text text-truncate">#{listingDescription l}
+              <div class="d-flex justify-content-between">
+                <a class="btn btn-primary" href=@{ViewAdminListingR (listingSlug l)}>edit
+                <span class="fs-4">$#{listingPrice l}

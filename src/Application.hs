@@ -72,14 +72,11 @@ appMain = do
                       _ -> Nothing
                     description = fmap (LT.toStrict . descriptionValue) $ veDescription e
                     summary     = fmap (LT.toStrict . summaryValue) $ veSummary e
-                    opacity     = case veTransp e of
-                      Opaque      _ -> True
-                      Transparent _ -> False
 
                 case mdates of
                   Just (start, end) -> do
                     void . insertBy $ Event
-                      cid source uuid start end description summary opacity
+                      cid source uuid start end Nothing description summary False True
                   Nothing -> pure ()
 
             Left err ->

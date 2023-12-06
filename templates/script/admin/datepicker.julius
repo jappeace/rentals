@@ -5,7 +5,7 @@ window.addEventListener("load", (e) => {
     });
   };
 
-  const adminDatepicker = $("#admin-datepicker #datepicker").datepicker({
+  const adminBlockDatepicker = $(".admin-datepicker #datepicker-block").datepicker({
     format: "yyyy-MM-dd",
     datesDisabled: #{toJSON (map fst bookedDates)},
     maxViewMode: 2,
@@ -22,7 +22,7 @@ window.addEventListener("load", (e) => {
     }
   });
 
-  adminDatepicker.datepicker("setDates", #{toJSON blockedDates});
+  adminBlockDatepicker.datepicker("setDates", #{toJSON blockedDates});
 
   let updateBlockedDatesForm = document.getElementById("update-blocked-dates");
   updateBlockedDatesForm.addEventListener("submit", function(e) {
@@ -33,9 +33,16 @@ window.addEventListener("load", (e) => {
     req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("Accept", "application/json");
 
-    console.log(adminDatepicker.datepicker("getDates"));
-    req.send(JSON.stringify(adminDatepicker.datepicker("getDates").map(function(d) {
+    console.log(adminBlockDatepicker.datepicker("getDates"));
+    req.send(JSON.stringify(adminBlockDatepicker.datepicker("getDates").map(function(d) {
       return String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     })));
+  });
+
+  const adminPriceDatepicker = $(".admin-datepicker #datepicker-price").datepicker({
+    format: "yyyy-MM-dd",
+    datesDisabled: #{toJSON (map fst bookedDates)},
+    maxViewMode: 2,
+    multidate: true
   });
 });
