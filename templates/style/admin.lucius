@@ -22,6 +22,9 @@
   color: #FFFFFF !important;
 }
 
+#datepicker-price td.priced {
+  background-color: #4A914A !important
+}
 #datepicker-price td.active {
   background-color: #74E874 !important;
 }

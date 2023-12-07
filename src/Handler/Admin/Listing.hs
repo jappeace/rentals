@@ -129,21 +129,18 @@ putAdminListingNewR = do
 
 putAdminListingUpdateDayPriceR :: ListingId -> Handler TypedContent
 putAdminListingUpdateDayPriceR lid = do
-  (day, price) <- parseJsonBody'
+  (price, days) <- parseJsonBody' :: Handler (Money, [Day])
+  let price' = if price == 0 then Nothing else Just price
 
   runDB $ do
     mCal <- getBy $ UniqueCalendar lid
 
     case mCal of
       Just (Entity cid _) -> do
-        mEvn <- getBy $ UniqueEvent cid day
-
-        case mEvn of
-          Just (Entity eid _) ->
-            update eid [EventPrice =. Just price]
-          Nothing -> do
-            uuid <- toText <$> liftIO randomIO
-            insert_ $ Event cid Local uuid day day (Just price) Nothing Nothing False False
+        for days $ \day -> do
+          uuid <- toText <$> liftIO randomIO
+          flip upsert [EventPrice =. price'] $ Event cid Local uuid
+            day day price' Nothing Nothing False False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)

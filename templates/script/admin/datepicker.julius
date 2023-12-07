@@ -1,8 +1,12 @@
-window.addEventListener("load", (e) => {
+window.addEventListener("load", () => {
   const today = function() {
     return new Date().toLocaleDateString(undefined, {
       year: "numeric", month: "2-digit", day: "2-digit"
     });
+  };
+
+  const iso = function(d) {
+    return String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   };
 
   const adminBlockDatepicker = $(".admin-datepicker #datepicker-block").datepicker({
@@ -11,12 +15,12 @@ window.addEventListener("load", (e) => {
     maxViewMode: 2,
     multidate: true,
     beforeShowDay: function(date) {
-      let targetDate = #{toJSON bookedDates}.find((e) => new Date(e[0] === date));
-      if (!!targetDate) {
+      let targetDate = #{toJSON bookedDates}.find((d) => d[0] === iso(date));
+      if (targetDate !== undefined) {
         switch (targetDate[1]) {
-          case "Local":  return {enabled: false, classes: "local"};
-          case "Airbnb": return {enabled: false, classes: "airbnb"};
-          case "Vrbo":   return {enabled: false, classes: "vrbo"};
+          case "Local":  return {"enabled": false, "classes": "local"};
+          case "Airbnb": return {"enabled": false, "classes": "airbnb"};
+          case "Vrbo":   return {"enabled": false, "classes": "vrbo"};
         }
       }
     }
@@ -35,7 +39,7 @@ window.addEventListener("load", (e) => {
 
     console.log(adminBlockDatepicker.datepicker("getDates"));
     req.send(JSON.stringify(adminBlockDatepicker.datepicker("getDates").map(function(d) {
-      return String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      return iso(d);
     })));
   });
 
@@ -43,6 +47,27 @@ window.addEventListener("load", (e) => {
     format: "yyyy-MM-dd",
     datesDisabled: #{toJSON (map fst bookedDates)},
     maxViewMode: 2,
-    multidate: true
+    multidate: true,
+    beforeShowDay: function(date) {
+      let targetDate = #{toJSON pricedDates}.find((d) => d[0] === iso(date));
+      if (targetDate !== undefined) {
+        return {"classes": "priced", "tooltip": targetDate[1]};
+      }
+    }
+  });
+
+  let updatePricedDatesForm = document.getElementById("update-priced-dates");
+  updatePricedDatesForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+    let req = new XMLHttpRequest();
+
+    req.open("PUT", updatePricedDatesForm.action);
+    req.setRequestHeader("Content-type", "application/json");
+    req.setRequestHeader("Accept", "application/json");
+
+    console.log(adminBlockDatepicker.datepicker("getDates"));
+    req.send(JSON.stringify([Number(updatePricedDatesForm.elements.price.value), adminPriceDatepicker.datepicker("getDates").map(function(d) {
+      return iso(d);
+    })]));
   });
 });

@@ -66,7 +66,7 @@ data Source = Local | Airbnb | Vrbo
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Source)
 -----------------------------------------------------------------------------------------
 newtype Money = Money { unMoney :: Centi }
-  deriving (Num, Fractional)
+  deriving (Eq, Ord, Num, Fractional)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Money)
 -----------------------------------------------------------------------------------------
 newtype Slug = Slug { unSlug :: Text }
