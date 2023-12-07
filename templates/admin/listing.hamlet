@@ -41,6 +41,27 @@
                 <div class="d-grid">
                   <button class="btn btn-primary">update blocked dates
 
+          <div class="col" id="datepicker-label">
+            <div class="row gy-1">
+              <div class="col-12 text-start">
+                <div class="badge active-block">00
+                selected for blocking
+              <div class="col-12 text-start">
+                <div class="badge local">00
+                booked locally
+              <div class="col-12 text-start">
+                <div class="badge airbnb">00
+                booked through airbnb
+              <div class="col-12 text-start">
+                <div class="badge vrbo">00
+                booked through vrbo
+              <div class="col-12 text-end">
+                per day price set (hover)
+                <div class="badge priced">00
+              <div class="col-12 text-end">
+                selected for price setting
+                <div class="badge active-price">00
+
           <div class="col admin-datepicker">
             <div class="admin-datepicker">
               <div id="datepicker-price" class="mb-2">

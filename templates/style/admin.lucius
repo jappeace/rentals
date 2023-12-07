@@ -5,28 +5,40 @@
   width: 210px !important;
 }
 
-#datepicker-block td.active {
+#datepicker-block td.active,
+#datepicker-label .active-block {
   background-color: #FF6767 !important;
   color: #FFFFFF !important;
 }
-#datepicker-block td.local {
+#datepicker-block td.local,
+#datepicker-label .local {
   background-color: #666666 !important;
   color: #FFFFFF !important;
 }
-#datepicker-block td.airbnb {
+#datepicker-block td.airbnb,
+#datepicker-label .airbnb {
   background-color: #FF385C !important;
   color: #FFFFFF !important;
 }
-#datepicker-block td.vrbo {
+#datepicker-block td.vrbo,
+#datepicker-label .vrbo {
   background-color: #245ABC !important;
   color: #FFFFFF !important;
 }
 
-#datepicker-price td.priced {
-  background-color: #4A914A !important
+#datepicker-price td.priced,
+#datepicker-label .priced {
+  background-color: #4A914A !important;
+  color: #FFFFFF !important;
 }
-#datepicker-price td.active {
+#datepicker-price td.active,
+#datepicker-label .active-price {
   background-color: #74E874 !important;
+  color: #FFFFFF !important;
+}
+
+#datepicker-label {
+  font-size: 12px;
 }
 
 #image-area ~ div .image {
