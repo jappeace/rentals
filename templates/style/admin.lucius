@@ -55,3 +55,12 @@
   height: 100%;
   object-fit: cover;
 }
+
+img ~ .remove-image button {
+  visibility: hidden;
+  z-index: 1;
+}
+img:hover + .remove-image button,
+.remove-image button:hover {
+  visibility: visible;
+}

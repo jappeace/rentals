@@ -43,24 +43,28 @@
 
           <div class="col" id="datepicker-label">
             <div class="row gy-1">
-              <div class="col-12 text-start">
-                <div class="badge active-block">00
-                selected for blocking
-              <div class="col-12 text-start">
-                <div class="badge local">00
-                booked locally
-              <div class="col-12 text-start">
-                <div class="badge airbnb">00
-                booked through airbnb
-              <div class="col-12 text-start">
-                <div class="badge vrbo">00
-                booked through vrbo
-              <div class="col-12 text-end">
-                per day price set (hover)
-                <div class="badge priced">00
-              <div class="col-12 text-end">
-                selected for price setting
-                <div class="badge active-price">00
+              <div class="col-12">
+                <div class="row justify-content-start">
+                  <div class="col-12 text-start">
+                    <div class="badge active-block">00
+                    selected for blocking
+                  <div class="col-12 text-start">
+                    <div class="badge local">00
+                    booked locally
+                  <div class="col-12 text-start">
+                    <div class="badge airbnb">00
+                    booked through airbnb
+                  <div class="col-12 text-start">
+                    <div class="badge vrbo">00
+                    booked through vrbo
+              <div class="col-12">
+                <div class="row justify-content-end">
+                  <div class="col-12 text-end">
+                    per day price set (hover)
+                    <div class="badge priced">00
+                  <div class="col-12 text-end">
+                    selected for price setting
+                    <div class="badge active-price">00
 
           <div class="col admin-datepicker">
             <div class="admin-datepicker">
@@ -98,7 +102,7 @@
               <span class="fs-5">remove calendars
           $forall (Entity _ i) <- is
             <div class="col-12">
-              <form action=@{AdminListingImportR lid} id="remove-import">
+              <form action=@{AdminListingImportR lid} class="remove-import">
                 <input name="calendar-source" value=#{show (importSource i)} readonly class="d-none">
                 <div class="row gx-0 justify-content-between">
                   <div class="col-12">
@@ -129,5 +133,8 @@
             <div class="col-md-6 mb-4">
               <div class="image overflow-hidden">
                 <img class="img-fluid rounded" src=@{ImageR (listingImageUuid img)}>
+                <form action=@{AdminListingImageR lid} class="remove-image position-relative">
+                  <button name="image" value=#{listingImageUuid img} class="btn btn-danger position-absolute top-0 end-0 me-1 mt-1">
+                    <i class="bi bi-trash">
 
 

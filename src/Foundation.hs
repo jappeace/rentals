@@ -184,6 +184,10 @@ instance ToMarkup Slug where
   toMarkup = toMarkup . unSlug
   preEscapedToMarkup = preEscapedToMarkup . unSlug
 -----------------------------------------------------------------------------------------
+instance ToMarkup UUID where
+  toMarkup = toMarkup . UUID.toText
+  preEscapedToMarkup = preEscapedToMarkup . UUID.toText
+-----------------------------------------------------------------------------------------
 instance ToMarkup URI where
   toMarkup v = toMarkup $ (uriToString id v) ""
   preEscapedToMarkup v = preEscapedToMarkup $ (uriToString id v) ""

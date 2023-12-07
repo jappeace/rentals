@@ -5,6 +5,7 @@ import Yesod
 
 import Utils
 
+import           Control.Monad
 import           Data.Aeson                (Result(..))
 import           Data.List.Extra           (wordsBy)
 import qualified Data.Map.Strict           as M
@@ -80,7 +81,16 @@ putAdminListingImageR lid = do
       | otherwise -> sendResponseStatus status201 $ toEncoding imgs
 
 deleteAdminListingImageR :: ListingId -> Handler TypedContent
-deleteAdminListingImageR lid = undefined
+deleteAdminListingImageR lid = do
+  uuid <- parseJsonBody'
+  let file = "images/" </> toString uuid
+
+  exists <- liftIO $ doesFileExist file
+  when exists $ do
+    runDB . deleteBy $ UniqueImage uuid
+    liftIO $ removeFile file
+
+  sendResponseStatus status204 ()
 
 putAdminListingUpdateBlockedDatesR :: ListingId -> Handler TypedContent
 putAdminListingUpdateBlockedDatesR lid = do
