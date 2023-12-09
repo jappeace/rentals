@@ -17,7 +17,7 @@ $doctype 5
     <div class="bg-body">
       <nav class="navbar bg-light border-bottom border-dark-subtle mb-3">
         <div class="container">
-          <a class="navbar-brand" href=@{HomeR}>
-            <span class="fs-3 text-bg-light text-uppercase">Rentals
+          <a class="navbar-brand" href=@{ListingsR}>
+            <span class="fs-3 text-bg-light text-uppercase">rentals
     <div class="container">
       ^{pageBody pc}

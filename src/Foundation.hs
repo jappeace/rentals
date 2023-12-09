@@ -259,6 +259,11 @@ instance Yesod App where
     messages <- getMessage
     withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
 
+defaultUserLayout :: WidgetFor App () -> Handler Html
+defaultUserLayout w = defaultLayout $ do
+  toWidgetHead $(luciusFile "templates/style/user.lucius")
+  w
+
 defaultAdminLayout :: WidgetFor App () -> Handler Html
 defaultAdminLayout w = defaultLayout $ do
   toWidgetHead $(juliusFile "templates/script/admin/forms.julius")

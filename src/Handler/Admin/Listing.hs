@@ -106,7 +106,7 @@ putAdminListingUpdateBlockedDatesR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventBlocked =. False] $ Event cid Local uuid
-            day day Nothing Nothing (Just "Unavailable (Local)") True False
+            day day Nothing Nothing (Just "Unavailable (Local)") True False Nothing
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
@@ -150,7 +150,7 @@ putAdminListingUpdateDayPriceR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventPrice =. price'] $ Event cid Local uuid
-            day day price' Nothing Nothing False False
+            day day price' Nothing Nothing False False Nothing
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)

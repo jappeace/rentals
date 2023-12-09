@@ -35,6 +35,7 @@ Event
   summary        Text Maybe         -- meta description of the event entry
   blocked        Bool default=false -- manually blocked?
   booked         Bool default=false
+  user           UserId Maybe
 
   UniqueEvent calendar start
 

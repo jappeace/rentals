@@ -17,7 +17,7 @@ getViewAdminR = do
       pure (l, fmap (listingImageUuid . entityVal) i)
 
   defaultAdminLayout $ do
-    $(whamletFile "templates/admin.hamlet")
+    $(whamletFile "templates/admin/admin.hamlet")
 
 getViewAdminListingR :: Slug -> Handler Html
 getViewAdminListingR slug = do

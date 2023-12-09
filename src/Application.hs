@@ -32,9 +32,10 @@ import           Text.ICalendar
 import Handler.Admin.Listing
 import Handler.Admin.Export
 import Handler.Admin.Import
-import Handler.Home
-import Handler.Listing
+import Handler.User.Booking
+import Handler.User.User
 import Handler.View.Admin
+import Handler.View.Listings
 
 import Settings
 
@@ -75,8 +76,9 @@ appMain = do
 
                 case mdates of
                   Just (start, end) -> do
-                    void . insertBy $ Event
-                      cid source uuid start end Nothing description summary False True
+                    void . for [start .. end] $ \start' ->
+                      insertBy $ Event cid source uuid
+                        start' end Nothing description summary False True Nothing
                   Nothing -> pure ()
 
             Left err ->

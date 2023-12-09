@@ -1,6 +1,3 @@
- /                                              HomeR                           GET
- /listing/#Slug                                 ListingR                        GET
----------------------------------------------------------------------------------------------------
  /view/admin                                    ViewAdminR                      GET
  /view/admin/listing/#Slug                      ViewAdminListingR               GET
 
@@ -13,6 +10,12 @@
  /admin/listing/#ListingId/update-day-price     AdminListingUpdateDayPriceR              PUT
 
  /ical/export/#ICS                              CalendarExportR                 GET
+---------------------------------------------------------------------------------------------------
+ /                                              ListingsR                       GET
+ /view/listing/#Slug                            ListingR                        GET
+ /view/user/profile                             UserR                           GET
+
+
 ---------------------------------------------------------------------------------------------------
  /image/#UUID                                   ImageR                          GET
  /auth                                          AuthR                           Auth getAuth
