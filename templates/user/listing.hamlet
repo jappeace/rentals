@@ -1,0 +1,36 @@
+<div class="row g-2">
+  <div class="col-12 fs-3">#{listingTitle listing}
+  <div class="col-12">
+    <div class="row g-2 mb-3">
+      $if not (null images)
+        <div id="image-area">
+        <div class="col-6">
+          <div class="image overflow-hidden">
+            <img class="img-fluid rounded" src=@{ImageR (head images)}>
+        <div class="col-6">
+          $if length images >= 2
+            <div class="row g-2">
+              $forall img <- tail images
+                <div class="col-6">
+                  <div class="image overflow-hidden">
+                    <img class="img-fluid rounded" src=@{ImageR img}>
+    <div class="row justify-content-between">
+      <div class="col-7">
+        <p class="fs-4">#{listingTitle listing}
+        <p>#{listingDescription listing}
+      <div class="col-4">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="card-title">
+                  <span class="fs-4">$#{listingPrice listing}
+                  night
+                <div class="card-text">
+                  <form>
+                    <div id="user-datepicker" class="input-daterange input-group">
+                      <input class="form-control" name="start">
+                      <span class="input-group-text">to
+                      <input class="form-control" name="end">
+                    <div class="d-grid">
+                      <button class="btn btn-primary">book now

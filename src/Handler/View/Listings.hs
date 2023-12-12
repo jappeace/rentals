@@ -9,6 +9,7 @@ import Control.Monad
 import Data.Maybe
 import Data.Traversable
 import Text.Hamlet
+import Text.Julius
 
 getListingsR :: Handler Html
 getListingsR = do
@@ -36,4 +37,21 @@ getListingsR = do
 
 getListingR :: Slug -> Handler Html
 getListingR slug = do
-  undefined
+  (Entity lid listing, images, unavailableDates) <- runDB $ do
+    listing@(Entity lid _) <- getBy404 $ UniqueSlug slug
+    Entity cid _           <- getBy404 $ UniqueCalendar lid
+    images                 <- selectList [ListingImageListing ==. lid] []
+    unavailableDates       <- selectList
+      (   [EventCalendar ==. cid, EventBlocked ==. True]
+      ||. [EventCalendar ==. cid, EventBooked  ==. True]
+      ) []
+
+    pure
+      ( listing
+      , map (listingImageUuid . entityVal) images
+      , map (eventStart       . entityVal) unavailableDates
+      )
+
+  defaultUserLayout $ do
+    toWidgetHead $(juliusFile "templates/script/user/datepicker.julius")
+    $(whamletFile "templates/user/listing.hamlet")
