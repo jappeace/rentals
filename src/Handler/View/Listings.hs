@@ -11,8 +11,8 @@ import Data.Traversable
 import Text.Hamlet
 import Text.Julius
 
-getListingsR :: Handler Html
-getListingsR = do
+getViewListingsR :: Handler Html
+getViewListingsR = do
   listings <- runDB $ do
     listings <- selectList [] []
 
@@ -35,8 +35,8 @@ getListingsR = do
 
   defaultUserLayout $(whamletFile "templates/user/listings.hamlet")
 
-getListingR :: Slug -> Handler Html
-getListingR slug = do
+getViewListingR :: Slug -> Handler Html
+getViewListingR slug = do
   (Entity lid listing, images, unavailableDates) <- runDB $ do
     listing@(Entity lid _) <- getBy404 $ UniqueSlug slug
     Entity cid _           <- getBy404 $ UniqueCalendar lid

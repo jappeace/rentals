@@ -35,7 +35,6 @@ Event
   summary        Text Maybe         -- meta description of the event entry
   blocked        Bool default=false -- manually blocked?
   booked         Bool default=false
-  user           UserId Maybe
 
   UniqueEvent calendar start
 
@@ -45,8 +44,3 @@ Import
   uri            URI
 
   UniqueImport calendar source
-
-User
-  email        Text
-  password     Text
-  UniqueEmail email

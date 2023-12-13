@@ -1,5 +1,9 @@
 window.addEventListener("load", () => {
   const today = new Date();
+  const tomorrow = new Date(today.valueOf() + 86400000);
+  const threeDays = new Date(today.valueOf() + 259200000);
+  const oneYear = new Date(today.valueOf() + 31557600000);
+
   const toISO = function(d) {
     return String(d.getFullYear()) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   };
@@ -9,16 +13,12 @@ window.addEventListener("load", () => {
 
   let start, end;
 
-  const adminBlockDatepicker = $("#user-datepicker").datepicker({
+  const userDatepicker = $("#user-datepicker").datepicker({
     // format: "yyyy-MM-dd",
     datesDisabled: #{toJSON unavailableDates},
-    maxViewMode: 2,
+    maxViewMode: 1,
     multidate: false,
-    endDate: today.setFullYear(today.getFullYear + 1),
-    beforeShowDay: function(date) {
-      if ((date <= today) || (#{toJSON unavailableDates}.find((e) => fromISO(e) == date) != undefined)) {
-        return {"enabled": false, "classes": "text-decoration-line-through"};
-      }
-    }
+    startDate: today,
+    endDate: oneYear
   });
 });

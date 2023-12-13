@@ -11,9 +11,8 @@
 
  /ical/export/#ICS                              CalendarExportR                 GET
 ---------------------------------------------------------------------------------------------------
- /                                              ListingsR                       GET
- /view/listing/#Slug                            ListingR                        GET
- /view/user/profile                             UserR                           GET
+ /                                              ViewListingsR                   GET
+ /view/listing/#Slug                            ViewListingR                    GET
 
 
 ---------------------------------------------------------------------------------------------------

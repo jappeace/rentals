@@ -10,7 +10,7 @@
         <div class="col-6">
           $if length images >= 2
             <div class="row g-2">
-              $forall img <- tail images
+              $forall img <- take 4 (tail images)
                 <div class="col-6">
                   <div class="image overflow-hidden">
                     <img class="img-fluid rounded" src=@{ImageR img}>
@@ -28,7 +28,7 @@
                   night
                 <div class="card-text">
                   <form>
-                    <div id="user-datepicker" class="input-daterange input-group">
+                    <div id="user-datepicker" class="input-daterange input-group mb-2">
                       <input class="form-control" name="start">
                       <span class="input-group-text">to
                       <input class="form-control" name="end">

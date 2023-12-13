@@ -1,0 +1,14 @@
+<div class="row gx-0 justify-content-center">
+  <div class="col-md-4">
+      <div class="mb-3 border-bottom border-secondary-subtle">login
+      <form action=@{AuthR loginR} method="POST">
+        <div class="row">
+          <label class="d-block mb-3 col-md-12">
+            <span>username
+            <input name="username" class="form-control">
+          <label class="d-block mb-3 col-md-12">
+            <span>password
+            <input type="password" name="password" class="form-control">
+          <div class="mb-3 col-md-2">
+            <div class="d-grid">
+              <button class="btn btn-primary">authenticate

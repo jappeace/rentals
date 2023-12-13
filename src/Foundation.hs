@@ -23,6 +23,7 @@ import Yesod.Auth.Hardcoded
 import Yesod.Persist
 
 import           Control.Arrow
+import           Control.Monad
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
 import qualified Data.ByteString            as BS
@@ -150,10 +151,6 @@ instance PathPiece ICS where
   toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
   fromPathPiece p = fmap ICS . UUID.fromText . T.drop 4 $ p
 -----------------------------------------------------------------------------------------
-instance PathPiece (Either Text UserId) where
-  toPathPiece = T.pack . show
-  fromPathPiece = readMaybe . T.unpack
------------------------------------------------------------------------------------------
 instance PathPiece Slug where
   toPathPiece = toPathPiece . unSlug
   fromPathPiece = fmap Slug . fromPathPiece
@@ -196,43 +193,44 @@ instance ToMarkup URI where
 -- YesodAuth instances
 -----------------------------------------------------------------------------------------
 instance YesodAuth App where
-  type AuthId App = Either Text UserId
+  type AuthId App = Text
 
   authPlugins _ = [authHardcoded]
+
+  authLayout = liftHandler . defaultAdminLayout
+
+  loginHandler = authLayout $ do
+    isAuthenticated' <- liftHandler maybeAuthId
+    when (isJust isAuthenticated') . liftHandler . redirect $ ViewAdminR
+    $(whamletFile "templates/admin/login.hamlet")
+
+  redirectToReferer _ = True
+  loginDest  _ = ViewAdminR
+  logoutDest _ = ViewListingsR
 
   authenticate Creds {..} = do
     mAdmin <- liftHandler $ lookupAdmin credsIdent
     pure $ case credsPlugin of
       "hardcoded" -> case mAdmin of
         Nothing -> UserError InvalidLogin
-        Just m  -> Authenticated . Left $ adminUsername m
+        Just m  -> Authenticated $ adminUsername m
 
 instance YesodAuthPersist App where
-  type AuthEntity App = Either AppAdmin User
+  type AuthEntity App = Text
 
-  getAuthEntity (Right uid) = do
-    x <- liftHandler . runDB $ get uid
-    pure . fmap Right $ x
-  getAuthEntity (Left au) = do
+  getAuthEntity au = do
     mAdmin <- liftHandler $ lookupAdmin au
-    pure (Left <$> mAdmin)
+    pure . fmap adminUsername $ mAdmin
 
 instance YesodAuthHardcoded App where
-  validatePassword u p = do
-    isValid <- liftHandler $ lookupAdminPassword u p
-    pure isValid
-  doesUserNameExist u = do
-    mAdmin <- liftHandler $ lookupAdmin u
-    pure $ isJust mAdmin
-
-lookupAdminPassword :: Text -> Text -> Handler Bool
-lookupAdminPassword u p = do
-  master <- getYesod
-  pure $ case find
-    (\m -> adminUsername m == u && adminPassword m == p)
-    (appAdmin $ appSettings master) of
-      Just _ -> True
-      _      -> False
+  validatePassword u p = liftHandler $ do
+    master <- getYesod
+    pure $ case find
+      (\m -> adminUsername m == u && adminPassword m == p)
+      (appAdmin $ appSettings master) of
+        Just _ -> True
+        _      -> False
+  doesUserNameExist u = isJust <$> (liftHandler $ lookupAdmin u)
 
 lookupAdmin :: Text -> Handler (Maybe AppAdmin)
 lookupAdmin u = do
@@ -247,15 +245,38 @@ isAuthenticated = do
     Nothing -> Unauthorized "You must authenticate to access this page"
     Just _ -> Authorized
 
+isAuthenticatedView :: Handler AuthResult
+isAuthenticatedView = do
+  authResult <- isAuthenticated
+  case authResult of
+    Unauthorized _ -> redirect $ AuthR LoginR
+    Authorized -> pure Authorized
+
 -----------------------------------------------------------------------------------------
 instance Yesod App where
   makeSessionBackend _ = Just <$> defaultClientSessionBackend
     (30 * 24 * 60) "config/client_session_key.aes"
 
-  isAuthorized _ _ = pure Authorized
+  isAuthorized ViewAdminR                          _ = isAuthenticatedView
+  isAuthorized (ViewAdminListingR _)               _ = isAuthenticatedView
+  isAuthorized AdminListingSourcesR                _ = isAuthenticated
+  isAuthorized AdminListingNewR                    _ = isAuthenticated
+  isAuthorized (AdminListingR _)                   _ = isAuthenticated
+  isAuthorized (AdminListingImageR _)              _ = isAuthenticated
+  isAuthorized (AdminListingUpdateBlockedDatesR _) _ = isAuthenticated
+  isAuthorized (AdminListingImportR _)             _ = isAuthenticated
+  isAuthorized (AdminListingUpdateDayPriceR _)     _ = isAuthenticated
+  isAuthorized (CalendarExportR _)                 _ = pure Authorized
+
+  isAuthorized ViewListingsR                       _ = pure Authorized
+  isAuthorized (ViewListingR _)                    _ = pure Authorized
+  isAuthorized (ImageR _)                          _ = pure Authorized
+
+  isAuthorized (AuthR _)                           _ = pure Authorized
 
   defaultLayout contents = do
     pc <- widgetToPageContent contents
+    ma <- maybeAuthId
     messages <- getMessage
     withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
 

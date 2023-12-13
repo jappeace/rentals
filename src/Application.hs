@@ -78,7 +78,7 @@ appMain = do
                   Just (start, end) -> do
                     void . for [start .. end] $ \start' ->
                       insertBy $ Event cid source uuid
-                        start' end Nothing description summary False True Nothing
+                        start' end Nothing description summary False True
                   Nothing -> pure ()
 
             Left err ->
