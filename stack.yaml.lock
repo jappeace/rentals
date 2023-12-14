@@ -29,6 +29,13 @@ packages:
       size: 431
   original:
     hackage: slugify-0.1.0.1
+- completed:
+    hackage: groupBy-0.1.0.0@sha256:9bd0c5e6bbfaf793f6e816a072bcb085dba1149bf282e998567eaaed8d0efec4,1720
+    pantry-tree:
+      sha256: 40726b0c6e42fc119f6c5a413fd81353cd69e3fd8893fec6e9ff50ccfc51172c
+      size: 450
+  original:
+    hackage: groupBy-0.1.0.0
 snapshots:
 - completed:
     sha256: fb482b8e2d5d061cdda4ba1da2957c012740c893a5ee1c1b99001adae7b1fbe7

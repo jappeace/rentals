@@ -15,7 +15,7 @@ window.addEventListener("load", () => {
 
   const userDatepicker = $("#user-datepicker").datepicker({
     // format: "yyyy-MM-dd",
-    datesDisabled: #{toJSON unavailableDates},
+    datesDisabled: #{toJSON unavailableDates}.map(d => fromISO(d)),
     maxViewMode: 1,
     multidate: false,
     startDate: today,

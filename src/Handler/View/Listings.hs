@@ -5,11 +5,14 @@ import Yesod
 
 import Utils
 
-import Control.Monad
-import Data.Maybe
-import Data.Traversable
-import Text.Hamlet
-import Text.Julius
+import           Control.Monad
+import           Data.List         ((\\))
+import qualified Data.List.GroupBy as GB
+import           Data.Maybe
+import           Data.Time.Clock
+import           Data.Traversable
+import           Text.Hamlet
+import           Text.Julius
 
 getViewListingsR :: Handler Html
 getViewListingsR = do
@@ -41,15 +44,20 @@ getViewListingR slug = do
     listing@(Entity lid _) <- getBy404 $ UniqueSlug slug
     Entity cid _           <- getBy404 $ UniqueCalendar lid
     images                 <- selectList [ListingImageListing ==. lid] []
-    unavailableDates       <- selectList
+    unavailableDates       <- map (eventStart . entityVal) <$> selectList
       (   [EventCalendar ==. cid, EventBlocked ==. True]
       ||. [EventCalendar ==. cid, EventBooked  ==. True]
       ) []
 
+    today <- utctDay <$> liftIO getCurrentTime
+    let availableDates    = (take 366 [today ..]) \\ unavailableDates
+        unavailableDates' = mconcat . filter (\x -> length x < 3) $
+          GB.groupBy (\x y -> succ x == y) availableDates
+
     pure
       ( listing
       , map (listingImageUuid . entityVal) images
-      , map (eventStart       . entityVal) unavailableDates
+      , unavailableDates <> unavailableDates'
       )
 
   defaultUserLayout $ do

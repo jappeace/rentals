@@ -45,6 +45,7 @@ extra-deps:
   commit: eb9e69e78ac039d6fb0bf3a1b5c21878557d58e3
 - mime-0.4.0.2
 - slugify-0.1.0.1
+- groupBy-0.1.0.0
 
 allow-newer: true
 allow-newer-deps:
