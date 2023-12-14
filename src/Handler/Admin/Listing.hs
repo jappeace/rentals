@@ -105,7 +105,7 @@ putAdminListingUpdateBlockedDatesR lid = do
 
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
-          flip upsert [EventBlocked =. False] $ Event cid Local uuid
+          flip upsert [EventBlocked =. True] $ Event cid Local uuid
             day day Nothing Nothing (Just "Unavailable (Local)") True False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
