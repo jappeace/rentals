@@ -33,6 +33,7 @@ import Handler.Admin.Listing
 import Handler.Admin.Export
 import Handler.Admin.Import
 import Handler.User.Booking
+import Handler.User.Listing
 import Handler.User.User
 import Handler.View.Admin
 import Handler.View.Listings

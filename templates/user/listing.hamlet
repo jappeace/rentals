@@ -24,8 +24,13 @@
             <div class="card">
               <div class="card-body">
                 <div class="card-title">
-                  <span class="fs-4">$#{listingPrice listing}
-                  night
+                  <div class="row mb-3 gx-0 justify-content-between">
+                    <div class="col-6">
+                      <div id="price-total" class="fs-4 text-start">$#{listingPrice listing}
+                      <div class="fs-7 lh-1 text-start text-secondary">total
+                    <div class="col-6">
+                      <div id="price-night" class="fs-4 text-end">$#{listingPrice listing}
+                      <div class="fs-7 lh-1 text-end text-secondary">avg per night
                 <div class="card-text">
                   <form>
                     <div id="user-datepicker" class="input-daterange input-group mb-2">

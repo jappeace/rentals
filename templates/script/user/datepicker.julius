@@ -11,8 +11,8 @@ window.addEventListener("load", () => {
     return new Date(d + " ");
   };
 
-  let start, end;
-
+  let start = $("#user-datepicker input[name=start]");
+  let end   = $("#user-datepicker input[name=end]");
   const userDatepicker = $("#user-datepicker").datepicker({
     // format: "yyyy-MM-dd",
     datesDisabled: #{toJSON unavailableDates}.map(d => fromISO(d)),
@@ -20,5 +20,26 @@ window.addEventListener("load", () => {
     multidate: false,
     startDate: today,
     endDate: oneYear
+  });
+
+  $("#user-datepicker input").datepicker().on("changeDate", function(e) {
+    if (start.datepicker("getDate") < end.datepicker("getDate")) {
+      let req = new XMLHttpRequest();
+
+      req.open("POST", "@{ListingQuoteR slug}");
+      req.addEventListener("load", function() {
+        if (req.status == 200) {
+          document.getElementById("price-total").textContent = "$" + req.responseText;
+        }
+      });
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Accept", "application/json");
+
+      req.send(JSON.stringify(
+        [ start.datepicker("getDate")
+        , end.datepicker("getDate")
+        ].map(d => toISO(d))
+      ));
+    }
   });
 });

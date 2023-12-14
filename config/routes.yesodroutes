@@ -14,6 +14,7 @@
  /                                              ViewListingsR                   GET
  /view/listing/#Slug                            ViewListingR                    GET
 
+ /listing/quote/#Slug                           ListingQuoteR                       POST
 
 ---------------------------------------------------------------------------------------------------
  /image/#UUID                                   ImageR                          GET
