@@ -107,7 +107,8 @@ window.addEventListener("load", function() {
         "title"      : newListingForm.elements.title.value,
         "description": newListingForm.elements.description.value,
         "price"      : Number(newListingForm.elements.price.value),
-        "slug"       : ""
+        "slug"       : "",
+        "uuid"       : #{UUID.toText UUID.nil}
       }));
 
       return false;
