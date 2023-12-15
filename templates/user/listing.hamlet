@@ -32,7 +32,7 @@
                       <div id="price-night" class="fs-4 text-end">$#{listingPrice listing}
                       <div class="fs-7 lh-1 text-end text-secondary">avg per night
                 <div class="card-text">
-                  <form>
+                  <form id="new-booking" action=@{ListingBookR lid}>
                     <div id="user-datepicker" class="input-daterange input-group mb-2">
                       <input class="form-control" name="start">
                       <span class="input-group-text">to

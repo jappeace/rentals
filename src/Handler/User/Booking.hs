@@ -10,6 +10,7 @@ import Utils
 
 import           Control.Monad
 import           Data.Text                                   (Text)
+import           Network.HTTP.Client
 import           Network.HTTP.Types.Status
 import qualified StripeAPI                                   as Stripe
 import qualified StripeAPI.Types.NotificationEventData.Extra as Stripe
@@ -33,5 +34,7 @@ putListingBookR lid = do
       pirb = Stripe.mkPostPaymentIntentsRequestBody amount "USD"
 
   res <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postPaymentIntents pirb
+  case responseBody res of
+    Stripe.PostPaymentIntentsResponse200 pi ->
+      sendResponseStatus status204 ()
 
-  sendResponseStatus status204 ()

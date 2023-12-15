@@ -271,6 +271,7 @@ instance Yesod App where
   isAuthorized ViewListingsR                       _ = pure Authorized
   isAuthorized (ViewListingR _ _)                  _ = pure Authorized
   isAuthorized (ListingQuoteR _)                   _ = pure Authorized
+  isAuthorized (ListingBookR _)                    _ = pure Authorized
 
   isAuthorized (ImageR _)                          _ = pure Authorized
 
@@ -284,6 +285,7 @@ instance Yesod App where
 
 defaultUserLayout :: WidgetFor App () -> Handler Html
 defaultUserLayout w = defaultLayout $ do
+  toWidgetHead $(juliusFile "templates/script/user/forms.julius")
   toWidgetHead $(luciusFile "templates/style/user.lucius")
   w
 
