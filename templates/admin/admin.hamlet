@@ -41,5 +41,5 @@
               <h5 class="card-title">#{listingTitle l}
               <p class="card-text text-truncate">#{listingDescription l}
               <div class="d-flex justify-content-between">
-                <a class="btn btn-primary" href=@{ViewAdminListingR (listingSlug l)}>edit
+                <a class="btn btn-primary" href=@{ViewAdminListingR lid (listingSlug l)}>edit
                 <span class="fs-4">$#{listingPrice l}

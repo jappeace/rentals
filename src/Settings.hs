@@ -10,6 +10,7 @@ data AppSettings = AppSettings
     appPort       :: Int
   , appAdmin      :: [AppAdmin]
   , appDatabase   :: AppDatabase
+  , appStripe     :: Stripe
   }
 
 data AppAdmin = AppAdmin
@@ -24,6 +25,11 @@ data AppDatabase = AppDatabase
   , port          :: Int
   , database      :: Text
   , poolsize      :: Int
+  }
+
+data Stripe = Stripe
+  { stripeSecret  :: Text
+  , stripePublic  :: Text
   }
 
 instance FromJSON AppSettings where
@@ -48,3 +54,9 @@ instance FromJSON AppDatabase where
     database <- o .: "database"
     poolsize <- o .: "poolsize"
     return AppDatabase {..}
+
+instance FromJSON Stripe where
+  parseJSON = withObject "Stripe" $ \o -> do
+    stripeSecret <- o .: "secret"
+    stripePublic <- o .: "public"
+    return Stripe {..}

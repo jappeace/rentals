@@ -1,5 +1,5 @@
  /view/admin                                    ViewAdminR                      GET
- /view/admin/listing/#Slug                      ViewAdminListingR               GET
+ /view/admin/listing/#ListingId/#Slug           ViewAdminListingR               GET
 
  /admin/listing/sources                         AdminListingSourcesR            GET
  /admin/listing/new                             AdminListingNewR                         PUT
@@ -12,9 +12,10 @@
  /ical/export/#ICS                              CalendarExportR                 GET
 ---------------------------------------------------------------------------------------------------
  /                                              ViewListingsR                   GET
- /view/listing/#Slug                            ViewListingR                    GET
+ /view/listing/#ListingId/#Slug                 ViewListingR                    GET
 
- /listing/quote/#Slug                           ListingQuoteR                       POST
+ /listing/quote/#ListingId                      ListingQuoteR                       POST
+ /listing/book/#ListingId                       ListingBookR                             PUT
 
 ---------------------------------------------------------------------------------------------------
  /image/#UUID                                   ImageR                          GET

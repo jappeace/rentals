@@ -36,6 +36,13 @@ packages:
       size: 450
   original:
     hackage: groupBy-0.1.0.0
+- completed:
+    hackage: stripeapi-3.0.0.0@sha256:54d1b698a58b36d5d20e9dc20a2369577300ba9ea5dd6c4c6decc9b75cf05dd8,61211
+    pantry-tree:
+      sha256: 6ad46a9b6204d97ba2c8b8770f7c372ddd3b14c6103446cea3f8d022a0bddcbc
+      size: 171969
+  original:
+    hackage: stripeapi-3.0.0.0
 snapshots:
 - completed:
     sha256: fb482b8e2d5d061cdda4ba1da2957c012740c893a5ee1c1b99001adae7b1fbe7

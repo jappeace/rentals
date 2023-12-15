@@ -11,3 +11,7 @@ database:
   port:
   database:
   poolsize:
+
+stripe:
+  secret:
+  public:

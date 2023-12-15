@@ -26,7 +26,7 @@ window.addEventListener("load", () => {
     if (start.datepicker("getDate") < end.datepicker("getDate")) {
       let req = new XMLHttpRequest();
 
-      req.open("POST", "@{ListingQuoteR slug}");
+      req.open("POST", "@{ListingQuoteR lid}");
       req.addEventListener("load", function() {
         if (req.status == 200) {
           document.getElementById("price-total").textContent = "$" + req.responseText;

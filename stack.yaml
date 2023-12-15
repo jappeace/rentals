@@ -46,6 +46,7 @@ extra-deps:
 - mime-0.4.0.2
 - slugify-0.1.0.1
 - groupBy-0.1.0.0
+- stripeapi-3.0.0.0
 
 allow-newer: true
 allow-newer-deps:

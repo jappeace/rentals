@@ -22,15 +22,11 @@ getViewListingsR = do
     for listings $ \l@(Entity lid listing) -> do
       image <- selectFirst [ListingImageListing ==. lid] []
       price <- do
-        mCal <- getBy $ UniqueCalendar lid
-        case mCal of
-          Just (Entity cid _) -> do
-            mEvent <- selectFirst [EventCalendar ==. cid, EventBooked ==. False, EventPrice !=. Nothing] [Asc EventPrice]
-            case mEvent of
-              Just (Entity _ event) ->
-                case eventPrice event of
-                  Just price -> pure $ min price (listingPrice listing)
-                  Nothing -> pure $ listingPrice listing
+        mevent <- selectFirst [EventListing ==. lid, EventBooked ==. False, EventPrice !=. Nothing] [Asc EventPrice]
+        case mevent of
+          Just (Entity _ event) ->
+            case eventPrice event of
+              Just price -> pure $ min price (listingPrice listing)
               Nothing -> pure $ listingPrice listing
           Nothing -> pure $ listingPrice listing
 
@@ -38,15 +34,14 @@ getViewListingsR = do
 
   defaultUserLayout $(whamletFile "templates/user/listings.hamlet")
 
-getViewListingR :: Slug -> Handler Html
-getViewListingR slug = do
-  (Entity lid listing, images, unavailableDates) <- runDB $ do
-    listing@(Entity lid _) <- getBy404 $ UniqueSlug slug
-    Entity cid _           <- getBy404 $ UniqueCalendar lid
-    images                 <- selectList [ListingImageListing ==. lid] []
-    unavailableDates       <- map (eventStart . entityVal) <$> selectList
-      (   [EventCalendar ==. cid, EventBlocked ==. True]
-      ||. [EventCalendar ==. cid, EventBooked  ==. True]
+getViewListingR :: ListingId -> Slug -> Handler Html
+getViewListingR lid slug = do
+  (listing, images, unavailableDates) <- runDB $ do
+    listing          <- get404 lid
+    images           <- selectList [ListingImageListing ==. lid] []
+    unavailableDates <- map (eventStart . entityVal) <$> selectList
+      (   [EventListing ==. lid, EventBlocked ==. True]
+      ||. [EventListing ==. lid, EventBooked  ==. True]
       ) []
 
     today <- utctDay <$> liftIO getCurrentTime

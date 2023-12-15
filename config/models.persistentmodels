@@ -3,25 +3,20 @@ Listing json
   description    Text
   price          Money
   slug           Slug
+  uuid           UUID
 
   UniqueSlug slug
+  UniqueCalendar uuid
 
 ListingImage
   listing        ListingId
   uuid           UUID
 
-  UniqueImage    uuid
-
-Calendar
-  listing        ListingId
-  uuid           UUID
-
-  UniqueCalendar listing
-  UniqueUUID uuid
+  UniqueImage uuid
 
 Event
   -- app details
-  calendar       CalendarId
+  listing        ListingId
   source         Source
   uuid           Text
 
@@ -36,11 +31,11 @@ Event
   blocked        Bool default=false -- manually blocked?
   booked         Bool default=false
 
-  UniqueEvent calendar start
+  UniqueEvent listing start
 
 Import
-  calendar       CalendarId
+  listing        ListingId
   source         Source
   uri            URI
 
-  UniqueImport calendar source
+  UniqueImport listing source

@@ -19,20 +19,19 @@ getViewAdminR = do
   defaultAdminLayout $ do
     $(whamletFile "templates/admin/admin.hamlet")
 
-getViewAdminListingR :: Slug -> Handler Html
-getViewAdminListingR slug = do
+getViewAdminListingR :: ListingId -> Slug -> Handler Html
+getViewAdminListingR lid slug = do
   let sources = [Airbnb ..]
-  (Entity lid l, Entity cid c, is, imgs) <- runDB $ do
-    l@(Entity lid listing)  <- getBy404 $ UniqueSlug slug
-    c@(Entity cid calendar) <- getBy404 $ UniqueCalendar lid
-    is                      <- selectList [ImportCalendar ==. cid] []
-    imgs                    <- selectList [ListingImageListing ==. lid] []
-    pure (l, c, is, imgs)
+  (l, is, imgs) <- runDB $ do
+    l    <- get404 lid
+    is   <- selectList [ImportListing ==. lid] []
+    imgs <- selectList [ListingImageListing ==. lid] []
+    pure (l, is, imgs)
 
   (blockedDates, bookedDates, pricedDates) <- runDB $ do
-    mbd <- selectList [EventCalendar ==. cid, EventBlocked ==. True] []
-    bd  <- selectList [EventCalendar ==. cid, EventBooked  ==. True] []
-    pd  <- selectList [EventCalendar ==. cid, EventBooked  ==. False, EventPrice !=. Nothing] []
+    mbd <- selectList [EventListing ==. lid, EventBlocked ==. True] []
+    bd  <- selectList [EventListing ==. lid, EventBooked  ==. True] []
+    pd  <- selectList [EventListing ==. lid, EventBooked  ==. False, EventPrice !=. Nothing] []
     pure
       ( map (showGregorian . eventStart . entityVal) mbd
       , map (\(Entity _ ev) -> (showGregorian . eventStart $ ev, eventSource ev)) bd

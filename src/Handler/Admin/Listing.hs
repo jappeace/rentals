@@ -97,15 +97,15 @@ putAdminListingUpdateBlockedDatesR lid = do
   days <- parseJsonBody' :: Handler [Day]
 
   runDB $ do
-    mcalendar <- getBy $ UniqueCalendar lid
+    mlisting <- get lid
 
-    case mcalendar of
-      Just (Entity cid _) -> do
-        updateWhere [EventCalendar ==. cid, EventStart /<-. days] [EventBlocked =. False]
+    case mlisting of
+      Just listing -> do
+        updateWhere [EventListing ==. lid, EventStart /<-. days] [EventBlocked =. False]
 
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
-          flip upsert [EventBlocked =. True] $ Event cid Local uuid
+          flip upsert [EventBlocked =. True] $ Event lid Local uuid
             day day Nothing Nothing (Just "Unavailable (Local)") True False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
@@ -117,23 +117,23 @@ putAdminListingNewR :: Handler TypedContent
 putAdminListingNewR = do
   listing <- parseJsonBody'
 
-  (slug, mcid) <- runDB $ do
-    lid  <- insert listing
-
-    let slug = Slug . slugify $ (listingTitle listing)
-          <> " " <> (T.pack . show $ fromSqlKey lid)
-    update lid [ListingSlug =. slug]
-
+  (mlid, slug) <- runDB $ do
     uuid <- liftIO randomIO
-    mcid <- insertUnique $ Calendar lid uuid
+    let slug = Slug . slugify $ listingTitle listing
 
-    pure (slug, mcid)
+    mlid <- insertUnique $ listing
+      { listingSlug = slug
+      , listingUuid = uuid
+      }
 
-  case mcid of
-    Just cid -> do
+    pure (mlid, slug)
+
+  case mlid of
+    Just lid -> do
       render <- getUrlRender
       sendResponseStatus status201 . toEncoding $
-        (render $ ViewAdminListingR slug)
+        (render $ ViewAdminListingR lid slug)
+
     Nothing  -> sendResponseStatus status500 $ toEncoding
       ("Failed to generate unique identifier, please try again" :: Text)
 
@@ -143,13 +143,13 @@ putAdminListingUpdateDayPriceR lid = do
   let price' = if price == 0 then Nothing else Just price
 
   runDB $ do
-    mCal <- getBy $ UniqueCalendar lid
+    mlisting <- get lid
 
-    case mCal of
-      Just (Entity cid _) -> do
+    case mlisting of
+      Just _ -> do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
-          flip upsert [EventPrice =. price'] $ Event cid Local uuid
+          flip upsert [EventPrice =. price'] $ Event lid Local uuid
             day day price' Nothing Nothing False False
 
       Nothing -> sendResponseStatus status404 $ toEncoding

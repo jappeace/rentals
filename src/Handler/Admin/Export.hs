@@ -18,12 +18,12 @@ import Utils
 
 getCalendarExportR :: ICS -> Handler VCalendar
 getCalendarExportR (ICS uuid) = do
-  mcalendar <- runDB . getBy $ UniqueUUID uuid
-  case mcalendar of
-    Just (Entity cid calendar) -> do
+  mlisting <- runDB . getBy $ UniqueCalendar uuid
+  case mlisting of
+    Just (Entity lid listing) -> do
       currentTime <- liftIO getCurrentTime
       eventUUID   <- liftIO randomIO
-      events      <- runDB $ selectList [EventCalendar ==. cid] []
+      events      <- runDB $ selectList [EventListing ==. lid, EventSource ==. Local] []
 
       let vcalendar = emptyVCalendar
           appendEvents vcalendar (Entity _ event) =

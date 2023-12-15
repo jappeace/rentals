@@ -33,10 +33,10 @@ import           Text.ICalendar
 putAdminListingImportR :: ListingId -> Handler TypedContent
 putAdminListingImportR lid = do
   (source, uri) <- parseJsonBody'
-  mCalendar     <- runDB . getBy $ UniqueCalendar lid
+  mlisting      <- runDB $ get lid
 
-  case mCalendar of
-    Just (Entity cid _) -> do
+  case mlisting of
+    Just listing -> do
       -- Try and parse the provided Airbnb calendar URI
       case URI.parseURI . T.unpack $ uri of
         Just l -> do
@@ -48,7 +48,7 @@ putAdminListingImportR lid = do
             200 ->
               case parseICalendar def parseErrorLog $ res ^. W.responseBody of
                 Right _ -> do
-                  runDB . insert $ Import cid source l
+                  runDB . insert $ Import lid source l
                   sendResponseStatus status204 ()
 
                 Left err -> do
@@ -72,10 +72,10 @@ deleteAdminListingImportR lid = do
   case requestBody of
     Success source -> do
       runDB $ do
-        mCalendar <- getBy $ UniqueCalendar lid
+        mlisting <- get lid
 
-        case mCalendar of
-          Just (Entity cid _) -> deleteBy $ UniqueImport cid source
+        case mlisting of
+          Just _ -> deleteBy $ UniqueImport lid source
           Nothing -> sendResponseStatus status404 $ toEncoding
             ("The target listing does not exist, please check the identifier and try again" :: Text)
 

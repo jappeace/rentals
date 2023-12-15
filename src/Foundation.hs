@@ -258,7 +258,7 @@ instance Yesod App where
     (30 * 24 * 60) "config/client_session_key.aes"
 
   isAuthorized ViewAdminR                          _ = isAuthenticatedView
-  isAuthorized (ViewAdminListingR _)               _ = isAuthenticatedView
+  isAuthorized (ViewAdminListingR _ _)             _ = isAuthenticatedView
   isAuthorized AdminListingSourcesR                _ = isAuthenticated
   isAuthorized AdminListingNewR                    _ = isAuthenticated
   isAuthorized (AdminListingR _)                   _ = isAuthenticated
@@ -269,7 +269,7 @@ instance Yesod App where
   isAuthorized (CalendarExportR _)                 _ = pure Authorized
 
   isAuthorized ViewListingsR                       _ = pure Authorized
-  isAuthorized (ViewListingR _)                    _ = pure Authorized
+  isAuthorized (ViewListingR _ _)                  _ = pure Authorized
   isAuthorized (ListingQuoteR _)                   _ = pure Authorized
 
   isAuthorized (ImageR _)                          _ = pure Authorized
