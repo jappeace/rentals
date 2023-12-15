@@ -37,6 +37,7 @@ instance FromJSON AppSettings where
     appPort <- o .: "port"
     appAdmin <- o .: "admin"
     appDatabase <- o .: "database"
+    appStripe <- o .: "stripe"
     return AppSettings {..}
 
 instance FromJSON AppAdmin where
