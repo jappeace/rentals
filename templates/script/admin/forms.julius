@@ -96,7 +96,7 @@ window.addEventListener("load", function() {
       let req = new XMLHttpRequest();
       req.addEventListener("load", function() {
         if (req.status == 201) {
-          window.location.assign(req.responseText);
+          window.location.assign(req.responseText.slice(1,-1));
         }
       });
       req.open("PUT", newListingForm.action);

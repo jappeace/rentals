@@ -272,6 +272,8 @@ instance Yesod App where
   isAuthorized (ViewListingR _ _)                  _ = pure Authorized
   isAuthorized (ListingQuoteR _)                   _ = pure Authorized
   isAuthorized (ListingBookR _)                    _ = pure Authorized
+  isAuthorized (ListingBookPaymentSuccessR _)      _ = pure Authorized
+  isAuthorized (ListingBookPaymentCancelR _)       _ = pure Authorized
 
   isAuthorized (ImageR _)                          _ = pure Authorized
 

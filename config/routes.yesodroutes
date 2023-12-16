@@ -10,13 +10,14 @@
  /admin/listing/#ListingId/update-day-price     AdminListingUpdateDayPriceR              PUT
 
  /ical/export/#ICS                              CalendarExportR                 GET
----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------
  /                                              ViewListingsR                   GET
  /view/listing/#ListingId/#Slug                 ViewListingR                    GET
 
  /listing/quote/#ListingId                      ListingQuoteR                       POST
  /listing/book/#ListingId                       ListingBookR                             PUT
-
----------------------------------------------------------------------------------------------------
+ /listing/book/#ListingId/payment/success       ListingBookPaymentSuccessR      GET
+ /listing/book/#ListingId/payment/cancel        ListingBookPaymentCancelR       GET
+-----------------------------------------------------------------------------------------------------------
  /image/#UUID                                   ImageR                          GET
  /auth                                          AuthR                           Auth getAuth

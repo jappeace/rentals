@@ -24,7 +24,10 @@ import           Data.Traversable
 import           Database.Persist
 import           Database.Persist.TH
 import           Database.Persist.Sqlite
+import           Network.HTTP.Types.Method
 import           Network.URI
+import           Network.Wai.Handler.Warp
+import           Network.Wai.Middleware.Cors
 import qualified Network.Wreq                    as W
 import           System.Directory
 import           Text.ICalendar
@@ -87,4 +90,14 @@ appMain = do
 
         liftIO . delay $ 60 * 60 * 1000 * 1000
 
-    warp (appPort settings) $ App settings pool
+    waiApp <- toWaiApp (App settings pool)
+    run (appPort settings) $
+      (cors $ \req -> Just $
+        simpleCorsResourcePolicy
+          {corsMethods =
+            [ methodOptions
+            , methodGet
+            , methodPost
+            , methodPut
+            , methodDelete
+            ]}) waiApp

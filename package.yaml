@@ -28,6 +28,8 @@ dependencies:
 - text
 - slugify
 - aeson
+- wai-cors
+- warp
 - case-insensitive
 - mtl
 - random
