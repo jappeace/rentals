@@ -76,6 +76,13 @@
                   <button class="btn btn-primary">
                     <i class="bi bi-floppy">
 
+      <div class="col-md-12 mb-3">
+        <div class="input-group">
+          <span class="input-group-text">export url
+          <input id="export-url" class="form-control" value=@{CalendarExportR (ICS (listingUuid l))} readonly>
+          <button data-clipboard-target="#export-url" id="copy-url" class="btn btn-primary">
+            <i class="bi bi-clipboard">
+
       <div class="col-md-12">
         <div class="row gx-0 mb-3">
           <div class="col-12 border-bottom border-secondary-subtle">

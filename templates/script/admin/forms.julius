@@ -1,4 +1,6 @@
 window.addEventListener("load", function() {
+  new ClipboardJS("#copy-url");
+
   let uploadImageForm = document.getElementById("upload-image");
   if (uploadImageForm) {
     uploadImageForm.addEventListener("submit", function(e) {
