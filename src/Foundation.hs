@@ -149,7 +149,7 @@ instance PathPiece UUID where
 -----------------------------------------------------------------------------------------
 instance PathPiece ICS where
   toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
-  fromPathPiece p = fmap ICS . UUID.fromText . T.drop 4 $ p
+  fromPathPiece p = fmap ICS . UUID.fromText . T.reverse . T.drop 4 . T.reverse $ p
 -----------------------------------------------------------------------------------------
 instance PathPiece Slug where
   toPathPiece = toPathPiece . unSlug
