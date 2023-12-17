@@ -1,12 +1,12 @@
-module Handler.User.Booking where
+module Rentals.Handler.User.Booking where
 
 import Yesod
-import Foundation
+import Rentals.Foundation
 
-import Handler.User.Internal
+import Rentals.Handler.User.Internal
 
-import Settings
-import Utils
+import Rentals.Settings
+import Rentals.Utils
 
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)

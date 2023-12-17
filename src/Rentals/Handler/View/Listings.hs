@@ -1,9 +1,9 @@
-module Handler.View.Listings where
+module Rentals.Handler.View.Listings where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 
-import Utils
+import Rentals.Utils
 
 import           Control.Monad
 import           Data.List         ((\\))

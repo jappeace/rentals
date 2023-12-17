@@ -1,6 +1,6 @@
-module Handler.Admin.Export where
+module Rentals.Handler.Admin.Export where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 
 import           Data.Default               (def)
@@ -14,7 +14,7 @@ import           Network.HTTP.Types.Status
 import           Text.ICalendar
 import           System.Random
 
-import Utils
+import Rentals.Utils
 
 getCalendarExportR :: ICS -> Handler VCalendar
 getCalendarExportR (ICS uuid) = do

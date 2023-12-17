@@ -1,6 +1,6 @@
-module Handler.View.Admin where
+module Rentals.Handler.View.Admin where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 
 import Data.Time.Calendar

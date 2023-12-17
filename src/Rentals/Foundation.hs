@@ -14,7 +14,7 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RecordWildCards            #-}
-module Foundation where
+module Rentals.Foundation where
 
 import Yesod
 import Yesod.Auth
@@ -52,7 +52,7 @@ import           Text.ICalendar
 import           Text.Julius
 import           Text.Read                  (readMaybe, readEither)
 
-import Settings
+import Rentals.Settings
 
 data App = App
   { appSettings :: AppSettings

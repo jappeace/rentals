@@ -1,7 +1,7 @@
-module Handler.User.Internal where
+module Rentals.Handler.User.Internal where
 
 import Yesod
-import Foundation
+import Rentals.Foundation
 
 import           Data.List                 (foldl')
 import           Data.Maybe
