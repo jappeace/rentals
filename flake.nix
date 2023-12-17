@@ -16,15 +16,16 @@
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
       hpkgs = pkgs.haskellPackages.override {
         overrides = hnew: hold: {
-          template-project = hnew.callCabal2nix "template-project" ./. { };
+          rentals = hnew.callCabal2nix "rentals" ./. { };
+          slugify = pkgs.haskell.lib.dontCheck (pkgs.haskell.lib.markUnbroken hold.slugify);
         };
       };
     in
     {
-      defaultPackage.x86_64-linux =  hpkgs.template-project;
+      defaultPackage.x86_64-linux =  hpkgs.rentals;
       inherit pkgs;
       devShell.x86_64-linux = hpkgs.shellFor {
-        packages = ps : [ ps."template-project" ];
+        packages = ps : [ ps."rentals" ];
         withHoogle = true;
 
         buildInputs = [
