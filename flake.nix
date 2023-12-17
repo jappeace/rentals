@@ -1,7 +1,16 @@
 # I used chatgpt to generate this template and then just
 # modified to how I normally use these things.
 {
-  description = "My Haskell project";
+  description = "Rentals";
+  nixConfig = {
+    extra-substituters = [
+      "https://jappie.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "jappie.cachix.org-1:+5Liddfns0ytUSBtVQPUr/Wo6r855oNLgD4R8tm1AE4="
+    ];
+  };
+
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
