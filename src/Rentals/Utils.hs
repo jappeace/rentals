@@ -1,7 +1,7 @@
-module Utils where
+module Rentals.Utils where
 
 import Yesod
-import Foundation
+import Rentals.Foundation
 
 import           Data.Aeson                (Result(..), FromJSON)
 import qualified Data.ByteString.Lazy      as LBS

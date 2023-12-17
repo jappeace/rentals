@@ -1,9 +1,9 @@
-module Handler.Admin.Listing where
+module Rentals.Handler.Admin.Listing where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 
-import Utils
+import Rentals.Utils
 
 import           Control.Monad
 import           Data.Aeson                (Result(..))

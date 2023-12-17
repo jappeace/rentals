@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Handler.Admin.Import where
+module Rentals.Handler.Admin.Import where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 
-import Utils
+import Rentals.Utils
 
 import qualified Control.Exception          as E
 import           Control.Lens               ((^.), (.~), (&), to)

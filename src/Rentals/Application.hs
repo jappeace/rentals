@@ -3,9 +3,9 @@
 {-# LANGUAGE ViewPatterns         #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Application where
+module Rentals.Application where
 
-import Foundation
+import Rentals.Foundation
 import Yesod
 import Yesod.Auth
 import Yesod.Default.Config2
@@ -32,16 +32,16 @@ import qualified Network.Wreq                    as W
 import           System.Directory
 import           Text.ICalendar
 
-import Handler.Admin.Listing
-import Handler.Admin.Export
-import Handler.Admin.Import
-import Handler.User.Booking
-import Handler.User.Listing
-import Handler.User.User
-import Handler.View.Admin
-import Handler.View.Listings
+import Rentals.Handler.Admin.Listing
+import Rentals.Handler.Admin.Export
+import Rentals.Handler.Admin.Import
+import Rentals.Handler.User.Booking
+import Rentals.Handler.User.Listing
+import Rentals.Handler.User.User
+import Rentals.Handler.View.Admin
+import Rentals.Handler.View.Listings
 
-import Settings
+import Rentals.Settings
 
 mkYesodDispatch "App" resourcesApp
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Settings where
+module Rentals.Settings where
 
 import Data.Aeson
 import Data.Text (Text)

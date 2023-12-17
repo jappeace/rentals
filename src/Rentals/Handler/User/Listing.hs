@@ -1,10 +1,10 @@
-module Handler.User.Listing where
+module Rentals.Handler.User.Listing where
 
-import           Foundation
+import           Rentals.Foundation
 import           Yesod
 
-import           Handler.User.Internal
-import           Utils
+import           Rentals.Handler.User.Internal
+import           Rentals.Utils
 
 import           Data.Fixed
 import           Data.Maybe
