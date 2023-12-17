@@ -21,7 +21,6 @@ cabal.sandbox.config
 *.keter
 *~
 \#*
-rentals.cabal
 logs/*
 images/*
 /.envrc

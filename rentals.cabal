@@ -1,0 +1,124 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           rentals
+version:        0.0.0
+build-type:     Simple
+license: AGPL
+license-file: LICENSE
+
+library
+  exposed-modules:
+      Rentals.Application
+      Rentals.Foundation
+      Rentals.Handler.Admin.Export
+      Rentals.Handler.Admin.Import
+      Rentals.Handler.Admin.Listing
+      Rentals.Handler.User.Booking
+      Rentals.Handler.User.Internal
+      Rentals.Handler.User.Listing
+      Rentals.Handler.User.User
+      Rentals.Handler.View.Admin
+      Rentals.Handler.View.Listings
+      Rentals.Settings
+      Rentals.Utils
+  other-modules:
+      Paths_rentals
+  hs-source-dirs:
+      src
+  default-extensions:
+      OverloadedStrings
+      TemplateHaskell
+  build-depends:
+      aeson
+    , base
+    , blaze-markup
+    , bytestring
+    , case-insensitive
+    , containers
+    , data-default
+    , directory
+    , extra
+    , filepath
+    , groupBy
+    , http-client
+    , http-types
+    , iCalendar
+    , lens
+    , monad-logger
+    , mtl
+    , network-uri
+    , persistent
+    , persistent-sqlite
+    , random
+    , resourcet
+    , shakespeare
+    , slugify
+    , stripeapi
+    , text
+    , time
+    , transformers
+    , unbounded-delays
+    , uuid
+    , wai-cors
+    , warp
+    , wreq
+    , yesod
+    , yesod-auth
+    , yesod-paginator
+    , yesod-persistent
+  default-language: Haskell2010
+
+executable rentals
+  main-is: Main.hs
+  other-modules:
+      Paths_rentals
+  hs-source-dirs:
+      app
+  default-extensions:
+      OverloadedStrings
+      TemplateHaskell
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      aeson
+    , base
+    , blaze-markup
+    , bytestring
+    , case-insensitive
+    , containers
+    , data-default
+    , directory
+    , extra
+    , filepath
+    , groupBy
+    , http-client
+    , http-types
+    , iCalendar
+    , lens
+    , monad-logger
+    , mtl
+    , network-uri
+    , persistent
+    , persistent-sqlite
+    , random
+    , rentals
+    , resourcet
+    , shakespeare
+    , slugify
+    , stripeapi
+    , text
+    , time
+    , transformers
+    , unbounded-delays
+    , uuid
+    , wai-cors
+    , warp
+    , wreq
+    , yesod
+    , yesod-auth
+    , yesod-paginator
+    , yesod-persistent
+  default-language: Haskell2010
