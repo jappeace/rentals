@@ -65,9 +65,6 @@ data App = App
 -----------------------------------------------------------------------------------------
 -- Types
 -----------------------------------------------------------------------------------------
-data Source = Local | Airbnb | Vrbo
-  deriving (Eq, Ord, Enum, Bounded, Show, Read)
-$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Source)
 
 newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
@@ -94,20 +91,7 @@ instance PersistFieldSql VCalendar where
 -----------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------
-instance PersistField URI where
-  toPersistValue uri = PersistText . T.pack $ (uriToString id uri) ""
-  fromPersistValue (PersistText uri) =
-    case parseURI . T.unpack $ uri of
-      Just uri' -> Right uri'
-      Nothing -> Left "Failed to create URI from Text"
-instance PersistFieldSql URI where
-  sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField Source where
-  toPersistValue = PersistText . T.pack . show
-  fromPersistValue (PersistText cs) = left T.pack . readEither $ T.unpack cs
-instance PersistFieldSql Source where
-  sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------
@@ -131,10 +115,6 @@ instance ToContent VCalendar where
 instance ToTypedContent VCalendar where
   toTypedContent = TypedContent "text/calendar; charset=utf-8" . toContent
 -----------------------------------------------------------------------------------------
-instance ToContent Listing where
-  toContent = toContent . toJSON
-instance ToTypedContent Listing where
-  toTypedContent = TypedContent "application/json; charset=utf-8" . toContent
 
 mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
 
@@ -147,9 +127,6 @@ instance ToMarkup UUID where
   toMarkup = toMarkup . UUID.toText
   preEscapedToMarkup = preEscapedToMarkup . UUID.toText
 -----------------------------------------------------------------------------------------
-instance ToMarkup URI where
-  toMarkup v = toMarkup $ (uriToString id v) ""
-  preEscapedToMarkup v = preEscapedToMarkup $ (uriToString id v) ""
 
 -----------------------------------------------------------------------------------------
 -- YesodAuth instances

@@ -17,9 +17,11 @@
 module Rentals.Database.Listing where
 
 import Rentals.Orphans()
+import Yesod.Core.Content
 import Data.Text
 import Database.Persist.TH
 import Data.UUID(UUID)
+import Data.Aeson(toJSON)
 import Data.Fixed(Centi, showFixed)
 import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
 import           Database.Persist
@@ -74,3 +76,9 @@ Listing json
   UniqueSlug slug
   UniqueCalendar uuid
   |]
+
+
+instance ToContent Listing where
+  toContent = toContent . toJSON
+instance ToTypedContent Listing where
+  toTypedContent = TypedContent "application/json; charset=utf-8" . toContent

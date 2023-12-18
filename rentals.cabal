@@ -27,6 +27,12 @@ library
       Rentals.Utils
       Rentals.Database.Listing
       Rentals.Database
+      Rentals.Database.Event
+      Rentals.Database.Import
+      Rentals.Database.ListingImage
+      Rentals.Orphans
+      Rentals.Database.Source
+
   other-modules:
       Paths_rentals
   hs-source-dirs:
@@ -38,6 +44,7 @@ library
       aeson
     , base
     , blaze-markup
+    , yesod-core
     , bytestring
     , case-insensitive
     , containers
