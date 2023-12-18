@@ -25,6 +25,8 @@ library
       Rentals.Handler.View.Listings
       Rentals.Settings
       Rentals.Utils
+      Rentals.Database.Listing
+      Rentals.Database
   other-modules:
       Paths_rentals
   hs-source-dirs:
@@ -44,6 +46,7 @@ library
     , extra
     , filepath
     , groupBy
+    , path-pieces
     , http-client
     , http-types
     , iCalendar

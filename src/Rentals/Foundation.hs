@@ -14,6 +14,8 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RecordWildCards            #-}
+
+
 module Rentals.Foundation where
 
 import Yesod
@@ -22,6 +24,7 @@ import Yesod.Auth.Message
 import Yesod.Auth.Hardcoded
 import Yesod.Persist
 
+import Rentals.Database.Listing
 import           Control.Arrow
 import           Control.Monad
 import           Control.Monad.Trans.Reader (ReaderT)
@@ -65,15 +68,7 @@ data App = App
 data Source = Local | Airbnb | Vrbo
   deriving (Eq, Ord, Enum, Bounded, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Source)
------------------------------------------------------------------------------------------
-newtype Money = Money { unMoney :: Centi }
-  deriving (Eq, Ord, Num, Fractional)
-$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Money)
------------------------------------------------------------------------------------------
-newtype Slug = Slug { unSlug :: Text }
-  deriving (Eq, Show, Read)
-$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Slug)
------------------------------------------------------------------------------------------
+
 newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
@@ -83,9 +78,6 @@ instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
 
 type DB a = forall (m :: Type -> Type). (MonadUnliftIO m) => ReaderT SqlBackend m a
-
-share [mkPersist sqlSettings, mkMigrate "migrateAll"]
-    $(persistFileWith lowerCaseSettings "config/models.persistentmodels")
 
 -----------------------------------------------------------------------------------------
 -- PersistField instances
@@ -99,21 +91,8 @@ instance PersistField VCalendar where
 instance PersistFieldSql VCalendar where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField UUID where
-  toPersistValue = PersistText . UUID.toText
-  fromPersistValue (PersistText uuid) =
-    case UUID.fromText uuid of
-      Just uuid' -> Right uuid'
-      Nothing -> Left "Failed to create UUID from Text"
-instance PersistFieldSql UUID where
-  sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField Money where
-  -- TODO: make double sure that this is precise enough, safe, to deal with money values
-  toPersistValue = PersistInt64 . fromIntegral . fromEnum . unMoney
-  fromPersistValue (PersistInt64 money) = Right . Money . toEnum . fromIntegral $ money
-instance PersistFieldSql Money where
-  sqlType _ = SqlInt64
+
 -----------------------------------------------------------------------------------------
 instance PersistField URI where
   toPersistValue uri = PersistText . T.pack $ (uriToString id uri) ""
@@ -130,11 +109,7 @@ instance PersistField Source where
 instance PersistFieldSql Source where
   sqlType _ = SqlString
 -----------------------------------------------------------------------------------------
-instance PersistField Slug where
-  toPersistValue = PersistText . unSlug
-  fromPersistValue (PersistText slug) = Right $ Slug slug
-instance PersistFieldSql Slug where
-  sqlType _ = SqlString
+
 -----------------------------------------------------------------------------------------
 instance YesodPersist App where
   type YesodPersistBackend App = SqlBackend
@@ -143,17 +118,10 @@ instance YesodPersist App where
 -----------------------------------------------------------------------------------------
 -- PathPiece instances
 -----------------------------------------------------------------------------------------
-instance PathPiece UUID where
-  toPathPiece uuid = UUID.toText uuid
-  fromPathPiece p = UUID.fromText p
------------------------------------------------------------------------------------------
 instance PathPiece ICS where
   toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
   fromPathPiece p = fmap ICS . UUID.fromText . T.reverse . T.drop 4 . T.reverse $ p
------------------------------------------------------------------------------------------
-instance PathPiece Slug where
-  toPathPiece = toPathPiece . unSlug
-  fromPathPiece = fmap Slug . fromPathPiece
+
 
 -----------------------------------------------------------------------------------------
 -- Content instances
@@ -173,13 +141,7 @@ mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
 -----------------------------------------------------------------------------------------
 -- ToMarkup instances
 -----------------------------------------------------------------------------------------
-instance ToMarkup Money where
-  toMarkup = toMarkup . showFixed False . unMoney
-  preEscapedToMarkup = preEscapedToMarkup . showFixed False . unMoney
------------------------------------------------------------------------------------------
-instance ToMarkup Slug where
-  toMarkup = toMarkup . unSlug
-  preEscapedToMarkup = preEscapedToMarkup . unSlug
+
 -----------------------------------------------------------------------------------------
 instance ToMarkup UUID where
   toMarkup = toMarkup . UUID.toText

@@ -3,6 +3,8 @@
 {-# LANGUAGE ViewPatterns         #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+-- | This hooks everything together
 module Rentals.Application where
 
 import Rentals.Foundation
@@ -33,6 +35,7 @@ import qualified Network.Wreq                    as W
 import           System.Directory
 import           Text.ICalendar
 
+import Rentals.Database(migrateAll)
 import Rentals.Handler.Admin.Listing
 import Rentals.Handler.Admin.Export
 import Rentals.Handler.Admin.Import
