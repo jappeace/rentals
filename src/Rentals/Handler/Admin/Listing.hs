@@ -3,7 +3,7 @@ module Rentals.Handler.Admin.Listing where
 import Rentals.Foundation
 import Yesod
 
-import Rentals.Utils
+import Rentals.JSON
 
 import Rentals.Database.Listing
 import Rentals.Database.Source

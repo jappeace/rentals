@@ -1,4 +1,4 @@
-module Rentals.Utils where
+module Rentals.Calendar(addVEventToVCalendar, emptyVCalendar, parseCalendar, printCalendar, newVEvent) where
 
 import Yesod
 import Rentals.Foundation
@@ -18,14 +18,6 @@ import           Data.Version
 import           Network.HTTP.Types.Status
 import           System.Random
 import           Text.ICalendar
-
-parseJsonBody' :: FromJSON a => Handler a
-parseJsonBody' = do
-  requestBody <- parseCheckJsonBody
-  case requestBody of
-    Success v -> pure v
-    Error err -> sendResponseStatus status400 $ toEncoding
-      ("Unable to parse the request body: " <> err)
 
 parseCalendar :: LBS.ByteString -> Handler (Either Text VCalendar)
 parseCalendar c = do

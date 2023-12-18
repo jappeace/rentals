@@ -6,7 +6,7 @@ import Rentals.Foundation
 import Rentals.Handler.User.Internal
 
 import Rentals.Settings
-import Rentals.Utils
+import Rentals.JSON
 
 import Rentals.Database.Listing
 import Rentals.Database.Source

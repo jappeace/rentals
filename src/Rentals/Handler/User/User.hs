@@ -3,7 +3,7 @@ module Rentals.Handler.User.User where
 import Rentals.Foundation
 import Yesod
 
-import Rentals.Utils
+import Rentals.JSON
 
 import Text.Hamlet
 

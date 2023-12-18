@@ -16,8 +16,9 @@ import           System.Random
 import Rentals.Database.Event
 import Rentals.Database.Listing
 import Rentals.Database.Source
+import Rentals.Calendar
 
-import Rentals.Utils
+import Rentals.JSON
 
 getCalendarExportR :: ICS -> Handler VCalendar
 getCalendarExportR (ICS uuid) = do
