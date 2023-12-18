@@ -13,6 +13,9 @@ import qualified Data.UUID                  as UUID
 import           Network.HTTP.Types.Status
 import           Text.ICalendar
 import           System.Random
+import Rentals.Database.Event
+import Rentals.Database.Listing
+import Rentals.Database.Source
 
 import Rentals.Utils
 

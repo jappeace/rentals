@@ -5,6 +5,10 @@ import Yesod
 
 import Rentals.Utils
 
+import Rentals.Database.Listing
+import Rentals.Database.Source
+import Rentals.Database.Event
+import Rentals.Database.ListingImage
 import           Control.Monad
 import           Data.Aeson                (Result(..))
 import           Data.List.Extra           (wordsBy)

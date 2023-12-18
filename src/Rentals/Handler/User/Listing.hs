@@ -1,6 +1,7 @@
 module Rentals.Handler.User.Listing where
 
 import           Rentals.Foundation
+import Rentals.Database.Listing
 import           Yesod
 
 import           Rentals.Handler.User.Internal

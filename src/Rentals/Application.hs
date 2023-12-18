@@ -7,6 +7,8 @@
 -- | This hooks everything together
 module Rentals.Application where
 
+import Rentals.Database.Import
+import Rentals.Database.Event
 import Rentals.Foundation
 import Yesod
 import Yesod.Auth
