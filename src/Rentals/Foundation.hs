@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE ViewPatterns               #-}
@@ -62,37 +63,42 @@ data App = App
   , appConnPool :: ConnectionPool
   }
 
------------------------------------------------------------------------------------------
--- Types
------------------------------------------------------------------------------------------
-
 newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
 -----------------------------------------------------------------------------------------
 
+mkYesodData "App" [parseRoutes|
+/view/admin                                    ViewAdminR                      GET
+/view/admin/listing/#ListingId/#Slug           ViewAdminListingR               GET
+
+/admin/listing/sources                         AdminListingSourcesR            GET
+/admin/listing/new                             AdminListingNewR                         PUT
+/admin/listing/list/#ListingId                      AdminListingR                   GET      PUT
+/admin/listing/image/#ListingId                AdminListingImageR                       PUT DELETE
+/admin/listing/update-blocked-dates/#ListingId AdminListingUpdateBlockedDatesR          PUT
+/admin/listing/import/#ListingId               AdminListingImportR                      PUT DELETE
+/admin/listing/update-day-price/#ListingId     AdminListingUpdateDayPriceR              PUT
+
+/ical/export/#ICS                              CalendarExportR                 GET
+
+/                                              ViewListingsR                   GET
+/view/listing/#ListingId/#Slug                 ViewListingR                    GET
+
+/listing/quote/#ListingId                      ListingQuoteR                       POST
+/listing/book/#ListingId                       ListingBookR                             PUT
+/listing/book/#ListingId/payment/success       ListingBookPaymentSuccessR      GET
+/listing/book/#ListingId/payment/cancel        ListingBookPaymentCancelR       GET
+
+/image/#UUID                                   ImageR                          GET
+/auth                                          AuthR                           Auth getAuth
+
+|]
+
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
 
 type DB a = forall (m :: Type -> Type). (MonadUnliftIO m) => ReaderT SqlBackend m a
-
------------------------------------------------------------------------------------------
--- PersistField instances
------------------------------------------------------------------------------------------
-instance PersistField VCalendar where
-  toPersistValue = PersistByteString . BS.toStrict . printICalendar def
-  fromPersistValue (PersistByteString textCal) =
-    case parseICalendar def "." $ BS.fromStrict textCal of
-      Right (parsedCal:_, _) -> Right parsedCal
-      Left err -> Left . T.pack $ err
-instance PersistFieldSql VCalendar where
-  sqlType _ = SqlString
------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------
-
------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------
 instance YesodPersist App where
@@ -115,8 +121,6 @@ instance ToContent VCalendar where
 instance ToTypedContent VCalendar where
   toTypedContent = TypedContent "text/calendar; charset=utf-8" . toContent
 -----------------------------------------------------------------------------------------
-
-mkYesodData "App" $(parseRoutesFile "config/routes.yesodroutes")
 
 -----------------------------------------------------------------------------------------
 -- ToMarkup instances
