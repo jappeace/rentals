@@ -35,7 +35,7 @@
       inherit pkgs;
       devShell.x86_64-linux = hpkgs.shellFor {
         packages = ps : [ ps."rentals" ];
-        withHoogle = true;
+        withHoogle = false;
 
         buildInputs = [
           hpkgs.haskell-language-server

@@ -6,7 +6,7 @@ import Rentals.Database.Listing
 import Rentals.Database.ListingImage
 import Rentals.Database.Event
 
-import Rentals.Utils
+import Rentals.JSON
 
 import           Control.Monad
 import           Data.List         ((\\))

@@ -1,17 +1,15 @@
 module Rentals.Handler.User.Listing where
 
-import           Rentals.Foundation
+import Data.Fixed
+import Data.List (foldl')
+import Data.Maybe
+import Data.Text (Text)
+import Network.HTTP.Types.Status
 import Rentals.Database.Listing
-import           Yesod
-
-import           Rentals.Handler.User.Internal
-import           Rentals.Utils
-
-import           Data.Fixed
-import           Data.Maybe
-import           Data.List (foldl')
-import           Data.Text (Text)
-import           Network.HTTP.Types.Status
+import Rentals.Foundation
+import Rentals.Handler.User.Internal
+import Rentals.JSON
+import Yesod
 
 postListingQuoteR :: ListingId -> Handler TypedContent
 postListingQuoteR lid = do

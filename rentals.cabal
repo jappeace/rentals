@@ -24,7 +24,8 @@ library
       Rentals.Handler.View.Admin
       Rentals.Handler.View.Listings
       Rentals.Settings
-      Rentals.Utils
+      Rentals.Calendar
+      Rentals.JSON
       Rentals.Database.Listing
       Rentals.Database
       Rentals.Database.Event
