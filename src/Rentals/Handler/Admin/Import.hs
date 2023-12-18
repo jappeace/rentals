@@ -52,7 +52,7 @@ putAdminListingImportR lid = do
                   sendResponseStatus status204 ()
 
                 Left err -> do
-                  liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+                  $logError $ T.pack err
                   sendResponseStatus status503 $ toEncoding
                     ("The retrieved iCalendar is malformed and could not be parsed: " <> T.pack err)
 

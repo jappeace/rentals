@@ -20,6 +20,7 @@ import           Data.Default                    (def)
 import           Data.Functor
 import qualified Data.Map.Strict                 as M
 import qualified Data.Text.Lazy                  as LT
+import qualified Data.Text                  as T
 import           Data.Traversable
 import           Database.Persist
 import           Database.Persist.TH
@@ -49,18 +50,13 @@ appMain :: IO ()
 appMain = do
   settings <- loadYamlSettings ["config/settings.yml"] [] useEnv
 
-  logExists <- doesFileExist "logs/ical-errors"
-  when (not logExists) $ do
-    createDirectoryIfMissing True "logs"
-    writeFile "logs/ical-errors" mempty
-
   createDirectoryIfMissing True "images"
 
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
 
-    void . forkIO . forever . runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool ->
-      liftIO . runResourceT . flip runSqlPool pool $ do
+    void $ forkIO $ forever $ runStderrLoggingT $ withSqlitePool "dev.sqlite3" 10 $ \pool ->
+      runResourceT $ flip runSqlPool pool $ do
         imports <- selectList [] []
 
         for imports $ \(Entity _ (Import cid source uri)) -> do
@@ -86,7 +82,7 @@ appMain = do
                   Nothing -> pure ()
 
             Left err ->
-              liftIO $ appendFile "logs/ical-errors" $ "\n" <> err
+              $logError $ T.pack err
 
         liftIO . delay $ 60 * 60 * 1000 * 1000
 
