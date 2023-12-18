@@ -3,6 +3,11 @@ module Rentals.Handler.View.Admin where
 import Rentals.Foundation
 import Yesod
 
+import Rentals.Database.Listing
+import Rentals.Database.Event
+import Rentals.Database.Import
+import Rentals.Database.Source
+import Rentals.Database.ListingImage
 import Data.Time.Calendar
 import Data.Traversable
 import Database.Persist.Sql

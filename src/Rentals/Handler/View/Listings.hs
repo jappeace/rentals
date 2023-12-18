@@ -2,6 +2,9 @@ module Rentals.Handler.View.Listings where
 
 import Rentals.Foundation
 import Yesod
+import Rentals.Database.Listing
+import Rentals.Database.ListingImage
+import Rentals.Database.Event
 
 import Rentals.Utils
 
