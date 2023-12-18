@@ -82,7 +82,7 @@ appMain = do
                   Nothing -> pure ()
 
             Left err ->
-              $logError $ T.pack err
+              $logError $ "Parsing ical failed: " <> T.pack err
 
         liftIO . delay $ 60 * 60 * 1000 * 1000
 
