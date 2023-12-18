@@ -24,14 +24,28 @@ Features
   - [] export calendars for a given listing
 
 # Planned features
++ house rules.
+  + we need to make them accept the house rules during the booking process.
+  + some text field fillable by the admin which they've to agree to
 + Discount codes.
-+ variable pricing.
++ price rules: 
+  + more people booking should increase the price.
+  + pets should increase the price
++ variable per night pricing.
+  + we mostly try to figure out seasonality but still get full bookings
+  + set a minimum price
+  + set a maximum price
+  + let an "algorightm" decide what to set it to:
+     + higher if far in the future
+     + lower if closer to now
+     + higher if previous bookings around the same time last year
+
 + reviews with fine grained administration control.
 
 # TODO
 
-+ [ ] License
-+ [ ] Add global namespace
++ [x] License
++ [x] Add global namespace
 + [ ] Split persistent models
 + [ ] integrate routes etc
 
