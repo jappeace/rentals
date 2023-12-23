@@ -24,3 +24,5 @@ cabal.sandbox.config
 logs/*
 images/*
 /.envrc
+/result
+/.direnv/
