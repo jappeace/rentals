@@ -69,8 +69,8 @@ $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
 -----------------------------------------------------------------------------------------
 
 mkYesodData "App" [parseRoutes|
-/view/admin                                    ViewAdminR                      GET
-/view/admin/listing/#ListingId/#Slug           ViewAdminListingR               GET
+/admin                                    ViewAdminR                      GET
+/admin/listing/view/#ListingId/#Slug           ViewAdminListingR               GET
 
 /admin/listing/sources                         AdminListingSourcesR            GET
 /admin/listing/new                             AdminListingNewR                         PUT
