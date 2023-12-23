@@ -45,6 +45,8 @@ import Text.ICalendar
 import Yesod
 import Yesod.Auth
 import Yesod.Default.Config2
+import System.Environment (getArgs)
+import Data.Maybe (fromMaybe)
 
 mkYesodDispatch "App" resourcesApp
 
