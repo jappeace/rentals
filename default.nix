@@ -1,4 +1,3 @@
-{}:
 (import
   (
     let lock = builtins.fromJSON (builtins.readFile ./flake.lock); in
