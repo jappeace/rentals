@@ -3,6 +3,7 @@
 {-# LANGUAGE ViewPatterns         #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE NumericUnderscores #-}
 
 -- | This hooks everything together
 module Rentals.Application where
@@ -48,12 +49,16 @@ import Rentals.Handler.View.Admin
 import Rentals.Handler.View.Listings
 
 import Rentals.Settings
+import Control.Concurrent.Async(async)
 
 mkYesodDispatch "App" resourcesApp
 
 appMain :: IO ()
 appMain = do
-  settings <- loadYamlSettings ["config/settings.yml"] [] useEnv
+
+  configPath <- bifold <$> race ("config/settings.yml" <$ threadDelay 10_000) getLine
+  putStrLn $ "reading config from: " <> configPath
+  settings <- loadYamlSettings [configPath ] [] useEnv
 
   createDirectoryIfMissing True "images"
 

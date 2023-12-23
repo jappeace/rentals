@@ -48,6 +48,7 @@ library
     , yesod-core
     , bytestring
     , case-insensitive
+    , async
     , containers
     , data-default
     , directory
