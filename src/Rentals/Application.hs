@@ -57,6 +57,7 @@ appMain = do
   settings <- loadYamlSettings [configPath] [] useEnv
 
   createDirectoryIfMissing True "images"
+  createDirectoryIfMissing True "config"
 
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
