@@ -61,3 +61,12 @@ cabal run
 
 the app binds by default to port 3023.
 
+
+you can enter the shell manually with:
+
+```
+nix develop
+```
+
+or build without nix using plain cabal,
+however that will miss several overrides.
