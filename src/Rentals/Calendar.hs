@@ -45,7 +45,7 @@ emptyVCalendar = VCalendar
 
 newVEvent :: UTCTime -> UUID -> VEvent
 newVEvent currentTime uuid = VEvent
-  { veDTStamp       = DTStamp currentTime def
+  { veDTStamp       = Just $ DTStamp currentTime def
   , veUID           = UID (LT.fromStrict . toText $ uuid) def
   , veClass         = Class Private def
   , veDTStart       = Nothing
