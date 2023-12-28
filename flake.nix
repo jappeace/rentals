@@ -28,11 +28,12 @@
         overrides = hnew: hold: {
           rentals = hnew.callCabal2nix "rentals" ./. { };
           slugify = lib.dontCheck (lib.markUnbroken hold.slugify);
-          iCalendar = lib.doJailbreak (hnew.callCabal2nix "iCalendar"
+          iCalendar = lib.dontCheck (lib.doJailbreak (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
-                     url = "https://github.com/ptkato/iCalendar";
-                     rev = "f96cd2bc84313fb25f3581f8d31c437cd855f1d7";
-                  }) {});
+                     url = "https://github.com/jappeace/iCalendar";
+                     ref = "bump-bounds";
+                     rev = "b1e73678dca75513f322061f91dc333788516e39";
+                  }) {}));
           base64-bytestring = lib.doJailbreak hold.base64-bytestring;
         };
       };
