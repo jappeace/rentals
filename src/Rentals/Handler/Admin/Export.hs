@@ -26,20 +26,21 @@ getCalendarExportR (ICS uuid) = do
   case mlisting of
     Just (Entity lid listing) -> do
       currentTime <- liftIO getCurrentTime
-      eventUUID   <- liftIO randomIO
       events      <- runDB $ selectList [EventListing ==. lid, EventSource ==. Local] []
 
-      let vcalendar = emptyVCalendar
-          appendEvents vcalendar (Entity _ event) =
-            addVEventToVCalendar vcalendar $ (newVEvent currentTime eventUUID)
-              { veDTStart = Just $ DTStartDate (Date (eventStart event)) def
-              , veDTEndDuration = Just . Left $ DTEndDate (Date (eventEnd event)) def
-              , veDescription = fmap (\d -> Description (LT.fromStrict d) Nothing Nothing def) $ eventDescription event
-              , veSummary = fmap (\d -> Summary (LT.fromStrict d) Nothing Nothing def) $ eventSummary event
-              , veTransp = Opaque def
-              }
+      let appendEvents vcalendar (Entity _ event) =
+            case UUID.fromText (eventUuid event) of
+              Just eventUUID ->
+                addVEventToVCalendar vcalendar $ (newVEvent currentTime eventUUID)
+                  { veDTStart = Just $ DTStartDate (Date (eventStart event)) def
+                  , veDTEndDuration = Just . Left $ DTEndDate (Date (eventEnd event)) def
+                  , veDescription = fmap (\d -> Description (LT.fromStrict d) Nothing Nothing def) $ eventDescription event
+                  , veSummary = fmap (\d -> Summary (LT.fromStrict d) Nothing Nothing def) $ eventSummary event
+                  , veTransp = Opaque def
+                  }
+              Nothing -> vcalendar
 
-      pure $ foldl' appendEvents vcalendar events
+      pure $ foldl' appendEvents emptyVCalendar events
 
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("No ical found for the given UUID, please check if it's correct" :: Text)
