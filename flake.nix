@@ -34,7 +34,6 @@
                      ref = "bump-bounds";
                      rev = "b1e73678dca75513f322061f91dc333788516e39";
                   }) {}));
-          base64-bytestring = lib.doJailbreak hold.base64-bytestring;
         };
       };
     in
