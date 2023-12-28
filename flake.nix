@@ -22,11 +22,12 @@
 
   outputs = { self, nixpkgs, flake-compat }:
     let
+      lib = pkgs.haskell.lib;
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
       hpkgs = pkgs.haskellPackages.override {
         overrides = hnew: hold: {
           rentals = hnew.callCabal2nix "rentals" ./. { };
-          slugify = pkgs.haskell.lib.dontCheck (pkgs.haskell.lib.markUnbroken hold.slugify);
+          slugify = lib.dontCheck (lib.markUnbroken hold.slugify);
           iCalendar = (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
                      url = "https://github.com/ptkato/iCalendar";
