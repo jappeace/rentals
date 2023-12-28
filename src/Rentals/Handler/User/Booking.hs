@@ -11,6 +11,7 @@ import Rentals.JSON
 import Rentals.Database.Listing
 import Rentals.Database.Source
 import Rentals.Database.Event
+import Rentals.Database.Money
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)
 import qualified Data.Aeson.KeyMap                           as A

@@ -7,6 +7,7 @@ import Rentals.JSON
 
 import Rentals.Database.Listing
 import Rentals.Database.Source
+import Rentals.Database.Money
 import Rentals.Database.Event
 import Rentals.Database.ListingImage
 import           Control.Monad
@@ -46,13 +47,18 @@ putAdminListingR :: ListingId -> Handler TypedContent
 putAdminListingR lid = do
   mListing <- runDB $ get lid
   case mListing of
-    Just _ -> do
+    Just original -> do
       listing <- parseJsonBody'
 
-      let slug = Slug . slugify $ (listingTitle listing)
-            <> " " <> (T.pack . show $ fromSqlKey lid)
+      let slug = Slug . slugify $ listingNewTitle listing
 
-      runDB . replace lid $ listing {listingSlug = slug}
+      runDB . replace lid $ original
+        { listingTitle       = listingNewTitle listing
+        , listingDescription = listingNewDescription listing
+        , listingPrice       = listingNewPrice listing
+        , listingCleaning    = listingNewCleaning listing
+        , listingSlug        = slug
+        }
 
       sendResponseStatus status200 $ toEncoding slug
 
@@ -123,12 +129,15 @@ putAdminListingNewR = do
 
   (mlid, slug) <- runDB $ do
     uuid <- liftIO randomIO
-    let slug = Slug . slugify $ listingTitle listing
+    let slug = Slug . slugify $ listingNewTitle listing
 
-    mlid <- insertUnique $ listing
-      { listingSlug = slug
-      , listingUuid = uuid
-      }
+    mlid <- insertUnique $ Listing
+        (listingNewTitle listing)
+        (listingNewDescription listing)
+        (listingNewPrice listing)
+        (listingNewCleaning listing)
+        slug
+        uuid
 
     pure (mlid, slug)
 

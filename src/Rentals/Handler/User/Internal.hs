@@ -10,6 +10,7 @@ import           Data.Time.Calendar
 import           Network.HTTP.Types.Status
 import Rentals.Database.Listing
 import Rentals.Database.Event
+import Rentals.Database.Money
 
 getQuote :: ListingId -> Day -> Day -> Handler Money
 getQuote lid start end = runDB $ do

@@ -10,6 +10,8 @@ import Rentals.Database.Listing()
 import Rentals.Database.ListingImage()
 import Rentals.Database.Event()
 import Rentals.Database.Import()
+import Rentals.Database.Source()
+import Rentals.Database.Money()
 
 -- this module splitting trick is mentioned here https://www.parsonsmatt.org/2019/12/06/splitting_persistent_models.html
 -- but if we use discoverEntities then we have to use it in all of our models, otherwise foreign keys are missed

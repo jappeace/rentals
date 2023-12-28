@@ -15,6 +15,7 @@
 module Rentals.Database.Event where
 
 import Rentals.Orphans()
+import Rentals.Database.Money
 import Data.Text
 import Database.Persist.TH
 import Data.UUID(UUID)
