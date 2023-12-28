@@ -62,7 +62,7 @@ appMain = do
   runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
 
-    void $ forkIO $ forever $ runStderrLoggingT $ withSqlitePool "dev.sqlite3" 10 $ \pool ->
+    void $ forkIO $ forever $ runStderrLoggingT $ withSqlitePool "dev.sqlite3" 10 $ \pool -> do
       runResourceT $ flip runSqlPool pool $ do
         imports <- selectList [] []
 
@@ -100,7 +100,7 @@ appMain = do
             Left err ->
               $logError $ "Parsing ical failed: " <> T.pack err
 
-        liftIO . delay $ 60 * 60 * 1000 * 1000
+      liftIO . delay $ 60 * 60 * 1000 * 1000
 
     waiApp <- toWaiApp (App settings pool)
     run (appPort settings) $
