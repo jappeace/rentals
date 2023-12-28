@@ -34,7 +34,7 @@
                      rev = "f96cd2bc84313fb25f3581f8d31c437cd855f1d7";
                   }) {});
           base64-bytestring = lib.doJailbreak hold.base64-bytestring;
-          bytestring = lib.doJailbreak hold.bytestring;
+          # bytestring = lib.doJailbreak hold.bytestring;
         };
       };
     in
