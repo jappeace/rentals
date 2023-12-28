@@ -1,9 +1,11 @@
-module Rentals.JSON(parseJsonBody') where
+module Rentals.JSON(parseJsonBody', ListingNew(..)) where
 
 import Yesod
 import Rentals.Foundation
+import Rentals.Database.Money
 
 import           Data.Aeson                (Result(..), FromJSON)
+import           Data.Aeson.TH             (unwrapUnaryRecords, defaultOptions, deriveJSON)
 import qualified Data.ByteString.Lazy      as LBS
 import           Data.CaseInsensitive
 import           Data.Default              (def)
@@ -27,3 +29,10 @@ parseJsonBody' = do
     Error err -> sendResponseStatus status400 $ toEncoding
       ("Unable to parse the request body: " <> err)
 
+data ListingNew = ListingNew
+  { listingNewTitle       :: Text
+  , listingNewDescription :: Text
+  , listingNewPrice       :: Money
+  , listingNewCleaning    :: Money
+  }
+$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ListingNew)

@@ -29,7 +29,8 @@ window.addEventListener("load", () => {
       req.open("POST", "@{ListingQuoteR lid}");
       req.addEventListener("load", function() {
         if (req.status == 200) {
-          document.getElementById("price-total").textContent = "$" + req.responseText;
+          let resp = JSON.parse(req.responseText);
+          document.getElementById("price-total").textContent = "$" + (resp[0] + resp[1]);
         }
       });
       req.setRequestHeader("Content-type", "application/json");

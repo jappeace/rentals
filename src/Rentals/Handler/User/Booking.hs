@@ -11,6 +11,7 @@ import Rentals.JSON
 import Rentals.Database.Listing
 import Rentals.Database.Source
 import Rentals.Database.Event
+import Rentals.Database.Money
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)
 import qualified Data.Aeson.KeyMap                           as A
@@ -39,9 +40,10 @@ putListingBookR lid = do
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
 
-  amount     <- (* 100) . floor . unMoney <$> getQuote lid start end
+  (quote, cleaningFee) <- getQuote lid start end
   stripeKeys <- getsYesod $ appStripe . appSettings
   render     <- getUrlRender
+  let amount = ((* 100) . floor . unMoney $ quote) + (floor . unMoney $ cleaningFee)
 
   let conf = Stripe.defaultConfiguration
         { Stripe.configSecurityScheme = Stripe.basicAuthenticationSecurityScheme Stripe.BasicAuthenticationData

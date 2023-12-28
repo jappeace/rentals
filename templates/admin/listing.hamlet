@@ -12,11 +12,13 @@
                 <label class="d-block mb-3 col-md-8">
                   <span>title
                   <input name="title" class="form-control" value=#{listingTitle l}>
-                <label class="d-block mb-3 col-md-4">
+                <label class="d-block mb-3 col-md-8">
                   <span>price
                   <div class="input-group">
                     <span class="input-group-text">$
                     <input name="price" type="number" step=".01" class="form-control" value=#{listingPrice l}>
+                    <span class="input-group-text">cln. fee
+                    <input name="cleaning" type="number" step=".01" class="form-control" value=#{listingCleaning l}>
             <div class="col-md-12">
               <div class="row justify-content-between">
                 <label class="d-block mb-3 col-md-10">

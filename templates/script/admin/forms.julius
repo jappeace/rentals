@@ -106,11 +106,10 @@ window.addEventListener("load", function() {
       req.setRequestHeader("Accept", "application/json");
 
       req.send(JSON.stringify({
-        "title"      : newListingForm.elements.title.value,
-        "description": newListingForm.elements.description.value,
-        "price"      : Number(newListingForm.elements.price.value),
-        "slug"       : "",
-        "uuid"       : #{UUID.toText UUID.nil}
+        "listingNewTitle"      : newListingForm.elements.title.value,
+        "listingNewDescription": newListingForm.elements.description.value,
+        "listingNewPrice"      : Number(newListingForm.elements.price.value),
+        "listingNewCleaning"   : Number(newListingForm.elements.cleaning.value)
       }));
 
       return false;
@@ -133,10 +132,10 @@ window.addEventListener("load", function() {
       req.setRequestHeader("Accept", "application/json");
 
       req.send(JSON.stringify({
-        "title"      : editListingForm.elements.title.value,
-        "description": editListingForm.elements.description.value,
-        "price"      : Number(editListingForm.elements.price.value),
-        "slug"       : ""
+        "listingNewTitle"      : editListingForm.elements.title.value,
+        "listingNewDescription": editListingForm.elements.description.value,
+        "listingNewPrice"      : Number(editListingForm.elements.price.value),
+        "listingNewCleaning"   : Number(editListingForm.elements.cleaning.value)
       }));
 
       return false;

@@ -10,6 +10,11 @@ build-type:     Simple
 license: AGPL
 license-file: LICENSE
 
+extra-source-files:
+    templates/**/*.hamlet
+    templates/script/**/*.julius
+    templates/style/**/*.cassius
+
 library
   exposed-modules:
       Rentals.Application
@@ -31,6 +36,7 @@ library
       Rentals.Database.Event
       Rentals.Database.Import
       Rentals.Database.ListingImage
+      Rentals.Database.Money
       Rentals.Orphans
       Rentals.Database.Source
 

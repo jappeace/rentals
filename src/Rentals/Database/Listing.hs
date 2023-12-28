@@ -17,6 +17,7 @@
 module Rentals.Database.Listing where
 
 import Rentals.Orphans()
+import Rentals.Database.Money
 import Yesod.Core.Content
 import Data.Text
 import Database.Persist.TH
@@ -29,21 +30,7 @@ import           Database.Persist.Sql
 import Text.Blaze(ToMarkup(..))
 import Web.PathPieces
 
-newtype Money = Money { unMoney :: Centi }
-  deriving (Eq, Ord, Num, Fractional)
-$(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Money)
 
-
-instance PersistField Money where
-  -- TODO: make double sure that this is precise enough, safe, to deal with money values
-  toPersistValue = PersistInt64 . fromIntegral . fromEnum . unMoney
-  fromPersistValue (PersistInt64 money) = Right . Money . toEnum . fromIntegral $ money
-instance PersistFieldSql Money where
-  sqlType _ = SqlInt64
-
-instance ToMarkup Money where
-  toMarkup = toMarkup . showFixed False . unMoney
-  preEscapedToMarkup = preEscapedToMarkup . showFixed False . unMoney
 
 newtype Slug = Slug { unSlug :: Text }
   deriving (Eq, Show, Read)
@@ -70,6 +57,7 @@ Listing json
   title          Text
   description    Text
   price          Money
+  cleaning       Money
   slug           Slug
   uuid           UUID
 

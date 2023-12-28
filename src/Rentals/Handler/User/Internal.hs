@@ -10,8 +10,9 @@ import           Data.Time.Calendar
 import           Network.HTTP.Types.Status
 import Rentals.Database.Listing
 import Rentals.Database.Event
+import Rentals.Database.Money
 
-getQuote :: ListingId -> Day -> Day -> Handler Money
+getQuote :: ListingId -> Day -> Day -> Handler (Money, Money)
 getQuote lid start end = runDB $ do
   mlisting <- get lid
 
@@ -25,7 +26,7 @@ getQuote lid start end = runDB $ do
         ] []
 
       let days = length [start .. end] - length prices
-      pure $ (listingPrice listing) * (Money $ realToFrac days) + foldl' (+) 0 prices
+      pure $ ((listingPrice listing) * (Money $ realToFrac days) + foldl' (+) 0 prices, listingCleaning listing)
 
     Nothing -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
