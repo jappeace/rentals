@@ -28,7 +28,7 @@
         overrides = hnew: hold: {
           rentals = hnew.callCabal2nix "rentals" ./. { };
           slugify = lib.dontCheck (lib.markUnbroken hold.slugify);
-          iCalendar = (hnew.callCabal2nix "iCalendar"
+          iCalendar = lib.doJailbreak (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
                      url = "https://github.com/ptkato/iCalendar";
                      rev = "f96cd2bc84313fb25f3581f8d31c437cd855f1d7";
