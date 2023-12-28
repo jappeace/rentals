@@ -27,7 +27,7 @@
         overrides = hnew: hold: {
           rentals = hnew.callCabal2nix "rentals" ./. { };
           slugify = pkgs.haskell.lib.dontCheck (pkgs.haskell.lib.markUnbroken hold.slugify);
-          iCalendar = (hpNew.callCabal2nix "iCalendar"
+          iCalendar = (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
                      url = "https://github.com/ptkato/iCalendar";
                      rev = "eb9e69e78ac039d6fb0bf3a1b5c21878557d58e3";
