@@ -39,6 +39,7 @@ import Rentals.Handler.User.Listing
 import Rentals.Handler.User.User
 import Rentals.Handler.View.Admin
 import Rentals.Handler.View.Listings
+import Rentals.Handler.View.Booking
 import Rentals.Settings
 import System.Directory
 import Text.ICalendar
