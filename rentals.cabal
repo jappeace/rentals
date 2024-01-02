@@ -73,7 +73,10 @@ library
     , persistent-sqlite
     , random
     , resourcet
+    , mime-mail
+    , mail-pool
     , shakespeare
+    , blaze-html
     , slugify
     , stripeapi
     , text

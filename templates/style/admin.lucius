@@ -41,6 +41,16 @@
   font-size: 12px;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-outer-spin-button {
+  -webkite-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 #image-area ~ div .image {
   position: relative;
 }

@@ -4,7 +4,7 @@
       <p class="fs-1 text-center text-success mb-0">Booking successful
       <p class="fs-1 text-center text-success">
         <i class="bi bi-check-circle-fill">
-      <p class="text-center">you should shortly receive a success email with the receipt and extra information about your booking order
+      <p class="text-center">you should shortly receive an email with the receipt, we will also contact you via email with extra information about your reservation
       <a href=@{ViewListingsR} class="btn btn-secondary text-center">
         <i class="bi bi-arrow-90deg-left">
         <span class="ms-2">go back

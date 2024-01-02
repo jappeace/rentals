@@ -48,6 +48,8 @@ Event
   summary        Text Maybe         -- meta description of the event entry
   blocked        Bool default=false -- manually blocked?
   booked         Bool default=false
+  emailed        Bool default=false
+  email          Text Maybe
 
   UniqueEvent listing start
 
