@@ -1,4 +1,5 @@
-port: "_env:PORT:3033"
+port:  "_env:PORT:3033"
+email: "_env:EMAIL:info@rental.jappie.me"
 
 admin:
   - username: "_env:ADMIN_USERNAME:jappie"
@@ -17,7 +18,7 @@ smtp:
   password: "_env:SMTP_PASSWORD:x0"
   login:    "_env:SMTP_LOGIN:x0"
   host:     "_env:SMTP_HOST:localhost"
-  port:     "_env:SMTP_PORT:0000"
+  port:     "_env:SMTP_PORT:587"
 
 stripe:
   secret: "_env:STRIPE_SECRET:x0"

@@ -7,8 +7,8 @@ import Data.Text (Text)
 import Network.Mail.Pool
 
 data AppSettings = AppSettings
-  {
-    appPort       :: Int
+  { appPort       :: Int
+  , appEmail      :: Text
   , appAdmin      :: [AppAdmin]
   , appDatabase   :: AppDatabase
   , appSmtpCreds  :: SmtpCred
@@ -38,6 +38,7 @@ data Stripe = Stripe
 instance FromJSON AppSettings where
   parseJSON = withObject "AppSettings" $ \o -> do
     appPort <- o .: "port"
+    appEmail <- o .: "email"
     appAdmin <- o .: "admin"
     appDatabase <- o .: "database"
     appSmtpCreds <- o .: "smtp"

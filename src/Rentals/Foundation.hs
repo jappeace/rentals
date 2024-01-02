@@ -230,6 +230,11 @@ instance Yesod App where
     messages <- getMessage
     withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
 
+defaultEmailLayout :: WidgetFor App () -> Handler Html
+defaultEmailLayout w = do
+    pc <- widgetToPageContent w
+    withUrlRenderer $(hamletFile "templates/default-email-layout.hamlet")
+
 defaultUserLayout :: WidgetFor App () -> Handler Html
 defaultUserLayout w = defaultLayout $ do
   toWidgetHead $(juliusFile "templates/script/user/forms.julius")

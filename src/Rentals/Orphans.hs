@@ -4,6 +4,8 @@
 --  we group all orphans (we can) in here.
 --  this excludes some nefarious yesod based orphans.
 module Rentals.Orphans where
+
+import           Data.Time.Calendar
 import           Data.UUID                  (UUID)
 import qualified Data.UUID                  as UUID
 import           Database.Persist
@@ -39,3 +41,7 @@ instance PersistFieldSql URI where
 instance ToMarkup URI where
   toMarkup v = toMarkup $ (uriToString id v) ""
   preEscapedToMarkup v = preEscapedToMarkup $ (uriToString id v) ""
+
+instance ToMarkup Day where
+  toMarkup = toMarkup . showGregorian
+  preEscapedToMarkup = preEscapedToMarkup . showGregorian

@@ -100,9 +100,11 @@ putListingBookR lid = do
 getListingBookPaymentSuccessR :: ListingId -> Handler TypedContent
 getListingBookPaymentSuccessR lid = do
   params      <- reqGetParams <$> getRequest
-  stripeKeys  <- getsYesod $ appStripe . appSettings
-  smtpCreds   <- getsYesod $ appSmtpCreds . appSettings
-  adminEmails <- getsYesod $ map adminEmail . appAdmin . appSettings
+  master      <- getsYesod appSettings
+  let stripeKeys  = appStripe master
+      smtpCreds   = appSmtpCreds master
+      adminEmails = map adminEmail $ appAdmin master
+      appEmail'   = appEmail master
   mlisting    <- runDB $ get lid
 
   case (params, mlisting) of
@@ -174,11 +176,12 @@ getListingBookPaymentSuccessR lid = do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
                   (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
 
-              connPool <- liftIO . smtpPool $ defSettings smtpCreds
-              for adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing adminEmail))
+              emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
+              connPool  <- liftIO . smtpPool $ defSettings smtpCreds
+              for adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                 { mailTo      = [Address Nothing adminEmail]
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
-                , mailParts   = [[htmlPart $ renderHtml "templates/email/book-alert.hamlet"]]
+                , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
 
       redirect . ViewListingR lid $ listingSlug listing
