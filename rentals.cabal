@@ -28,6 +28,7 @@ library
       Rentals.Handler.User.User
       Rentals.Handler.View.Admin
       Rentals.Handler.View.Listings
+      Rentals.Handler.View.Booking
       Rentals.Settings
       Rentals.Calendar
       Rentals.JSON
@@ -72,7 +73,10 @@ library
     , persistent-sqlite
     , random
     , resourcet
+    , mime-mail
+    , mail-pool
     , shakespeare
+    , blaze-html
     , slugify
     , stripeapi
     , text

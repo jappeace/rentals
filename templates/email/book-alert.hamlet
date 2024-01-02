@@ -1,0 +1,2 @@
+<p>New booking for #{listingTitle listing}.
+<p>from #{start} to #{end}

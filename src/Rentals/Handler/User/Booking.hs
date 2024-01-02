@@ -23,9 +23,12 @@ import           Data.Traversable
 import qualified Data.UUID                                   as UUID
 import           Network.HTTP.Client
 import           Network.HTTP.Types.Status
+import           Network.Mail.Mime
+import           Network.Mail.Pool
 import qualified StripeAPI                                   as Stripe
 import qualified StripeAPI.Types.NotificationEventData.Extra as Stripe
 import           System.Random
+import           Text.Blaze.Html.Renderer.Text
 
 putListingBookR :: ListingId -> Handler TypedContent
 putListingBookR lid = do
@@ -76,6 +79,9 @@ putListingBookR lid = do
         ){Stripe.postCheckoutSessionsRequestBodyLineItems = Just [checkoutLineItem]
         , Stripe.postCheckoutSessionsRequestBodyMode = Just Stripe.PostCheckoutSessionsRequestBodyMode'EnumPayment
         , Stripe.postCheckoutSessionsRequestBodyCustomerCreation = Just Stripe.PostCheckoutSessionsRequestBodyCustomerCreation'EnumAlways
+        , Stripe.postCheckoutSessionsRequestBodyPaymentIntentData = Just $ Stripe.mkPostCheckoutSessionsRequestBodyPaymentIntentData'
+          { Stripe.postCheckoutSessionsRequestBodyPaymentIntentData'Description = Just $ "Thank you for your reservation!"
+          }
         }
 
   checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postCheckoutSessions checkoutSession
@@ -93,9 +99,13 @@ putListingBookR lid = do
 
 getListingBookPaymentSuccessR :: ListingId -> Handler TypedContent
 getListingBookPaymentSuccessR lid = do
-  params     <- reqGetParams <$> getRequest
-  stripeKeys <- getsYesod $ appStripe . appSettings
-  mlisting   <- runDB $ get lid
+  params      <- reqGetParams <$> getRequest
+  master      <- getsYesod appSettings
+  let stripeKeys  = appStripe master
+      smtpCreds   = appSmtpCreds master
+      adminEmails = map adminEmail $ appAdmin master
+      appEmail'   = appEmail master
+  mlisting    <- runDB $ get lid
 
   case (params, mlisting) of
     ([(_, checkoutSessionId)], Just listing) -> do
@@ -114,6 +124,23 @@ getListingBookPaymentSuccessR lid = do
         Stripe.GetCheckoutSessionsSessionLineItemsResponseDefault err -> sendResponseStatus status503 $ toEncoding
           ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
         Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> T.pack err)
+
+      checkoutSessionResponse' <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSession $
+        Stripe.mkGetCheckoutSessionsSessionParameters checkoutSessionId
+      customerEmail <- case responseBody checkoutSessionResponse' of
+        Stripe.GetCheckoutSessionsSessionResponse200 checkoutSession ->
+          case Stripe.checkout'sessionCustomerDetails checkoutSession of
+            Just (Stripe.NonNull customerDetails) ->
+              case Stripe.checkout'sessionCustomerDetails'NonNullableEmail customerDetails of
+                Just (Stripe.NonNull customerEmail) -> pure customerEmail
+                _ -> sendResponseStatus status503 $ toEncoding
+                  ("An error has ocurred with the payment processor: no email was provided" :: Text)
+            _ -> sendResponseStatus status503 $ toEncoding
+              ("An error has ocurred with the payment processor: no email was provided" :: Text)
+        Stripe.GetCheckoutSessionsSessionResponseDefault err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
+        Stripe.GetCheckoutSessionsSessionResponseError   err -> sendResponseStatus status503 $ toEncoding
           ("An error has ocurred with the payment processor: " <> T.pack err)
 
       for items $ \i -> case Stripe.itemPrice i of
@@ -139,15 +166,23 @@ getListingBookPaymentSuccessR lid = do
               let (start, end) = if start' > end' then (end', start') else (start', end')
               for [start .. end] $ \d -> do
                 uuid <- UUID.toText <$> liftIO randomIO
-                runDB . flip upsert [EventBooked =. True] $ Event lid Local uuid
-                  d end Nothing Nothing Nothing False True
+                runDB . flip upsert [EventBooked =. True, EventEmail =. Just customerEmail] $ Event lid Local uuid
+                  d end Nothing Nothing Nothing False True False (Just customerEmail)
               uuid  <- UUID.toText <$> liftIO randomIO
               uuid' <- UUID.toText <$> liftIO randomIO
               runDB $ do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid
-                  (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False
+                  (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
-                  (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False
+                  (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
+
+              emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
+              connPool  <- liftIO . smtpPool $ defSettings smtpCreds
+              for adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+                { mailTo      = [Address Nothing adminEmail]
+                , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
+                , mailParts   = [[htmlPart $ renderHtml emailBody]]
+                }
 
       redirect . ViewListingR lid $ listingSlug listing
 

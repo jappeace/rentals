@@ -54,12 +54,17 @@ instance ToMarkup Slug where
 mkPersistWith sqlSettings $(discoverEntities)
   [persistLowerCase|
 Listing json
-  title          Text
-  description    Text
-  price          Money
-  cleaning       Money
-  slug           Slug
-  uuid           UUID
+  title            Text
+  description      Text
+  price            Money
+  cleaning         Money
+  country          Text
+  address          Text
+  handlerName      Text
+  handlerPhone     Text
+
+  slug             Slug
+  uuid             UUID
 
   UniqueSlug slug
   UniqueCalendar uuid

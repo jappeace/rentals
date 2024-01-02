@@ -7,27 +7,50 @@
       <div class="col-md-12">
         <form action=@{AdminListingNewR} id="new-listing">
           <div class="row">
-            <div class="col-md-12">
-              <div class="row">
-                <label class="d-block mb-3 col-md-8">
-                  <span>title
-                  <input name="title" class="form-control">
-                <label class="d-block mb-3 col-md-8">
-                  <span>price
-                  <div class="input-group">
-                    <span class="input-group-text">$
-                    <input name="price" type="number" step=".01" class="form-control">
-                    <span class="input-group-text">cln. fee
-                    <input name="cleaning" type="number" step=".01" class="form-control">
-            <div class="col-md-12">
-              <div class="row justify-content-between">
-                <label class="d-block mb-3 col-md-10">
-                  <span>description
-                  <textarea name="description" class="form-control">
-                <div class="mb-3 col-md-2">
-                  <span class="text-white">submit
-                  <div class="d-grid">
-                    <button class="btn btn-primary">submit
+            <div class="col-12 mb-3">
+              <div class="form-floating">
+                <input name="title" class="form-control" placeholder="listing title">
+                <label>title
+            <div class="col-12 mb-3">
+              <div class="form-floating">
+                <textarea name="description" class="form-control" placeholder="listing description" style="height: 7em;">
+                <label>description
+            <div class="col-12 mb-3">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-person-fill">
+                <div class="form-floating">
+                  <input name="handlerName" class="form-control" placeholder="handler name">
+                  <label>handler name
+                <span class="input-group-text">
+                  <i class="bi bi-telephone-fill">
+                <div class="form-floating">
+                  <input name="handlerPhone" class="form-control" placeholder="handler phone">
+                  <label>handler phone
+            <div class="col-12 mb-3">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-globe"></i>
+                <div class="form-floating">
+                  <input name="country" class="form-control" placeholder="country">
+                  <label>country
+                <div class="form-floating w-50">
+                  <input name="address" class="form-control" placeholder="address">
+                  <label>address
+            <div class="col-9 mb-3">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-cash">
+                <div class="form-floating">
+                  <input name="price" type="number" step="1" class="form-control" placeholder="listing price">
+                  <label>price
+                <div class="form-floating">
+                  <input name="cleaning" type="number" step="1" class="form-control" placeholder="cleaning fee">
+                  <label>cleaning fee
+            <div class="d-grid col-3 mb-3">
+              <button class="btn btn-primary">
+                <i class="bi bi-floppy">
+                <span class="ms-2">submit
 
   <div class="col-md-6">
     <div class="row">

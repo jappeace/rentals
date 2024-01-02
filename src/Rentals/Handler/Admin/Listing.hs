@@ -25,7 +25,9 @@ import           Network.HTTP.Types.Status
 import           System.Directory
 import           System.FilePath
 import           System.Random
+import           Text.Blaze.Html.Renderer.Text
 import           Text.ICalendar
+import           Text.Hamlet
 import           Text.Julius
 import           Text.Lucius
 import           Text.Slugify
@@ -53,11 +55,15 @@ putAdminListingR lid = do
       let slug = Slug . slugify $ listingNewTitle listing
 
       runDB . replace lid $ original
-        { listingTitle       = listingNewTitle listing
-        , listingDescription = listingNewDescription listing
-        , listingPrice       = listingNewPrice listing
-        , listingCleaning    = listingNewCleaning listing
-        , listingSlug        = slug
+        { listingTitle            = listingNewTitle listing
+        , listingDescription      = listingNewDescription listing
+        , listingPrice            = listingNewPrice listing
+        , listingCleaning         = listingNewCleaning listing
+        , listingCountry          = listingNewCountry listing
+        , listingAddress          = listingNewAddress listing
+        , listingHandlerName      = listingNewHandlerName listing
+        , listingHandlerPhone     = listingNewHandlerPhone listing
+        , listingSlug             = slug
         }
 
       sendResponseStatus status200 $ toEncoding slug
@@ -116,7 +122,7 @@ putAdminListingUpdateBlockedDatesR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventBlocked =. True] $ Event lid Local uuid
-            day day Nothing Nothing (Just "Unavailable (Local)") True False
+            day day Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
@@ -132,12 +138,16 @@ putAdminListingNewR = do
     let slug = Slug . slugify $ listingNewTitle listing
 
     mlid <- insertUnique $ Listing
-        (listingNewTitle listing)
-        (listingNewDescription listing)
-        (listingNewPrice listing)
-        (listingNewCleaning listing)
-        slug
-        uuid
+      (listingNewTitle listing)
+      (listingNewDescription listing)
+      (listingNewPrice listing)
+      (listingNewCleaning listing)
+      (listingNewCountry listing)
+      (listingNewAddress listing)
+      (listingNewHandlerName listing)
+      (listingNewHandlerPhone listing)
+      slug
+      uuid
 
     pure (mlid, slug)
 
@@ -163,7 +173,7 @@ putAdminListingUpdateDayPriceR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventPrice =. price'] $ Event lid Local uuid
-            day day price' Nothing Nothing False False
+            day day price' Nothing Nothing False False False Nothing
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)

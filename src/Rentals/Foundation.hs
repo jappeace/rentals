@@ -69,12 +69,12 @@ $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
 -----------------------------------------------------------------------------------------
 
 mkYesodData "App" [parseRoutes|
-/admin                                    ViewAdminR                      GET
+/admin                                         ViewAdminR                      GET
 /admin/listing/view/#ListingId/#Slug           ViewAdminListingR               GET
 
 /admin/listing/sources                         AdminListingSourcesR            GET
 /admin/listing/new                             AdminListingNewR                         PUT
-/admin/listing/list/#ListingId                      AdminListingR                   GET      PUT
+/admin/listing/list/#ListingId                 AdminListingR                   GET      PUT
 /admin/listing/image/#ListingId                AdminListingImageR                       PUT DELETE
 /admin/listing/update-blocked-dates/#ListingId AdminListingUpdateBlockedDatesR          PUT
 /admin/listing/import/#ListingId               AdminListingImportR                      PUT DELETE
@@ -84,6 +84,7 @@ mkYesodData "App" [parseRoutes|
 
 /                                              ViewListingsR                   GET
 /view/listing/#ListingId/#Slug                 ViewListingR                    GET
+/view/book/success                             ViewBookSuccessR                GET
 
 /listing/quote/#ListingId                      ListingQuoteR                       POST
 /listing/book/#ListingId                       ListingBookR                             PUT
@@ -213,6 +214,7 @@ instance Yesod App where
 
   isAuthorized ViewListingsR                       _ = pure Authorized
   isAuthorized (ViewListingR _ _)                  _ = pure Authorized
+  isAuthorized ViewBookSuccessR                    _ = pure Authorized
   isAuthorized (ListingQuoteR _)                   _ = pure Authorized
   isAuthorized (ListingBookR _)                    _ = pure Authorized
   isAuthorized (ListingBookPaymentSuccessR _)      _ = pure Authorized
@@ -227,6 +229,11 @@ instance Yesod App where
     ma <- maybeAuthId
     messages <- getMessage
     withUrlRenderer $(hamletFile "templates/default-layout.hamlet")
+
+defaultEmailLayout :: WidgetFor App () -> Handler Html
+defaultEmailLayout w = do
+    pc <- widgetToPageContent w
+    withUrlRenderer $(hamletFile "templates/default-email-layout.hamlet")
 
 defaultUserLayout :: WidgetFor App () -> Handler Html
 defaultUserLayout w = defaultLayout $ do

@@ -4,18 +4,21 @@ module Rentals.Settings where
 
 import Data.Aeson
 import Data.Text (Text)
+import Network.Mail.Pool
 
 data AppSettings = AppSettings
-  {
-    appPort       :: Int
+  { appPort       :: Int
+  , appEmail      :: Text
   , appAdmin      :: [AppAdmin]
   , appDatabase   :: AppDatabase
+  , appSmtpCreds  :: SmtpCred
   , appStripe     :: Stripe
   }
 
 data AppAdmin = AppAdmin
   { adminUsername :: Text
   , adminPassword :: Text
+  , adminEmail    :: Text
   }
 
 data AppDatabase = AppDatabase
@@ -35,8 +38,10 @@ data Stripe = Stripe
 instance FromJSON AppSettings where
   parseJSON = withObject "AppSettings" $ \o -> do
     appPort <- o .: "port"
+    appEmail <- o .: "email"
     appAdmin <- o .: "admin"
     appDatabase <- o .: "database"
+    appSmtpCreds <- o .: "smtp"
     appStripe <- o .: "stripe"
     return AppSettings {..}
 
@@ -44,6 +49,7 @@ instance FromJSON AppAdmin where
   parseJSON = withObject "AppAdmin" $ \o -> do
     adminUsername <- o .: "username"
     adminPassword <- o .: "password"
+    adminEmail <- o .: "email"
     return AppAdmin {..}
 
 instance FromJSON AppDatabase where
