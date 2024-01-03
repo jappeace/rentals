@@ -58,6 +58,7 @@ library
     Rentals.Settings
 
   other-modules:      Paths_rentals
+  autogen-modules:    Paths_rentals
   hs-source-dirs:     src
   default-extensions:
     OverloadedStrings
