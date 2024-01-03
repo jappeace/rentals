@@ -8,6 +8,7 @@ module Rentals.Application where
 
 import Control.Concurrent
 import Control.Concurrent.Thread.Delay
+import Control.Exception.Annotated
 import Control.Lens (to, (^.))
 import Control.Monad
 import Control.Monad.Logger (runStderrLoggingT)
@@ -69,61 +70,69 @@ appMain = do
                 <> " user="     <> user dbSettings
                 <> " password=" <> password dbSettings
 
-  runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> liftIO $ do
-    runResourceT . flip runSqlPool pool $ runMigration migrateAll
+  runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
+    runResourceT . flip runSqlPool pool $ do
+      automigration <- showMigration migrateAll
+      if null automigration
+        then $logInfo "migrations are consistent"
+        else do
+          $logError "migrations are inconsistent"
+          $logDebug $ T.unlines automigration
+          liftIO . throw $ InconsistentMigrationException automigration
 
-    void $ forkIO $ forever $ runStderrLoggingT $ withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
-      runResourceT $ flip runSqlPool pool $ do
-        imports <- selectList [] []
+    liftIO $ do
+      void . forkIO . forever . runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
+        runResourceT $ flip runSqlPool pool $ do
+          imports <- selectList [] []
 
-        for imports $ \(Entity _ (Import cid source uri)) -> do
-          let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
-          ics <- liftIO . W.get $ (uriToString id uri) ""
+          for imports $ \(Entity _ (Import cid source uri)) -> do
+            let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
+            ics <- liftIO . W.get $ (uriToString id uri) ""
 
-          case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
-            Right (ical : _, _) -> do
-              void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
-                let uuid = LT.toStrict . uidValue $ veUID e
-                    mdates = case (veDTStart e, veDTEndDuration e) of
-                      (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
-                      (Just (DTStartDate (Date start) _), _) -> Just (start, start)
-                      _ -> Nothing
-                    description = fmap (LT.toStrict . descriptionValue) $ veDescription e
-                    summary = fmap (LT.toStrict . summaryValue) $ veSummary e
+            case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
+              Right (ical : _, _) -> do
+                void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
+                  let uuid = LT.toStrict . uidValue $ veUID e
+                      mdates = case (veDTStart e, veDTEndDuration e) of
+                        (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
+                        (Just (DTStartDate (Date start) _), _) -> Just (start, start)
+                        _ -> Nothing
+                      description = fmap (LT.toStrict . descriptionValue) $ veDescription e
+                      summary = fmap (LT.toStrict . summaryValue) $ veSummary e
 
-                case mdates of
-                  Just (start, end) -> do
-                    void . for [start .. end] $ \start' ->
-                      insertBy $
-                        Event
-                          cid
-                          source
-                          uuid
-                          start'
-                          end
-                          Nothing
-                          description
-                          summary
-                          False
-                          True
-                  Nothing -> pure ()
-            Left err ->
-              $logError $ "Parsing ical failed: " <> T.pack err
+                  case mdates of
+                    Just (start, end) -> do
+                      void . for [start .. end] $ \start' ->
+                        insertBy $
+                          Event
+                            cid
+                            source
+                            uuid
+                            start'
+                            end
+                            Nothing
+                            description
+                            summary
+                            False
+                            True
+                    Nothing -> pure ()
+              Left err ->
+                $logError $ "Parsing ical failed: " <> T.pack err
 
-      liftIO . delay $ 60 * 60 * 1000 * 1000
+        liftIO . delay $ 60 * 60 * 1000 * 1000
 
-    waiApp <- toWaiApp (App settings pool)
-    run (appPort settings) $
-      ( cors $ \req ->
-          Just $
-            simpleCorsResourcePolicy
-              { corsMethods =
-                  [ methodOptions,
-                    methodGet,
-                    methodPost,
-                    methodPut,
-                    methodDelete
-                  ]
-              }
-      )
-        waiApp
+      waiApp <- toWaiApp (App settings pool)
+      run (appPort settings) $
+        ( cors $ \req ->
+            Just $
+              simpleCorsResourcePolicy
+                { corsMethods =
+                    [ methodOptions,
+                      methodGet,
+                      methodPost,
+                      methodPut,
+                      methodDelete
+                    ]
+                }
+        )
+          waiApp
