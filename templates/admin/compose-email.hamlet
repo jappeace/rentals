@@ -1,0 +1,19 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    $maybe listing <- mlisting
+      <div class="fs-4 mb-3">pending emails - #{listingTitle listing}
+    <form id="email-instructions" action=@{AdminListingEmailsR lid}>
+      <div class="row">
+        <div class="col-12 mb-3">
+          <select name="email" class="form-select" size="5">
+            <option>
+            $forall (Entity cid c, start, end) <- pendingEmails
+              <option value=#{fromSqlKey cid}>#{checkoutName c} &lt#{checkoutEmail c}&gt from #{start} to #{end}
+        <div class="col-12 mb-3">
+          <div class="form-floating">
+            <textarea name="instructions" class="form-control" placeholder="booking instructions" style="height: 15em;">
+            <label>booking instructions
+        <div class="d-grid d-md-flex justify-content-md-end mb-3">
+          <button class="btn btn-primary">
+            <i class="bi bi-envelope-at">
+            <span class="ms-2">send

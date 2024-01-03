@@ -11,6 +11,7 @@ import Rentals.JSON
 import Rentals.Database.Listing
 import Rentals.Database.Source
 import Rentals.Database.Event
+import Rentals.Database.Checkout
 import Rentals.Database.Money
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)
@@ -126,23 +127,6 @@ getListingBookPaymentSuccessR lid = do
         Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> sendResponseStatus status503 $ toEncoding
           ("An error has ocurred with the payment processor: " <> T.pack err)
 
-      checkoutSessionResponse' <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSession $
-        Stripe.mkGetCheckoutSessionsSessionParameters checkoutSessionId
-      customerEmail <- case responseBody checkoutSessionResponse' of
-        Stripe.GetCheckoutSessionsSessionResponse200 checkoutSession ->
-          case Stripe.checkout'sessionCustomerDetails checkoutSession of
-            Just (Stripe.NonNull customerDetails) ->
-              case Stripe.checkout'sessionCustomerDetails'NonNullableEmail customerDetails of
-                Just (Stripe.NonNull customerEmail) -> pure customerEmail
-                _ -> sendResponseStatus status503 $ toEncoding
-                  ("An error has ocurred with the payment processor: no email was provided" :: Text)
-            _ -> sendResponseStatus status503 $ toEncoding
-              ("An error has ocurred with the payment processor: no email was provided" :: Text)
-        Stripe.GetCheckoutSessionsSessionResponseDefault err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-        Stripe.GetCheckoutSessionsSessionResponseError   err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> T.pack err)
-
       for items $ \i -> case Stripe.itemPrice i of
         Just (Stripe.NonNull ip) -> do
           product <- case Stripe.itemPrice'NonNullableProduct ip of
@@ -164,17 +148,41 @@ getListingBookPaymentSuccessR lid = do
           case dates of
             [Success start', Success end'] -> do
               let (start, end) = if start' > end' then (end', start') else (start', end')
+
               for [start .. end] $ \d -> do
                 uuid <- UUID.toText <$> liftIO randomIO
-                runDB . flip upsert [EventBooked =. True, EventEmail =. Just customerEmail] $ Event lid Local uuid
-                  d end Nothing Nothing Nothing False True False (Just customerEmail)
+                runDB . flip upsert [EventBooked =. True] $ Event lid Local uuid
+                  d end Nothing Nothing Nothing False True
               uuid  <- UUID.toText <$> liftIO randomIO
               uuid' <- UUID.toText <$> liftIO randomIO
               runDB $ do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid
-                  (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
+                  (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
-                  (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
+                  (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False
+
+              checkoutSessionResponse' <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSession $
+                Stripe.mkGetCheckoutSessionsSessionParameters checkoutSessionId
+              case responseBody checkoutSessionResponse' of
+                Stripe.GetCheckoutSessionsSessionResponse200 checkoutSession ->
+                  case Stripe.checkout'sessionCustomerDetails checkoutSession of
+                    Just (Stripe.NonNull customerDetails) ->
+                      case (Stripe.checkout'sessionCustomerDetails'NonNullableEmail customerDetails
+                           ,Stripe.checkout'sessionCustomerDetails'NonNullableName  customerDetails) of
+                        (Just (Stripe.NonNull customerEmail), Just (Stripe.NonNull customerName)) -> runDB $ do
+                          mevent <- getBy $ UniqueEvent lid start
+                          case mevent of
+                            Just (Entity eid _) -> insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
+                            Nothing -> sendResponseStatus status500 $ toEncoding
+                              ("An error has ocurred: no reservation found at " <> showGregorian start)
+                        _ -> sendResponseStatus status503 $ toEncoding
+                          ("An error has ocurred with the payment processor: no email was provided" :: Text)
+                    _ -> sendResponseStatus status503 $ toEncoding
+                      ("An error has ocurred with the payment processor: no email was provided" :: Text)
+                Stripe.GetCheckoutSessionsSessionResponseDefault err -> sendResponseStatus status503 $ toEncoding
+                  ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
+                Stripe.GetCheckoutSessionsSessionResponseError   err -> sendResponseStatus status503 $ toEncoding
+                  ("An error has ocurred with the payment processor: " <> T.pack err)
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
               connPool  <- liftIO . smtpPool $ defSettings smtpCreds
@@ -184,7 +192,7 @@ getListingBookPaymentSuccessR lid = do
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
 
-      redirect . ViewListingR lid $ listingSlug listing
+      redirect ViewBookSuccessR
 
     (_, Nothing) -> sendResponseStatus status404 $ toEncoding
       ("The target listing does not exist, please check the identifier and try again" :: Text)
