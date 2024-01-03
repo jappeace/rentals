@@ -97,8 +97,6 @@ appMain = do
                           summary
                           False
                           True
-                          False
-                          Nothing
                   Nothing -> pure ()
             Left err ->
               $logError $ "Parsing ical failed: " <> T.pack err

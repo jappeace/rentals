@@ -4,11 +4,13 @@ import Rentals.Foundation
 import Yesod
 
 import Rentals.JSON
+import Rentals.Settings
 
 import Rentals.Database.Listing
 import Rentals.Database.Source
 import Rentals.Database.Money
 import Rentals.Database.Event
+import Rentals.Database.Checkout
 import Rentals.Database.ListingImage
 import           Control.Monad
 import           Data.Aeson                (Result(..))
@@ -22,6 +24,8 @@ import           Data.Traversable
 import           Data.UUID
 import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
+import           Network.Mail.Mime
+import           Network.Mail.Pool
 import           System.Directory
 import           System.FilePath
 import           System.Random
@@ -122,7 +126,7 @@ putAdminListingUpdateBlockedDatesR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventBlocked =. True] $ Event lid Local uuid
-            day day Nothing Nothing (Just "Unavailable (Local)") True False False Nothing
+            day day Nothing Nothing (Just "Unavailable (Local)") True False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
@@ -173,9 +177,33 @@ putAdminListingUpdateDayPriceR lid = do
         for days $ \day -> do
           uuid <- toText <$> liftIO randomIO
           flip upsert [EventPrice =. price'] $ Event lid Local uuid
-            day day price' Nothing Nothing False False False Nothing
+            day day price' Nothing Nothing False False
 
       Nothing -> sendResponseStatus status404 $ toEncoding
         ("The target listing does not exist, please check the identifier and try again" :: Text)
 
   sendResponseStatus status204 ()
+
+putAdminListingEmailsR :: ListingId -> Handler TypedContent
+putAdminListingEmailsR lid = do
+  (cid, body) <- parseJsonBody'
+  mcheckout <- runDB $ get cid
+
+  case mcheckout of
+    Just checkout -> do
+      master <- getsYesod appSettings
+      let smtpCreds = appSmtpCreds master
+          appEmail' = appEmail master
+
+      connPool  <- liftIO . smtpPool $ defSettings smtpCreds
+      sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+        { mailTo      = [Address Nothing $ checkoutEmail checkout]
+        , mailHeaders = [("Subject", "Booking Instructions")]
+        , mailParts   = [[plainPart body]]
+        }
+
+      runDB $ update cid [CheckoutEmailed =. True]
+      sendResponseStatus status204 ()
+
+    Nothing -> sendResponseStatus status404 $ toEncoding
+      ("The target checkout does not exist, please check the identifier and try again" :: Text)

@@ -149,4 +149,28 @@ window.addEventListener("load", function() {
       return false;
     });
   }
+
+  let emailInstructionsForm = document.getElementById("email-instructions");
+  if (emailInstructionsForm) {
+    emailInstructionsForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      let req = new XMLHttpRequest();
+      req.addEventListener("load", function() {
+        if (req.status == 204) {
+          window.location.reload();
+        }
+      });
+      req.open("PUT", emailInstructionsForm.action);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Accept", "application/json");
+
+      req.send(JSON.stringify([
+        Number(emailInstructionsForm.elements.email.value),
+        emailInstructionsForm.elements.instructions.value
+      ]));
+
+      return false;
+    });
+  }
 });

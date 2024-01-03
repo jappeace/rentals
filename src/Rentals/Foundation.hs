@@ -71,6 +71,7 @@ $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
 mkYesodData "App" [parseRoutes|
 /admin                                         ViewAdminR                      GET
 /admin/listing/view/#ListingId/#Slug           ViewAdminListingR               GET
+/admin/listing/view/emails/#ListingId/#Slug    ViewAdminListingEmailsR         GET
 
 /admin/listing/sources                         AdminListingSourcesR            GET
 /admin/listing/new                             AdminListingNewR                         PUT
@@ -79,6 +80,7 @@ mkYesodData "App" [parseRoutes|
 /admin/listing/update-blocked-dates/#ListingId AdminListingUpdateBlockedDatesR          PUT
 /admin/listing/import/#ListingId               AdminListingImportR                      PUT DELETE
 /admin/listing/update-day-price/#ListingId     AdminListingUpdateDayPriceR              PUT
+/admin/listing/emails/#ListingId               AdminListingEmailsR                      PUT
 
 /ical/export/#ICS                              CalendarExportR                 GET
 
@@ -203,6 +205,7 @@ instance Yesod App where
 
   isAuthorized ViewAdminR                          _ = isAuthenticatedView
   isAuthorized (ViewAdminListingR _ _)             _ = isAuthenticatedView
+  isAuthorized (ViewAdminListingEmailsR _ _)       _ = isAuthenticatedView
   isAuthorized AdminListingSourcesR                _ = isAuthenticated
   isAuthorized AdminListingNewR                    _ = isAuthenticated
   isAuthorized (AdminListingR _)                   _ = isAuthenticated
@@ -210,6 +213,7 @@ instance Yesod App where
   isAuthorized (AdminListingUpdateBlockedDatesR _) _ = isAuthenticated
   isAuthorized (AdminListingImportR _)             _ = isAuthenticated
   isAuthorized (AdminListingUpdateDayPriceR _)     _ = isAuthenticated
+  isAuthorized (AdminListingEmailsR _)             _ = isAuthenticated
   isAuthorized (CalendarExportR _)                 _ = pure Authorized
 
   isAuthorized ViewListingsR                       _ = pure Authorized

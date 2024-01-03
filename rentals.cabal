@@ -35,6 +35,7 @@ library
       Rentals.Database.Listing
       Rentals.Database
       Rentals.Database.Event
+      Rentals.Database.Checkout
       Rentals.Database.Import
       Rentals.Database.ListingImage
       Rentals.Database.Money

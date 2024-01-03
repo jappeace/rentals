@@ -5,9 +5,11 @@ import Yesod
 
 import Rentals.Database.Listing
 import Rentals.Database.Event
+import Rentals.Database.Checkout
 import Rentals.Database.Import
 import Rentals.Database.Source
 import Rentals.Database.ListingImage
+import Data.List (groupBy)
 import Data.Time.Calendar
 import Data.Traversable
 import Database.Persist.Sql
@@ -46,3 +48,14 @@ getViewAdminListingR lid slug = do
   defaultAdminLayout $ do
     toWidgetHead $(juliusFile "templates/script/admin/datepicker.julius")
     $(whamletFile "templates/admin/listing.hamlet")
+
+getViewAdminListingEmailsR :: ListingId -> Slug -> Handler Html
+getViewAdminListingEmailsR lid slug = do
+  mlisting      <- runDB $ get lid
+  pendingEmails <- runDB $ do
+    pendingEmails <- selectList [CheckoutListing ==. lid, CheckoutEmailed ==. False] []
+    for pendingEmails $ \ce@(Entity _ c) -> do
+      event <- get404 $ checkoutEvent c
+      pure (ce, eventStart event, eventEnd event)
+
+  defaultAdminLayout $(whamletFile "templates/admin/compose-email.hamlet")

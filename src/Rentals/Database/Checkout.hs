@@ -12,10 +12,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Rentals.Database.Event where
+module Rentals.Database.Checkout where
 
 import Rentals.Orphans()
-import Rentals.Database.Money
+import Rentals.Database.Event
 import Data.Text
 import Database.Persist.TH
 import Data.UUID(UUID)
@@ -32,23 +32,16 @@ import Rentals.Database.Source
 
 mkPersistWith sqlSettings $(discoverEntities)
   [persistLowerCase|
-Event
-  -- app details
-  listing        ListingId
-  source         Source
-  uuid           Text
+Checkout
+  listing   ListingId
+  event     EventId
+  sessionId Text
+  name      Text
+  email     Text
 
-  -- booking details
-  start          Day
-  end            Day
-  price          Money Maybe
-  description    Text Maybe
+  emailed   Bool
 
-  -- meta details
-  summary        Text Maybe         -- meta description of the event entry
-  blocked        Bool default=false -- manually blocked?
-  booked         Bool default=false
-
-  UniqueEvent listing start
+  UniqueCheckout sessionId
+  UniqueCheckoutEvent event
 
   |]
