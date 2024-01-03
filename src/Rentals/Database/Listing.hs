@@ -58,10 +58,10 @@ Listing json
   description      Text
   price            Money
   cleaning         Money default=0
-  country          Text
-  address          Text
-  handlerName      Text
-  handlerPhone     Text
+  country          Text  default=''
+  address          Text  default=''
+  handlerName      Text  default=''
+  handlerPhone     Text  default=''
 
   slug             Slug
   uuid             UUID
