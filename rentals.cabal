@@ -89,7 +89,7 @@ library
     , network-uri        >=2.6.4  && <2.7
     , path-pieces        >=0.2.1  && <0.3
     , persistent         >=2.14.6 && <2.15
-    , persistent-sqlite  >=2.13.2 && <2.14
+    , persistent-postgresql >=2.13.2 && <2.14
     , random             >=1.2.1  && <1.3
     , resourcet          >=1.2.6  && <1.3
     , shakespeare        >=2.1.0  && <2.2

@@ -47,7 +47,7 @@ import qualified Data.UUID                  as UUID
 import           Database.Persist
 import           Database.Persist.Quasi
 import           Database.Persist.Sql       (ConnectionPool, runSqlPool)
-import           Database.Persist.Sqlite
+import           Database.Persist.Postgresql
 import           Network.URI
 import           Text.Blaze
 import           Text.Hamlet

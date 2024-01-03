@@ -17,10 +17,11 @@ import Data.Functor
 import Data.List (uncons)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as LT
 import Data.Traversable
 import Database.Persist
-import Database.Persist.Sqlite
+import Database.Persist.Postgresql
 import Database.Persist.TH
 import Network.HTTP.Types.Method
 import Network.URI
@@ -60,10 +61,18 @@ appMain = do
   createDirectoryIfMissing True "images"
   createDirectoryIfMissing True "config"
 
-  runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
+  let dbSettings = appDatabase settings
+      connString = TE.encodeUtf8 $
+                   "host="      <> host dbSettings
+                <> " port="     <> (T.pack . show $ port dbSettings)
+                <> " dbname="   <> database dbSettings
+                <> " user="     <> user dbSettings
+                <> " password=" <> password dbSettings
+
+  runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> liftIO $ do
     runResourceT . flip runSqlPool pool $ runMigration migrateAll
 
-    void $ forkIO $ forever $ runStderrLoggingT $ withSqlitePool "dev.sqlite3" 10 $ \pool -> do
+    void $ forkIO $ forever $ runStderrLoggingT $ withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
       runResourceT $ flip runSqlPool pool $ do
         imports <- selectList [] []
 
