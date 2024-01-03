@@ -23,6 +23,7 @@ description:
 extra-source-files:
   templates/**/*.hamlet
   templates/script/**/*.julius
+  Changelog.md
 
 -- templates/style/**/*.cassius
 
