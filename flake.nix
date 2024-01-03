@@ -48,6 +48,7 @@
           hpkgs.haskell-language-server
           pkgs.ghcid
           pkgs.cabal-install
+          pkgs.haskellPackages.postgresql-libpq
         ];
       };
     };

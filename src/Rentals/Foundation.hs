@@ -27,6 +27,7 @@ import Yesod.Persist
 
 import Rentals.Database.Listing
 import           Control.Arrow
+import           Control.Exception          (Exception)
 import           Control.Monad
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
@@ -47,7 +48,7 @@ import qualified Data.UUID                  as UUID
 import           Database.Persist
 import           Database.Persist.Quasi
 import           Database.Persist.Sql       (ConnectionPool, runSqlPool)
-import           Database.Persist.Sqlite
+import           Database.Persist.Postgresql
 import           Network.URI
 import           Text.Blaze
 import           Text.Hamlet
@@ -66,6 +67,13 @@ data App = App
 newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
+
+newtype InconsistentMigrationException = InconsistentMigrationException [Text]
+
+instance Show InconsistentMigrationException where
+  show (InconsistentMigrationException e) = T.unpack $ T.unlines e
+instance Exception InconsistentMigrationException
+
 -----------------------------------------------------------------------------------------
 
 mkYesodData "App" [parseRoutes|

@@ -8,6 +8,7 @@ module Rentals.Application where
 
 import Control.Concurrent
 import Control.Concurrent.Thread.Delay
+import Control.Exception.Annotated
 import Control.Lens (to, (^.))
 import Control.Monad
 import Control.Monad.Logger (runStderrLoggingT)
@@ -17,10 +18,11 @@ import Data.Functor
 import Data.List (uncons)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as LT
 import Data.Traversable
 import Database.Persist
-import Database.Persist.Sqlite
+import Database.Persist.Postgresql
 import Database.Persist.TH
 import Network.HTTP.Types.Method
 import Network.URI
@@ -60,61 +62,77 @@ appMain = do
   createDirectoryIfMissing True "images"
   createDirectoryIfMissing True "config"
 
-  runStderrLoggingT . withSqlitePool "dev.sqlite3" 10 $ \pool -> liftIO $ do
-    runResourceT . flip runSqlPool pool $ runMigration migrateAll
+  let dbSettings = appDatabase settings
+      connString = TE.encodeUtf8 $
+                   "host="      <> host dbSettings
+                <> " port="     <> (T.pack . show $ port dbSettings)
+                <> " dbname="   <> database dbSettings
+                <> " user="     <> user dbSettings
+                <> " password=" <> password dbSettings
 
-    void $ forkIO $ forever $ runStderrLoggingT $ withSqlitePool "dev.sqlite3" 10 $ \pool -> do
-      runResourceT $ flip runSqlPool pool $ do
-        imports <- selectList [] []
+  runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
+    runResourceT . flip runSqlPool pool $ do
+      automigration <- showMigration migrateAll
+      if null automigration
+        then $logInfo "migrations are consistent"
+        else do
+          $logError "migrations are inconsistent"
+          $logDebug $ T.unlines automigration
+          liftIO . throw $ InconsistentMigrationException automigration
 
-        for imports $ \(Entity _ (Import cid source uri)) -> do
-          let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
-          ics <- liftIO . W.get $ (uriToString id uri) ""
+    liftIO $ do
+      void . forkIO . forever . runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
+        runResourceT $ flip runSqlPool pool $ do
+          imports <- selectList [] []
 
-          case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
-            Right (ical : _, _) -> do
-              void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
-                let uuid = LT.toStrict . uidValue $ veUID e
-                    mdates = case (veDTStart e, veDTEndDuration e) of
-                      (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
-                      (Just (DTStartDate (Date start) _), _) -> Just (start, start)
-                      _ -> Nothing
-                    description = fmap (LT.toStrict . descriptionValue) $ veDescription e
-                    summary = fmap (LT.toStrict . summaryValue) $ veSummary e
+          for imports $ \(Entity _ (Import cid source uri)) -> do
+            let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
+            ics <- liftIO . W.get $ (uriToString id uri) ""
 
-                case mdates of
-                  Just (start, end) -> do
-                    void . for [start .. end] $ \start' ->
-                      insertBy $
-                        Event
-                          cid
-                          source
-                          uuid
-                          start'
-                          end
-                          Nothing
-                          description
-                          summary
-                          False
-                          True
-                  Nothing -> pure ()
-            Left err ->
-              $logError $ "Parsing ical failed: " <> T.pack err
+            case parseICalendar def parseErrorLog $ ics ^. W.responseBody of
+              Right (ical : _, _) -> do
+                void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
+                  let uuid = LT.toStrict . uidValue $ veUID e
+                      mdates = case (veDTStart e, veDTEndDuration e) of
+                        (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
+                        (Just (DTStartDate (Date start) _), _) -> Just (start, start)
+                        _ -> Nothing
+                      description = fmap (LT.toStrict . descriptionValue) $ veDescription e
+                      summary = fmap (LT.toStrict . summaryValue) $ veSummary e
 
-      liftIO . delay $ 60 * 60 * 1000 * 1000
+                  case mdates of
+                    Just (start, end) -> do
+                      void . for [start .. end] $ \start' ->
+                        insertBy $
+                          Event
+                            cid
+                            source
+                            uuid
+                            start'
+                            end
+                            Nothing
+                            description
+                            summary
+                            False
+                            True
+                    Nothing -> pure ()
+              Left err ->
+                $logError $ "Parsing ical failed: " <> T.pack err
 
-    waiApp <- toWaiApp (App settings pool)
-    run (appPort settings) $
-      ( cors $ \req ->
-          Just $
-            simpleCorsResourcePolicy
-              { corsMethods =
-                  [ methodOptions,
-                    methodGet,
-                    methodPost,
-                    methodPut,
-                    methodDelete
-                  ]
-              }
-      )
-        waiApp
+        liftIO . delay $ 60 * 60 * 1000 * 1000
+
+      waiApp <- toWaiApp (App settings pool)
+      run (appPort settings) $
+        ( cors $ \req ->
+            Just $
+              simpleCorsResourcePolicy
+                { corsMethods =
+                    [ methodOptions,
+                      methodGet,
+                      methodPost,
+                      methodPut,
+                      methodDelete
+                    ]
+                }
+        )
+          waiApp
