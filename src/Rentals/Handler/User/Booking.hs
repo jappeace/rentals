@@ -47,7 +47,7 @@ putListingBookR lid = do
   (quote, cleaningFee) <- getQuote lid start end
   stripeKeys <- getsYesod $ appStripe . appSettings
   render     <- getUrlRender
-  let amount = ((* 100) . floor . unMoney $ quote) + (floor . unMoney $ cleaningFee)
+  let amount = 100 * ((floor . unMoney $ quote) + (floor . unMoney $ cleaningFee))
 
   let conf = Stripe.defaultConfiguration
         { Stripe.configSecurityScheme = Stripe.basicAuthenticationSecurityScheme Stripe.BasicAuthenticationData
