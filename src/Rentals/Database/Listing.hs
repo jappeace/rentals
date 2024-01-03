@@ -57,7 +57,7 @@ Listing json
   title            Text
   description      Text
   price            Money
-  cleaning         Money
+  cleaning         Money default=0
   country          Text
   address          Text
   handlerName      Text
