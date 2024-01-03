@@ -1,111 +1,125 @@
-cabal-version: 1.12
+cabal-version:      2.4
 
 -- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
-name:           rentals
-version:        0.0.1
-build-type:     Simple
-license: AGPL
-license-file: LICENSE
+name:               rentals
+maintainer:         hi@jappie.me
+category:           Application
+version:            0.0.1
+build-type:         Simple
+license:            AGPL-3.0-only
+license-file:       LICENSE
+synopsis:           A rental management web app
+description:
+  A self hosted airbnb like rental system.
+  The major advantage is that
+  it's a fixed hosting costs instead of payment per booking,
+  which would be around $50 per month if done by a third party,
+  or if done by yourself whatever price you can rent the hardware.
+  Which may range from 2 to 10 dollars.
 
 extra-source-files:
-    templates/**/*.hamlet
-    templates/script/**/*.julius
-    templates/style/**/*.cassius
+  templates/**/*.hamlet
+  templates/script/**/*.julius
+
+-- templates/style/**/*.cassius
+
+source-repository head
+  type: git
+  location: https://github.com/jappeace/rentals
 
 library
   exposed-modules:
-      Rentals.Application
-      Rentals.Foundation
-      Rentals.Handler.Admin.Export
-      Rentals.Handler.Admin.Import
-      Rentals.Handler.Admin.Listing
-      Rentals.Handler.User.Booking
-      Rentals.Handler.User.Internal
-      Rentals.Handler.User.Listing
-      Rentals.Handler.User.User
-      Rentals.Handler.View.Admin
-      Rentals.Handler.View.Listings
-      Rentals.Handler.View.Booking
-      Rentals.Settings
-      Rentals.Calendar
-      Rentals.JSON
-      Rentals.Database.Listing
-      Rentals.Database
-      Rentals.Database.Event
-      Rentals.Database.Checkout
-      Rentals.Database.Import
-      Rentals.Database.ListingImage
-      Rentals.Database.Money
-      Rentals.Orphans
-      Rentals.Database.Source
+    Rentals.Application
+    Rentals.Calendar
+    Rentals.Database
+    Rentals.Database.Checkout
+    Rentals.Database.Event
+    Rentals.Database.Import
+    Rentals.Database.Listing
+    Rentals.Database.ListingImage
+    Rentals.Database.Money
+    Rentals.Database.Source
+    Rentals.Foundation
+    Rentals.Handler.Admin.Export
+    Rentals.Handler.Admin.Import
+    Rentals.Handler.Admin.Listing
+    Rentals.Handler.User.Booking
+    Rentals.Handler.User.Internal
+    Rentals.Handler.User.Listing
+    Rentals.Handler.User.User
+    Rentals.Handler.View.Admin
+    Rentals.Handler.View.Booking
+    Rentals.Handler.View.Listings
+    Rentals.JSON
+    Rentals.Orphans
+    Rentals.Settings
 
-  other-modules:
-      Paths_rentals
-  hs-source-dirs:
-      src
+  other-modules:      Paths_rentals
+  hs-source-dirs:     src
   default-extensions:
-      OverloadedStrings
-      TemplateHaskell
+    OverloadedStrings
+    TemplateHaskell
+
   build-depends:
-      aeson
-    , base
-    , blaze-markup
-    , yesod-core
-    , bytestring
-    , case-insensitive
-    , containers
-    , data-default
-    , directory
-    , extra
-    , filepath
-    , groupBy
-    , path-pieces
-    , http-client
-    , http-types
-    , iCalendar
-    , lens
-    , monad-logger
-    , mtl
-    , network-uri
-    , persistent
-    , persistent-sqlite
-    , random
-    , resourcet
-    , mime-mail
-    , mail-pool
-    , shakespeare
-    , blaze-html
-    , slugify
-    , stripeapi
-    , text
-    , time
-    , transformers
-    , unbounded-delays
-    , uuid
-    , wai-cors
-    , warp
-    , wreq
-    , yesod
-    , yesod-auth
-    , yesod-paginator
-    , yesod-persistent
-  default-language: Haskell2010
+    , aeson              >=2.1.2  && <2.2
+    , base               >=4.17.2 && <4.18
+    , blaze-html         >=0.9.1  && <0.10
+    , blaze-markup       >=0.8.3  && <0.9
+    , bytestring         >=0.11.5 && <0.12
+    , case-insensitive   >=1.2.1  && <1.3
+    , containers         >=0.6.7  && <0.7
+    , data-default       >=0.7.1  && <0.8
+    , directory          >=1.3.7  && <1.4
+    , extra              >=1.7.14 && <1.8
+    , filepath           >=1.4.2  && <1.5
+    , groupBy            >=0.1.0  && <0.2
+    , http-client        >=0.7.15 && <0.8
+    , http-types         >=0.12.3 && <0.13
+    , iCalendar          >=0.4.0  && <0.5
+    , lens               >=5.2.3  && <5.3
+    , mail-pool          >=2.2.3  && <2.3
+    , mime-mail          >=0.5.1  && <0.6
+    , monad-logger       >=0.3.40 && <0.4
+    , mtl                >=2.2.2  && <2.3
+    , network-uri        >=2.6.4  && <2.7
+    , path-pieces        >=0.2.1  && <0.3
+    , persistent         >=2.14.6 && <2.15
+    , persistent-sqlite  >=2.13.2 && <2.14
+    , random             >=1.2.1  && <1.3
+    , resourcet          >=1.2.6  && <1.3
+    , shakespeare        >=2.1.0  && <2.2
+    , slugify            >=0.1.0  && <0.2
+    , stripeapi          >=3.0.0  && <3.1
+    , text               >=2.0.2  && <2.1
+    , time               >=1.12.2 && <1.13
+    , transformers       >=0.5.6  && <0.6
+    , unbounded-delays   >=0.1.1  && <0.2
+    , uuid               >=1.3.15 && <1.4
+    , wai-cors           >=0.2.7  && <0.3
+    , warp               >=3.3.25 && <3.4
+    , wreq               >=0.5.4  && <0.6
+    , yesod              >=1.6.2  && <1.7
+    , yesod-auth         >=1.6.11 && <1.7
+    , yesod-core         >=1.6.25 && <1.7
+    , yesod-paginator    >=1.1.2  && <1.2
+    , yesod-persistent   >=1.6.0  && <1.7
+
+  default-language:   Haskell2010
 
 executable rentals
-  main-is: Main.hs
-  other-modules:
-      Paths_rentals
-  hs-source-dirs:
-      app
+  main-is:            Main.hs
+  other-modules:      Paths_rentals
+  hs-source-dirs:     app
   default-extensions:
-      OverloadedStrings
-      TemplateHaskell
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
+    OverloadedStrings
+    TemplateHaskell
+
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
-      aeson
+    , aeson
     , base
     , blaze-markup
     , bytestring
@@ -143,4 +157,5 @@ executable rentals
     , yesod-auth
     , yesod-paginator
     , yesod-persistent
-  default-language: Haskell2010
+
+  default-language:   Haskell2010
