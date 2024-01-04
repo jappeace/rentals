@@ -65,10 +65,16 @@ appMain = do
   createDirectoryIfMissing True "images"
   createDirectoryIfMissing True "config"
 
-  pool <- runStderrLoggingT $ runMigrations $ appDatabase settings
+  pool <- runStderrLoggingT $ do
+    $logInfo "running migrations"
+    runMigrations $ appDatabase settings
+
+  runStderrLoggingT $ $logInfo "forking background jobs"
   void $ forkIO $ forever $ runStderrLoggingT $ importIcall pool
 
+  runStderrLoggingT $ $logInfo "setting up wai app"
   waiApp <- toWaiApp (App settings pool)
+  runStderrLoggingT $ $logInfo $ "binding to port " <> T.pack (show (appPort settings))
   run (appPort settings) $
     ( cors $ \req ->
         Just $
