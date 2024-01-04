@@ -18,10 +18,13 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Data.Default (def)
 import Data.Functor
 import Data.List (uncons)
+import Data.Text(Text)
+import Control.Monad.Reader(ReaderT)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as LT
+import qualified System.Cron as Cron
 import Data.Traversable
 import Database.Persist
 import Database.Persist.Postgresql
@@ -70,7 +73,10 @@ appMain = do
     runMigrations $ appDatabase settings
 
   runStderrLoggingT $ $logInfo "forking background jobs"
-  void $ forkIO $ forever $ runStderrLoggingT $ importIcall pool
+
+  _tids <- Cron.execSchedule $ do
+
+    Cron.addJob (runStderrLoggingT $ flip runSqlPool pool $ importIcall) everyHour
 
   runStderrLoggingT $ $logInfo "setting up wai app"
   waiApp <- toWaiApp (App settings pool)
@@ -90,12 +96,22 @@ appMain = do
     )
       waiApp
 
-importIcall :: Pool SqlBackend -> LoggingT IO ()
-importIcall pool = do
-        flip runSqlPool pool $ do
+everyHour :: Text
+          -- ┌────────────── minute (0 - 59)
+          -- │ ┌───────────── hour (0 - 23)
+          -- │ │ ┌───────────── day of the month (1 - 31)
+          -- │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+          -- │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+          -- │ │ │ │ │
+          -- │ │ │ │ │
+          -- │ │ │ │ │
+everyHour = "0 * * * *"
+
+importIcall :: (ReaderT SqlBackend (LoggingT IO)) ()
+importIcall = do
           imports <- selectList [] []
 
-          for imports $ \(Entity _ (Import cid source uri)) -> do
+          void $ for imports $ \(Entity _ (Import cid source uri)) -> do
             let parseErrorLog = "Failed to parse <" <> show source <> "> ics file: "
             ics <- liftIO . W.get $ (uriToString id uri) ""
 
@@ -128,5 +144,3 @@ importIcall pool = do
                     Nothing -> pure ()
               Left err ->
                 $logError $ "Parsing ical failed: " <> T.pack err
-
-        liftIO . delay $ 60 * 60 * 1000 * 1000
