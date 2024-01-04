@@ -1,0 +1,17 @@
+CREATe TABLE "listing"("id" SERIAL8  PRIMARY KEY UNIQUE,"title" VARCHAR NOT NULL,"description" VARCHAR NOT NULL,"price" INT8 NOT NULL,"cleaning" INT8 NOT NULL DEFAULT 0,"country" VARCHAR NOT NULL DEFAULT '',"address" VARCHAR NOT NULL DEFAULT '',"handler_name" VARCHAR NOT NULL DEFAULT '',"handler_phone" VARCHAR NOT NULL DEFAULT '',"slug" VARCHAR NOT NULL,"uuid" VARCHAR NOT NULL);
+CREATe TABLE "event"("id" SERIAL8  PRIMARY KEY UNIQUE,"listing" INT8 NOT NULL,"source" VARCHAR NOT NULL,"uuid" VARCHAR NOT NULL,"start" DATE NOT NULL,"end" DATE NOT NULL,"price" INT8 NULL,"description" VARCHAR NULL,"summary" VARCHAR NULL,"blocked" BOOLEAN NOT NULL DEFAULT false,"booked" BOOLEAN NOT NULL DEFAULT false);
+CREATe TABLE "checkout"("id" SERIAL8  PRIMARY KEY UNIQUE,"listing" INT8 NOT NULL,"event" INT8 NOT NULL,"session_id" VARCHAR NOT NULL,"name" VARCHAR NOT NULL,"email" VARCHAR NOT NULL,"emailed" BOOLEAN NOT NULL);
+ALTER TABLE "checkout" ADD CONSTRAINT "unique_checkout" UNIQUE("session_id");
+ALTER TABLE "checkout" ADD CONSTRAINT "unique_checkout_event" UNIQUE("event");
+ALTER TABLE "checkout" ADD CONSTRAINT "checkout_listing_fkey" FOREIGN KEY("listing") REFERENCES "listing"("id") ON DELETE RESTRICT  ON UPDATE RESTRICT;
+ALTER TABLE "checkout" ADD CONSTRAINT "checkout_event_fkey" FOREIGN KEY("event") REFERENCES "event"("id") ON DELETE RESTRICT  ON UPDATE RESTRICT;
+ALTER TABLE "event" ADD CONSTRAINT "unique_event" UNIQUE("listing","start");
+ALTER TABLE "event" ADD CONSTRAINT "event_listing_fkey" FOREIGN KEY("listing") REFERENCES "listing"("id") ON DELETE RESTRICT  ON UPDATE RESTRICT;
+CREATe TABLE "import"("id" SERIAL8  PRIMARY KEY UNIQUE,"listing" INT8 NOT NULL,"source" VARCHAR NOT NULL,"uri" VARCHAR NOT NULL);
+ALTER TABLE "import" ADD CONSTRAINT "unique_import" UNIQUE("listing","source");
+ALTER TABLE "import" ADD CONSTRAINT "import_listing_fkey" FOREIGN KEY("listing") REFERENCES "listing"("id") ON DELETE RESTRICT  ON UPDATE RESTRICT;
+ALTER TABLE "listing" ADD CONSTRAINT "unique_slug" UNIQUE("slug");
+ALTER TABLE "listing" ADD CONSTRAINT "unique_calendar" UNIQUE("uuid");
+CREATe TABLE "listing_image"("id" SERIAL8  PRIMARY KEY UNIQUE,"listing" INT8 NOT NULL,"uuid" VARCHAR NOT NULL);
+ALTER TABLE "listing_image" ADD CONSTRAINT "unique_image" UNIQUE("uuid");
+ALTER TABLE "listing_image" ADD CONSTRAINT "listing_image_listing_fkey" FOREIGN KEY("listing") REFERENCES "listing"("id") ON DELETE RESTRICT  ON UPDATE RESTRICT;

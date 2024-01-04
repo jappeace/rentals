@@ -28,7 +28,10 @@ data AppDatabase = AppDatabase
   , port          :: Int
   , database      :: Text
   , poolsize      :: Int
+  , migrationFolder :: MigrationFolder
   }
+
+newtype MigrationFolder = MigrationFolder Text
 
 data Stripe = Stripe
   { stripeSecret  :: Text
@@ -60,6 +63,7 @@ instance FromJSON AppDatabase where
     port <- o .: "port"
     database <- o .: "database"
     poolsize <- o .: "poolsize"
+    migrationFolder  <- fmap MigrationFolder $  o .: "migration_folder"
     return AppDatabase {..}
 
 instance FromJSON Stripe where

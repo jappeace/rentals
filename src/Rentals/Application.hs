@@ -6,6 +6,8 @@
 -- | This hooks everything together
 module Rentals.Application where
 
+import Control.Monad.Logger(LoggingT)
+import Data.Pool (Pool)
 import Control.Concurrent
 import Control.Concurrent.Thread.Delay
 import Control.Exception.Annotated
@@ -50,6 +52,7 @@ import Yesod.Auth
 import Yesod.Default.Config2
 import System.Environment (getArgs)
 import Data.Maybe (fromMaybe)
+import Rentals.Database.Migration(runMigrations)
 
 mkYesodDispatch "App" resourcesApp
 
@@ -62,27 +65,28 @@ appMain = do
   createDirectoryIfMissing True "images"
   createDirectoryIfMissing True "config"
 
-  let dbSettings = appDatabase settings
-      connString = TE.encodeUtf8 $
-                   "host="      <> host dbSettings
-                <> " port="     <> (T.pack . show $ port dbSettings)
-                <> " dbname="   <> database dbSettings
-                <> " user="     <> user dbSettings
-                <> " password=" <> password dbSettings
+  pool <- runStderrLoggingT $ runMigrations $ appDatabase settings
+  void $ forkIO $ forever $ runStderrLoggingT $ importIcall pool
 
-  runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
-    runResourceT . flip runSqlPool pool $ do
-      automigration <- showMigration migrateAll
-      if null automigration
-        then $logInfo "migrations are consistent"
-        else do
-          $logError "migrations are inconsistent"
-          $logDebug $ T.unlines automigration
-          liftIO . throw $ InconsistentMigrationException automigration
+  waiApp <- toWaiApp (App settings pool)
+  run (appPort settings) $
+    ( cors $ \req ->
+        Just $
+          simpleCorsResourcePolicy
+            { corsMethods =
+                [ methodOptions,
+                  methodGet,
+                  methodPost,
+                  methodPut,
+                  methodDelete
+                ]
+            }
+    )
+      waiApp
 
-    liftIO $ do
-      void . forkIO . forever . runStderrLoggingT . withPostgresqlPool connString (poolsize dbSettings) $ \pool -> do
-        runResourceT $ flip runSqlPool pool $ do
+importIcall :: Pool SqlBackend -> LoggingT IO ()
+importIcall pool = do
+        flip runSqlPool pool $ do
           imports <- selectList [] []
 
           for imports $ \(Entity _ (Import cid source uri)) -> do
@@ -120,19 +124,3 @@ appMain = do
                 $logError $ "Parsing ical failed: " <> T.pack err
 
         liftIO . delay $ 60 * 60 * 1000 * 1000
-
-      waiApp <- toWaiApp (App settings pool)
-      run (appPort settings) $
-        ( cors $ \req ->
-            Just $
-              simpleCorsResourcePolicy
-                { corsMethods =
-                    [ methodOptions,
-                      methodGet,
-                      methodPost,
-                      methodPut,
-                      methodDelete
-                    ]
-                }
-        )
-          waiApp

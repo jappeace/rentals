@@ -43,6 +43,7 @@ library
     Rentals.Database.ListingImage
     Rentals.Database.Money
     Rentals.Database.Source
+    Rentals.Database.Migration
     Rentals.Foundation
     Rentals.Handler.Admin.Export
     Rentals.Handler.Admin.Import
@@ -93,6 +94,11 @@ library
     , persistent-postgresql >=2.13.2 && <2.14
     , random             >=1.2.1  && <1.3
     , resourcet          >=1.2.6  && <1.3
+    , resource-pool
+    , postgresql-simple
+    , postgresql-migration
+    , unliftio-core
+    , neat-interpolation
     , shakespeare        >=2.1.0  && <2.2
     , slugify            >=0.1.0  && <0.2
     , stripeapi          >=3.0.0  && <3.1

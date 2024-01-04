@@ -18,11 +18,31 @@ Features
 - Syncs with airbnb/vrbo for blocked dates.
 
 # Usage
+install [nix](https://nixos.org/)
+install devenv (optional)
+install postgres
 
-install devenv,
-install nix
+## configure database
+open a shell postgres shell:
 
 ```
+psql
+```
+you may need to use sudo or the postgres user.
+
+must align with whatever you put in settings.yml or respective env variables,
+by default it's this:
+
+```
+CREATE USER rental WITH PASSWORD 'rental';
+CREATE DATABASE rental;
+GRANT ALL ON DATABASE rental TO rental;
+```
+
+## run the app
+
+```
+nix develop
 cabal run
 ```
 
