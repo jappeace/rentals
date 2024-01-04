@@ -120,7 +120,7 @@ importIcall = do
                 void . flip M.traverseWithKey (vcEvents ical) $ \_ e -> do
                   let uuid = LT.toStrict . uidValue $ veUID e
                       mdates = case (veDTStart e, veDTEndDuration e) of
-                        (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, end)
+                        (Just (DTStartDate (Date start) _), Just (Left (DTEndDate (Date end) _))) -> Just (start, pred end)
                         (Just (DTStartDate (Date start) _), _) -> Just (start, start)
                         _ -> Nothing
                       description = fmap (LT.toStrict . descriptionValue) $ veDescription e

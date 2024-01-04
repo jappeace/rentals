@@ -33,7 +33,7 @@ getCalendarExportR (ICS uuid) = do
               Just eventUUID ->
                 addVEventToVCalendar vcalendar $ (newVEvent currentTime eventUUID)
                   { veDTStart = Just $ DTStartDate (Date (eventStart event)) def
-                  , veDTEndDuration = Just . Left $ DTEndDate (Date (eventEnd event)) def
+                  , veDTEndDuration = Just . Left $ DTEndDate (Date (succ $ eventEnd event)) def
                   , veDescription = fmap (\d -> Description (LT.fromStrict d) Nothing Nothing def) $ eventDescription event
                   , veSummary = fmap (\d -> Summary (LT.fromStrict d) Nothing Nothing def) $ eventSummary event
                   , veTransp = Opaque def

@@ -47,7 +47,7 @@ runMigrations dbSettings = do
 
 
       migrations = migrationFolder dbSettings
-      
+
 
 runMigrationCommands :: MigrationFolder -> PGSimple.Connection -> (ReaderT SqlBackend (LoggingT IO)) ()
 runMigrationCommands (MigrationFolder migrationPath) connection = do
