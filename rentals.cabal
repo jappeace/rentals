@@ -23,6 +23,7 @@ description:
 extra-source-files:
   templates/**/*.hamlet
   templates/script/**/*.julius
+  migrations/up/*.sql
   Changelog.md
 
 -- templates/style/**/*.cassius
