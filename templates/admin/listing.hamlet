@@ -140,12 +140,12 @@
           $forall (Entity _ i) <- is
             <div class="col-12">
               <form action=@{AdminListingImportR lid} class="remove-import">
-                <input name="calendar-source" value=#{show (importSource i)} readonly class="d-none">
+                <input name="source" value=#{show (importSource i)} readonly class="d-none">
                 <div class="row gx-0 justify-content-between">
                   <div class="col-12">
                     <div class="input-group mb-2">
                       <span class="input-group-text">#{show (importSource i)}
-                      <input name="calendar-uri" class="form-control" disabled readonly value=#{importUri i}>
+                      <input name="uri" class="form-control" disabled readonly value=#{importUri i}>
                       <button class="btn btn-danger">
                         <i class="bi bi-trash">
 
