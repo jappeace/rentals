@@ -1,7 +1,8 @@
 # Change log for rentals
 
 ## Version 0.0.3 
-Add migration system
++ Add migration system
++ Use cron package for cron jobs
 
 ## Version 0.0.2 
 workaround migration issue.
