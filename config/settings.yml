@@ -10,9 +10,10 @@ database:
   user:     "_env:DATABASE_USER:rental"
   password: "_env:DATABASE_PASSWORD:rental"
   host:     "_env:DATABASE_HOST:localhost"
-  port:     "_env:DATABASE_PORT:30336"
-  database: "_env:DATABASE_NAME:xxxx"
+  port:     "_env:DATABASE_PORT:5432"
+  database: "_env:DATABASE_NAME:rental"
   poolsize: "_env:DATABASE_POOLSIZE:1"
+  migration_folder: "_env:MIGRATION_FOLDER:migrations/up"
 
 smtp:
   password: "_env:SMTP_PASSWORD:x0"

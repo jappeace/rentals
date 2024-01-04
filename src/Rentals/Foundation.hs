@@ -68,11 +68,6 @@ newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
 
-newtype InconsistentMigrationException = InconsistentMigrationException [Text]
-
-instance Show InconsistentMigrationException where
-  show (InconsistentMigrationException e) = T.unpack $ T.unlines e
-instance Exception InconsistentMigrationException
 
 -----------------------------------------------------------------------------------------
 
