@@ -54,9 +54,13 @@ runMigrationCommands (MigrationFolder migrationPath) connection = do
   $logInfo $ "using migration folder " <> migrationPath
   runInIO <- askRunInIO
   initialized <- liftIO $ Migration.existsTable connection "schema_migrations"
-  let migrations = if initialized
-                   then [Migration.MigrationDirectory $ Text.unpack migrationPath]
-                   else [ Migration.MigrationInitialization
+  migrations <- if initialized
+                   then do
+    $logInfo "found schema_migrations so just running them"
+    pure $ [Migration.MigrationDirectory $ Text.unpack migrationPath]
+                   else do
+    $logInfo "not found schema_migrations, create it first and then run them"
+    pure $ [ Migration.MigrationInitialization
                         , Migration.MigrationDirectory $ Text.unpack migrationPath]
   result <- liftIO $ Migration.runMigrations connection (migrationOptions runInIO) migrations
   case result of
