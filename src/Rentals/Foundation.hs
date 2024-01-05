@@ -206,6 +206,9 @@ instance Yesod App where
   makeSessionBackend _ = Just <$> defaultClientSessionBackend
     (30 * 24 * 60) "config/client_session_key.aes"
 
+  maximumContentLength _ (Just (AdminListingImageR _)) = Just $ 50 * 1024 * 1024
+  maximumContentLength _ _                             = Just $  2 * 1024 * 1024
+
   isAuthorized ViewAdminR                          _ = isAuthenticatedView
   isAuthorized (ViewAdminListingR _ _)             _ = isAuthenticatedView
   isAuthorized (ViewAdminListingEmailsR _ _)       _ = isAuthenticatedView
