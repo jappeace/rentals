@@ -146,6 +146,7 @@ instance YesodAuth App where
 
   authPlugins _ = [authHardcoded]
 
+
   authLayout = liftHandler . defaultAdminLayout
 
   loginHandler = authLayout $ do
@@ -201,8 +202,32 @@ isAuthenticatedView = do
     Unauthorized _ -> redirect $ AuthR LoginR
     Authorized -> pure Authorized
 
+tshow :: Show a => a -> Text
+tshow = T.pack . show
+
 -----------------------------------------------------------------------------------------
 instance Yesod App where
+
+  errorHandler errorResp = do
+    env <- appEnv . appSettings <$> getYesod
+    $logInfo $ "error " <> tshow errorResp
+    let message :: Text
+        message = case errorResp of
+          NotFound -> "Not Found"
+          InternalError err -> case env of
+            EnvDev -> "Internal server error: " <> err
+            EnvProd -> "Internal server error, check the logs"
+          InvalidArgs args -> "invalid " <> tshow args
+          NotAuthenticated -> "not authenticated"
+          PermissionDenied reason -> case env of
+            EnvDev -> "permission denied " <> reason
+            EnvProd -> "permission denied "
+          BadMethod "GET" -> "bad get method"
+          BadMethod "POST" -> "bad post method"
+          BadMethod "PUT" -> "bad put method"
+          BadMethod _ -> "bad method"
+    selectRep $ provideRep $ defaultUserLayout $ $(whamletFile "templates/error.hamlet")
+
   makeSessionBackend _ = Just <$> defaultClientSessionBackend
     (30 * 24 * 60) "config/client_session_key.aes"
 

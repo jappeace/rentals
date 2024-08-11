@@ -43,6 +43,7 @@
       devShell.x86_64-linux = hpkgs.shellFor {
         packages = ps : [ ps."rentals" ];
         withHoogle = false;
+        DEVELOPMENT = "true";
 
         buildInputs = [
           hpkgs.haskell-language-server
