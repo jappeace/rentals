@@ -13,6 +13,7 @@ data AppSettings = AppSettings
   , appDatabase   :: AppDatabase
   , appSmtpCreds  :: SmtpCred
   , appStripe     :: Stripe
+  , appEnv        :: Environment
   }
 
 data AppAdmin = AppAdmin
@@ -38,6 +39,9 @@ data Stripe = Stripe
   , stripePublic  :: Text
   }
 
+data Environment = EnvDev | EnvProd
+   deriving (Eq, Show)
+
 instance FromJSON AppSettings where
   parseJSON = withObject "AppSettings" $ \o -> do
     appPort <- o .: "port"
@@ -46,6 +50,8 @@ instance FromJSON AppSettings where
     appDatabase <- o .: "database"
     appSmtpCreds <- o .: "smtp"
     appStripe <- o .: "stripe"
+    dev                       <- o .: "development"
+    let appEnv = if dev then EnvDev else EnvProd
     return AppSettings {..}
 
 instance FromJSON AppAdmin where

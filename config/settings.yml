@@ -24,3 +24,5 @@ smtp:
 stripe:
   secret: "_env:STRIPE_SECRET:x0"
   public: "_env:STRIPE_PUBLIC:x0"
+
+development: "_env:DEVELOPMENT:false"
