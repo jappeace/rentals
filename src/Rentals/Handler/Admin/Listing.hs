@@ -191,12 +191,9 @@ putAdminListingEmailsR lid = do
 
   case mcheckout of
     Just checkout -> do
-      master <- getsYesod appSettings
-      let smtpCreds = appSmtpCreds master
-          appEmail' = appEmail master
-
-      connPool  <- liftIO . smtpPool $ defSettings smtpCreds
-      sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+      master <- getYesod
+      let appEmail' = appEmail $ appSettings master
+      sendEmail (appSmtpPool master) $ (emptyMail (Address Nothing appEmail'))
         { mailTo      = [Address Nothing $ checkoutEmail checkout]
         , mailHeaders = [("Subject", "Booking Instructions")]
         , mailParts   = [[plainPart body]]
