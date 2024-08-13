@@ -58,10 +58,13 @@ import           Text.Julius
 import           Text.Read                  (readMaybe, readEither)
 
 import Rentals.Settings
+import Network.Mail.Pool (SMTPConnection)
+import Data.Pool (Pool)
 
 data App = App
   { appSettings :: AppSettings
   , appConnPool :: ConnectionPool
+  , appSmtpPool :: Pool SMTPConnection
   }
 
 newtype ICS = ICS { unICS :: UUID }

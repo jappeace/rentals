@@ -56,6 +56,8 @@ import Yesod.Default.Config2
 import System.Environment (getArgs)
 import Data.Maybe (fromMaybe)
 import Rentals.Database.Migration(runMigrations)
+import Network.Mail.Pool (smtpPool)
+import Network.Mail.Pool (defSettings)
 
 mkYesodDispatch "App" resourcesApp
 
@@ -78,8 +80,13 @@ appMain = do
 
     Cron.addJob (runStderrLoggingT $ flip runSqlPool pool $ importIcall) everyHour
 
+  smtpPool <- liftIO $ smtpPool $ defSettings (appSmtpCreds settings)
   runStderrLoggingT $ $logInfo "setting up wai app"
-  waiApp <- toWaiApp (App settings pool)
+  waiApp <- toWaiApp (App
+      { appSettings = settings
+      , appConnPool = pool
+      , appSmtpPool = smtpPool
+      })
   runStderrLoggingT $ $logInfo $ "binding to port " <> T.pack (show (appPort settings))
   run (appPort settings) $
     ( cors $ \req ->
