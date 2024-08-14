@@ -31,7 +31,7 @@
           mail-pool = hnew.callHackageDirect {
               pkg = "mail-pool";
               ver = "2.3.1";
-              sha256 = "sha256-7LWSiS9AMo0vB5mJ4y2VaU8YIyKF4WlmO1bgWJ/iiag=";
+              sha256 = "sha256-AL1VYMAmgoGTd50IElKRJJbC2eUUiNJX38G19hbv9DQ=";
             } {};
           iCalendar = lib.dontCheck (lib.doJailbreak (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
