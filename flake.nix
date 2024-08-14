@@ -28,6 +28,11 @@
         overrides = hnew: hold: {
           rentals = hnew.callCabal2nix "rentals" ./. { };
           slugify = lib.dontCheck (lib.markUnbroken hold.slugify);
+          mail-pool = hnew.callHackageDirect {
+              pkg = "mail-pool";
+              ver = "2.3.0";
+              sha256 = "sha256-7LWSiS9AMo0vB5mJ4y2VaU8YIyKF4WlmO1bgWJ/iiag=";
+            } {};
           iCalendar = lib.dontCheck (lib.doJailbreak (hnew.callCabal2nix "iCalendar"
                   (builtins.fetchGit {
                      url = "https://github.com/jappeace/iCalendar";
