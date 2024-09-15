@@ -156,6 +156,8 @@ getListingBookPaymentSuccessR lid = do
                   d end Nothing Nothing Nothing False True
               uuid  <- UUID.toText <$> liftIO randomIO
               uuid' <- UUID.toText <$> liftIO randomIO
+              
+              confirmBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
               runDB $ do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid
                   (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False
@@ -177,11 +179,10 @@ getListingBookPaymentSuccessR lid = do
                               
                               insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
                               
-                              emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
                               liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                                 { mailTo      = [Address Nothing customerEmail]
                                 , mailHeaders = [("Subject", "Booking confirmed - " <> listingTitle listing)]
-                                , mailParts   = [[htmlPart $ renderHtml emailBody]]
+                                , mailParts   = [[htmlPart $ renderHtml confirmBody]]
                                 }
                             Nothing -> sendResponseStatus status500 $ toEncoding
                               ("An error has ocurred: no reservation found at " <> showGregorian start)
