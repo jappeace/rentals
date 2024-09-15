@@ -177,7 +177,7 @@ getListingBookPaymentSuccessR lid = do
                               
                               insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
                               
-                              emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-conirm.hamlet")
+                              emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
                               liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                                 { mailTo      = [Address Nothing customerEmail]
                                 , mailHeaders = [("Subject", "Booking confirmed - " <> listingTitle listing)]
