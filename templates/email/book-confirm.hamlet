@@ -1,0 +1,5 @@
+<p>Booking confirmed for #{listingTitle listing}.
+<p>from #{start} to #{end}
+
+Contact me at #{appEmail'} for any questions.
+
