@@ -30,6 +30,7 @@ import qualified StripeAPI                                   as Stripe
 import qualified StripeAPI.Types.NotificationEventData.Extra as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
+import Data.Foldable (for_)
 
 putListingBookR :: ListingId -> Handler TypedContent
 putListingBookR lid = do
@@ -102,8 +103,8 @@ getListingBookPaymentSuccessR :: ListingId -> Handler TypedContent
 getListingBookPaymentSuccessR lid = do
   params      <- reqGetParams <$> getRequest
   master      <- getsYesod appSettings
+  connPool    <- getsYesod appSmtpPool
   let stripeKeys  = appStripe master
-      smtpCreds   = appSmtpCreds master
       adminEmails = map adminEmail $ appAdmin master
       appEmail'   = appEmail master
   mlisting    <- runDB $ get lid
@@ -127,7 +128,7 @@ getListingBookPaymentSuccessR lid = do
         Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> sendResponseStatus status503 $ toEncoding
           ("An error has ocurred with the payment processor: " <> T.pack err)
 
-      for items $ \i -> case Stripe.itemPrice i of
+      for_ items $ \i -> case Stripe.itemPrice i of
         Just (Stripe.NonNull ip) -> do
           product <- case Stripe.itemPrice'NonNullableProduct ip of
             Just (Stripe.ItemPrice'NonNullableProduct'Text           p) -> do
@@ -149,12 +150,14 @@ getListingBookPaymentSuccessR lid = do
             [Success start', Success end'] -> do
               let (start, end) = if start' > end' then (end', start') else (start', end')
 
-              for [start .. end] $ \d -> do
+              for_ [start .. end] $ \d -> do
                 uuid <- UUID.toText <$> liftIO randomIO
                 runDB . flip upsert [EventBooked =. True] $ Event lid Local uuid
                   d end Nothing Nothing Nothing False True
               uuid  <- UUID.toText <$> liftIO randomIO
               uuid' <- UUID.toText <$> liftIO randomIO
+              
+              confirmBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
               runDB $ do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid
                   (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False
@@ -172,7 +175,15 @@ getListingBookPaymentSuccessR lid = do
                         (Just (Stripe.NonNull customerEmail), Just (Stripe.NonNull customerName)) -> runDB $ do
                           mevent <- getBy $ UniqueEvent lid start
                           case mevent of
-                            Just (Entity eid _) -> insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
+                            Just (Entity eid _) -> do
+                              
+                              insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
+                              
+                              liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+                                { mailTo      = [Address Nothing customerEmail]
+                                , mailHeaders = [("Subject", "Booking confirmed - " <> listingTitle listing)]
+                                , mailParts   = [[htmlPart $ renderHtml confirmBody]]
+                                }
                             Nothing -> sendResponseStatus status500 $ toEncoding
                               ("An error has ocurred: no reservation found at " <> showGregorian start)
                         _ -> sendResponseStatus status503 $ toEncoding
@@ -185,12 +196,12 @@ getListingBookPaymentSuccessR lid = do
                   ("An error has ocurred with the payment processor: " <> T.pack err)
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
-              connPool  <- liftIO . smtpPool $ defSettings smtpCreds
-              for adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+              for_ adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                 { mailTo      = [Address Nothing adminEmail]
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
+
 
       redirect ViewBookSuccessR
 
