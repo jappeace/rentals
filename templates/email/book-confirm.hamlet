@@ -1,5 +1,9 @@
-<p>Booking confirmed for #{listingTitle listing}.
-<p>from #{start} to #{end}
 
-Contact me at #{appEmail'} for any questions.
+<p>Thank you for your booking on #{listingTitle listing}.
+The dates we received is from #{start} to #{end}
+
+<p>For any comments or questions you can contact the property manager #{handlerName listing} on #{handlerPhone listing}.
+
+<p> See you soon at #{listingTitle listing}.
+
 
