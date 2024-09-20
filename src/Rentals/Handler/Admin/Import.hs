@@ -6,6 +6,7 @@ import Yesod
 
 import Rentals.JSON
 
+import Rentals.ICallImporter(importIcall)
 import Rentals.Database.Import
 import Rentals.Database.Listing
 import qualified Control.Exception          as E
@@ -50,7 +51,10 @@ putAdminListingImportR lid = do
             200 ->
               case parseICalendar def parseErrorLog $ res ^. W.responseBody of
                 Right _ -> do
-                  runDB . insert $ Import lid source l
+                  let res = Import lid source l
+                  runDB $ do
+                    insert res
+                    importThisICall res
                   sendResponseStatus status204 ()
 
                 Left err -> do
