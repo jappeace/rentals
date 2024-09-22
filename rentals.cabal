@@ -35,6 +35,7 @@ source-repository head
 library
   exposed-modules:
     Rentals.Application
+    Rentals.ICallImporter
     Rentals.Calendar
     Rentals.Database
     Rentals.Database.Checkout
