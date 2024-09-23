@@ -2,54 +2,31 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 -- | This hooks everything together
 module Rentals.Application where
 
-import Control.Monad.Logger(LoggingT)
-import Data.Pool (Pool)
-import Control.Concurrent
-import Control.Concurrent.Thread.Delay
-import Control.Exception.Annotated
-import Control.Lens (to, (^.))
-import Control.Monad
 import Control.Monad.Logger (runStderrLoggingT)
-import Control.Monad.Trans.Resource (runResourceT)
-import Data.Default (def)
-import Data.Functor
 import Data.List (uncons)
 import Data.Text(Text)
-import Control.Monad.Reader(ReaderT)
-import qualified Data.Map.Strict as M
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Lazy as LT
 import qualified System.Cron as Cron
-import Data.Traversable
-import Database.Persist
 import Database.Persist.Postgresql
-import Database.Persist.TH
 import Network.HTTP.Types.Method
-import Network.URI
 import Network.Wai.Handler.Warp
 import Network.Wai.Middleware.Cors
-import qualified Network.Wreq as W
-import Rentals.Database (migrateAll)
-import Rentals.Database.Event
-import Rentals.Database.Import
 import Rentals.Foundation
 import Rentals.Handler.Admin.Export
 import Rentals.Handler.Admin.Import
 import Rentals.Handler.Admin.Listing
 import Rentals.Handler.User.Booking
 import Rentals.Handler.User.Listing
-import Rentals.Handler.User.User
 import Rentals.Handler.View.Admin
 import Rentals.Handler.View.Listings
 import Rentals.Handler.View.Booking
 import Rentals.Settings
 import System.Directory
-import Text.ICalendar
 import Yesod
 import Yesod.Auth
 import Yesod.Default.Config2
@@ -81,16 +58,16 @@ appMain = do
 
     Cron.addJob (runStderrLoggingT $ flip runSqlPool pool $ importIcall) everyHour
 
-  smtpPool <- liftIO $ smtpPool $ defSettings (appSmtpCreds settings)
+  smtpPool' <- liftIO $ smtpPool $ defSettings (appSmtpCreds settings)
   runStderrLoggingT $ $logInfo "setting up wai app"
   waiApp <- toWaiApp (App
       { appSettings = settings
       , appConnPool = pool
-      , appSmtpPool = smtpPool
+      , appSmtpPool = smtpPool'
       })
   runStderrLoggingT $ $logInfo $ "binding to port " <> T.pack (show (appPort settings))
   run (appPort settings) $
-    ( cors $ \req ->
+    ( cors $ \_req ->
         Just $
           simpleCorsResourcePolicy
             { corsMethods =

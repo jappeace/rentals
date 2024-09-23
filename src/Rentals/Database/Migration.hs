@@ -15,8 +15,6 @@ import qualified Control.Exception.Annotated as Annotated
 import Data.Pool (Pool)
 import Control.Monad.Reader (ReaderT, lift)
 import Database.Persist.Sql (SqlBackend, showMigration, runSqlPool)
-import Control.Monad.Logger (LoggingT)
-import Rentals.Settings (AppDatabase)
 import qualified Database.PostgreSQL.Simple as PGSimple
 import qualified Database.PostgreSQL.Simple.Migration as Migration
 import qualified Database.PostgreSQL.Simple.Util as Migration
@@ -82,6 +80,7 @@ data InconsistentMigrationException = InconsistentMigrationException [Text]
 
 instance Show InconsistentMigrationException where
   show (InconsistentMigrationException e) = Text.unpack $ Text.unlines e
+  show (MigrationLibraryError x) = x
 
 instance Annotated.Exception InconsistentMigrationException where
   displayException (InconsistentMigrationException suggestions) =

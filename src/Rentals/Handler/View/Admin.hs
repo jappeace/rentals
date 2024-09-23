@@ -9,7 +9,6 @@ import Rentals.Database.Checkout
 import Rentals.Database.Import
 import Rentals.Database.Source
 import Rentals.Database.ListingImage
-import Data.List (groupBy)
 import Data.Time.Calendar
 import Data.Traversable
 import Database.Persist.Sql
@@ -50,7 +49,7 @@ getViewAdminListingR lid slug = do
     $(whamletFile "templates/admin/listing.hamlet")
 
 getViewAdminListingEmailsR :: ListingId -> Slug -> Handler Html
-getViewAdminListingEmailsR lid slug = do
+getViewAdminListingEmailsR lid _slug = do
   mlisting      <- runDB $ get lid
   pendingEmails <- runDB $ do
     pendingEmails <- selectList [CheckoutListing ==. lid, CheckoutEmailed ==. False] []

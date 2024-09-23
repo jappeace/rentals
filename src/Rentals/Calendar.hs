@@ -1,9 +1,7 @@
 module Rentals.Calendar(addVEventToVCalendar, emptyVCalendar, parseCalendar, printCalendar, newVEvent) where
 
-import Yesod
 import Rentals.Foundation
 
-import           Data.Aeson                (Result(..), FromJSON)
 import qualified Data.ByteString.Lazy      as LBS
 import           Data.CaseInsensitive
 import           Data.Default              (def)
@@ -11,12 +9,9 @@ import qualified Data.Map.Strict           as M
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Lazy            as LT
-import           Data.Time.Calendar
 import           Data.Time.Clock
 import           Data.UUID
 import           Data.Version
-import           Network.HTTP.Types.Status
-import           System.Random
 import           Text.ICalendar
 
 parseCalendar :: LBS.ByteString -> Handler (Either Text VCalendar)
@@ -82,15 +77,3 @@ addVEventToVCalendar :: VCalendar -> VEvent -> VCalendar
 addVEventToVCalendar cal evn
   | M.member (uidValue (veUID evn), Nothing) (vcEvents cal) = cal
   | otherwise = cal {vcEvents = M.insert (uidValue (veUID evn), Nothing) evn (vcEvents cal)}
-
-removeVEventFromVCalendar :: VCalendar -> VEvent -> VCalendar
-removeVEventFromVCalendar cal evn = cal {vcEvents = M.delete (uidValue (veUID evn), Nothing) (vcEvents cal)}
-
-removeVEventAtDateFromVCalendar :: VCalendar -> Day -> VCalendar
-removeVEventAtDateFromVCalendar cal day = do
-  -- if the date is different from the desired day, keep it in the list
-  let updatedCalendar = flip M.filter (vcEvents cal) $ \ev ->
-        case veDTStart ev of
-          Just (DTStartDate (Date d) _) -> d /= day
-          _ -> True
-  cal {vcEvents = updatedCalendar}

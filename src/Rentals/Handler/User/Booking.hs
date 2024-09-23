@@ -16,18 +16,15 @@ import Rentals.Database.Money
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)
 import qualified Data.Aeson.KeyMap                           as A
-import           Data.List                                   (sort)
 import           Data.Text                                   (Text)
 import qualified Data.Text                                   as T
 import           Data.Time.Calendar
-import           Data.Traversable
 import qualified Data.UUID                                   as UUID
 import           Network.HTTP.Client
 import           Network.HTTP.Types.Status
 import           Network.Mail.Mime
 import           Network.Mail.Pool
 import qualified StripeAPI                                   as Stripe
-import qualified StripeAPI.Types.NotificationEventData.Extra as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
@@ -60,8 +57,8 @@ putListingBookR lid = do
   productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
     $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
       { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
-  product <- case responseBody productResponse of
-    Stripe.PostProductsResponse200 product -> pure product
+  product' <- case responseBody productResponse of
+    Stripe.PostProductsResponse200 product' -> pure product'
     Stripe.PostProductsResponseDefault err -> sendResponseStatus status503 $ toEncoding
       ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
     Stripe.PostProductsResponseError   err -> sendResponseStatus status503 $ toEncoding
@@ -71,7 +68,7 @@ putListingBookR lid = do
         { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
         , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData = Just $
           (Stripe.mkPostCheckoutSessionsRequestBodyLineItems'PriceData' "USD")
-            { Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'Product = Just $ Stripe.productId product
+            { Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'Product = Just $ Stripe.productId product'
             , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'UnitAmount = Just amount
             }
         }
@@ -130,7 +127,7 @@ getListingBookPaymentSuccessR lid = do
 
       for_ items $ \i -> case Stripe.itemPrice i of
         Just (Stripe.NonNull ip) -> do
-          product <- case Stripe.itemPrice'NonNullableProduct ip of
+          product' <- case Stripe.itemPrice'NonNullableProduct ip of
             Just (Stripe.ItemPrice'NonNullableProduct'Text           p) -> do
               productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.getProductsId $ Stripe.mkGetProductsIdParameters p
 
@@ -144,9 +141,11 @@ getListingBookPaymentSuccessR lid = do
             Just (Stripe.ItemPrice'NonNullableProduct'Product        p) -> pure $ Stripe.productMetadata p
             Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> sendResponseStatus status503 $ toEncoding
               ("An error has ocurred with the payment processor, the product was deleted: " <> Stripe.deletedProductId p)
+            other -> error $ "Unxpected " <> show other
 
-          let dates = map fromJSON $ A.elems product
+          let dates = map fromJSON $ A.elems product'
           case dates of
+            [] -> error "Empty dates"
             [Success start', Success end'] -> do
               let (start, end) = if start' > end' then (end', start') else (start', end')
 
@@ -158,8 +157,8 @@ getListingBookPaymentSuccessR lid = do
               uuid' <- UUID.toText <$> liftIO randomIO
               
               confirmBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
-              runDB $ do
-                flip upsert [EventBlocked =. True] $ Event lid Local uuid
+              _ <- runDB $ do
+                _ <- flip upsert [EventBlocked =. True] $ Event lid Local uuid
                   (pred start) (pred start) Nothing Nothing (Just "Unavailable (Local)") True False
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
                   (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False
@@ -177,7 +176,7 @@ getListingBookPaymentSuccessR lid = do
                           case mevent of
                             Just (Entity eid _) -> do
                               
-                              insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
+                              _ <- insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
                               
                               liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                                 { mailTo      = [Address Nothing customerEmail]
@@ -201,6 +200,8 @@ getListingBookPaymentSuccessR lid = do
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
+            other -> error $ "Unxpected" <> show other
+        other -> error $ "Unxpected" <> show other
 
 
       redirect ViewBookSuccessR
@@ -210,5 +211,6 @@ getListingBookPaymentSuccessR lid = do
     _ -> sendResponseStatus status400 $ toEncoding
       ("The payment processor did not provide a proper redirect address, missing <session_id> parameter" :: Text)
 
+-- | this is passed to stripe for some reason?
 getListingBookPaymentCancelR :: ListingId -> Handler TypedContent
-getListingBookPaymentCancelR lid = undefined
+getListingBookPaymentCancelR _lid = undefined

@@ -19,43 +19,27 @@
 
 module Rentals.Foundation where
 
+import Rentals.Tshow
 import Yesod
 import Yesod.Auth
 import Yesod.Auth.Message
 import Yesod.Auth.Hardcoded
-import Yesod.Persist
 
 import Rentals.Database.Listing
-import           Control.Arrow
-import           Control.Exception          (Exception)
 import           Control.Monad
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
-import qualified Data.ByteString            as BS
-import           Data.Time.Calendar
-import           Data.Default               (def)
-import           Data.Fixed
 import           Data.Kind                  (Type)
 import           Data.List                  (find)
-import           Data.Map.Strict            (Map)
-import qualified Data.Map.Strict            as M
 import           Data.Maybe                 (isJust)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
 import           Data.UUID                  (UUID)
 import qualified Data.UUID                  as UUID
-import           Database.Persist
-import           Database.Persist.Quasi
-import           Database.Persist.Sql       (ConnectionPool, runSqlPool)
 import           Database.Persist.Postgresql
-import           Network.URI
-import           Text.Blaze
 import           Text.Hamlet
 import           Text.Lucius
-import           Text.ICalendar
 import           Text.Julius
-import           Text.Read                  (readMaybe, readEither)
 
 import Rentals.Settings
 import Network.Mail.Pool (SMTPConnection)
@@ -69,10 +53,13 @@ data App = App
 
 newtype ICS = ICS { unICS :: UUID }
   deriving (Eq, Show, Read)
+
+instance PathPiece ICS where
+  toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
+  fromPathPiece p = fmap ICS . UUID.fromText . T.reverse . T.drop 4 . T.reverse $ p
+
+
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''ICS)
-
-
------------------------------------------------------------------------------------------
 
 mkYesodData "App" [parseRoutes|
 /admin                                         ViewAdminR                      GET
@@ -109,41 +96,10 @@ instance RenderMessage App FormMessage where
 
 type DB a = forall (m :: Type -> Type). (MonadUnliftIO m) => ReaderT SqlBackend m a
 
------------------------------------------------------------------------------------------
 instance YesodPersist App where
   type YesodPersistBackend App = SqlBackend
   runDB action = getYesod >>= runSqlPool action . appConnPool
 
------------------------------------------------------------------------------------------
--- PathPiece instances
------------------------------------------------------------------------------------------
-instance PathPiece ICS where
-  toPathPiece ics = (UUID.toText $ unICS ics) <> ".ics"
-  fromPathPiece p = fmap ICS . UUID.fromText . T.reverse . T.drop 4 . T.reverse $ p
-
-
------------------------------------------------------------------------------------------
--- Content instances
------------------------------------------------------------------------------------------
-instance ToContent VCalendar where
-  toContent = toContent . printICalendar def
-instance ToTypedContent VCalendar where
-  toTypedContent = TypedContent "text/calendar; charset=utf-8" . toContent
------------------------------------------------------------------------------------------
-
------------------------------------------------------------------------------------------
--- ToMarkup instances
------------------------------------------------------------------------------------------
-
------------------------------------------------------------------------------------------
-instance ToMarkup UUID where
-  toMarkup = toMarkup . UUID.toText
-  preEscapedToMarkup = preEscapedToMarkup . UUID.toText
------------------------------------------------------------------------------------------
-
------------------------------------------------------------------------------------------
--- YesodAuth instances
------------------------------------------------------------------------------------------
 instance YesodAuth App where
   type AuthId App = Text
 
@@ -163,10 +119,13 @@ instance YesodAuth App where
 
   authenticate Creds {..} = do
     mAdmin <- liftHandler $ lookupAdmin credsIdent
-    pure $ case credsPlugin of
+    case credsPlugin of
       "hardcoded" -> case mAdmin of
-        Nothing -> UserError InvalidLogin
-        Just m  -> Authenticated $ adminUsername m
+        Nothing -> pure $ UserError InvalidLogin
+        Just m  -> pure $ Authenticated $ adminUsername m
+      plugin -> do
+        $logError $ "unkonw plugin: " <> plugin
+        pure $ UserError InvalidLogin
 
 instance YesodAuthPersist App where
   type AuthEntity App = Text
@@ -204,11 +163,8 @@ isAuthenticatedView = do
   case authResult of
     Unauthorized _ -> redirect $ AuthR LoginR
     Authorized -> pure Authorized
+    AuthenticationRequired -> redirect $ AuthR LoginR
 
-tshow :: Show a => a -> Text
-tshow = T.pack . show
-
------------------------------------------------------------------------------------------
 instance Yesod App where
 
   errorHandler errorResp = do

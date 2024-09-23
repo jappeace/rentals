@@ -1,9 +1,5 @@
 module Rentals.Handler.User.Listing where
 
-import Data.Fixed
-import Data.List (foldl')
-import Data.Maybe
-import Data.Text (Text)
 import Network.HTTP.Types.Status
 import Rentals.Database.Listing
 import Rentals.Foundation

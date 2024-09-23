@@ -6,31 +6,17 @@ import Yesod
 
 import Rentals.JSON
 
-import Rentals.ICallImporter(importIcall)
+import Rentals.ICallImporter(importThisICall )
 import Rentals.Database.Import
 import Rentals.Database.Listing
-import qualified Control.Exception          as E
-import           Control.Lens               ((^.), (.~), (&), to)
-import           Control.Monad
-import           Control.Monad.Except
+import           Control.Lens               ((^.), (.~), (&))
 import           Data.Aeson                 (Result(..))
-import qualified Data.ByteString            as BS
 import           Data.Default               (def)
-import           Data.Either
-import           Data.List.Extra            (breakEnd)
-import qualified Data.Map.Strict            as M
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
-import qualified Data.Text.Lazy             as LT
-import qualified Data.Text.Lazy.Encoding    as LTE
-import qualified Data.UUID                  as UUID
-import           Database.Persist
-import           Network.HTTP.Client
 import           Network.HTTP.Types.Status
 import           Network.URI                as URI
 import qualified Network.Wreq               as W
-import           System.Random
 import           Text.ICalendar
 
 putAdminListingImportR :: ListingId -> Handler TypedContent
@@ -39,7 +25,7 @@ putAdminListingImportR lid = do
   mlisting      <- runDB $ get lid
 
   case mlisting of
-    Just listing -> do
+    Just _listing -> do
       -- Try and parse the provided Airbnb calendar URI
       case URI.parseURI . T.unpack $ uri of
         Just l -> do
@@ -51,10 +37,10 @@ putAdminListingImportR lid = do
             200 ->
               case parseICalendar def parseErrorLog $ res ^. W.responseBody of
                 Right _ -> do
-                  let res = Import lid source l
+                  let res' = Import lid source l
                   runDB $ do
-                    insert res
-                    importThisICall res
+                    _ <- insert res'
+                    importThisICall res'
                   sendResponseStatus status204 ()
 
                 Left err -> do

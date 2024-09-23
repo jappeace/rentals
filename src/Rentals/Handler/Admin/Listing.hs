@@ -13,27 +13,16 @@ import Rentals.Database.Event
 import Rentals.Database.Checkout
 import Rentals.Database.ListingImage
 import           Control.Monad
-import           Data.Aeson                (Result(..))
-import           Data.List.Extra           (wordsBy)
-import qualified Data.Map.Strict           as M
 import           Data.Text                 (Text)
-import qualified Data.Text                 as T
-import qualified Data.Text.Lazy            as LT
 import           Data.Time.Calendar
 import           Data.Traversable
 import           Data.UUID
-import           Database.Persist.Sql
 import           Network.HTTP.Types.Status
 import           Network.Mail.Mime
 import           Network.Mail.Pool
 import           System.Directory
 import           System.FilePath
 import           System.Random
-import           Text.Blaze.Html.Renderer.Text
-import           Text.ICalendar
-import           Text.Hamlet
-import           Text.Julius
-import           Text.Lucius
 import           Text.Slugify
 
 getAdminListingR :: ListingId -> Handler TypedContent
@@ -85,8 +74,8 @@ putAdminListingImageR lid = do
     uuid <- liftIO randomIO
     liftIO $ fileMove imgFile ("images" </> toString uuid)
 
-    exists <- liftIO . doesFileExist $ "images" </> toString uuid
-    if exists
+    exists' <- liftIO . doesFileExist $ "images" </> toString uuid
+    if exists'
       then do
         runDB . insert_ $ ListingImage lid uuid
         pure uuid
@@ -101,12 +90,12 @@ putAdminListingImageR lid = do
       | otherwise -> sendResponseStatus status201 $ toEncoding imgs
 
 deleteAdminListingImageR :: ListingId -> Handler TypedContent
-deleteAdminListingImageR lid = do
+deleteAdminListingImageR _lid = do
   uuid <- parseJsonBody'
   let file = "images/" </> toString uuid
 
-  exists <- liftIO $ doesFileExist file
-  when exists $ do
+  exists' <- liftIO $ doesFileExist file
+  when exists' $ do
     runDB . deleteBy $ UniqueImage uuid
     liftIO $ removeFile file
 
@@ -116,11 +105,11 @@ putAdminListingUpdateBlockedDatesR :: ListingId -> Handler TypedContent
 putAdminListingUpdateBlockedDatesR lid = do
   days <- parseJsonBody' :: Handler [Day]
 
-  runDB $ do
+  _ <- runDB $ do
     mlisting <- get lid
 
     case mlisting of
-      Just listing -> do
+      Just _listing -> do
         updateWhere [EventListing ==. lid, EventStart /<-. days] [EventBlocked =. False]
 
         for days $ \day -> do
@@ -169,9 +158,8 @@ putAdminListingUpdateDayPriceR lid = do
   (price, days) <- parseJsonBody' :: Handler (Money, [Day])
   let price' = if price == 0 then Nothing else Just price
 
-  runDB $ do
+  _ <- runDB $ do
     mlisting <- get lid
-
     case mlisting of
       Just _ -> do
         for days $ \day -> do
@@ -185,7 +173,7 @@ putAdminListingUpdateDayPriceR lid = do
   sendResponseStatus status204 ()
 
 putAdminListingEmailsR :: ListingId -> Handler TypedContent
-putAdminListingEmailsR lid = do
+putAdminListingEmailsR _lid = do
   (cid, body) <- parseJsonBody'
   mcheckout <- runDB $ get cid
 

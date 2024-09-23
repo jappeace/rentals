@@ -8,23 +8,20 @@ import           Data.Foldable
 import           Data.Text                  (Text)
 import qualified Data.Text.Lazy             as LT
 import           Data.Time.Clock
-import           Data.UUID                  (UUID)
 import qualified Data.UUID                  as UUID
 import           Network.HTTP.Types.Status
 import           Text.ICalendar
-import           System.Random
 import Rentals.Database.Event
 import Rentals.Database.Listing
 import Rentals.Database.Source
 import Rentals.Calendar
 
-import Rentals.JSON
 
 getCalendarExportR :: ICS -> Handler VCalendar
 getCalendarExportR (ICS uuid) = do
   mlisting <- runDB . getBy $ UniqueCalendar uuid
   case mlisting of
-    Just (Entity lid listing) -> do
+    Just (Entity lid _listing) -> do
       currentTime <- liftIO getCurrentTime
       events      <- runDB $ selectList [EventListing ==. lid, EventSource ==. Local] []
 
