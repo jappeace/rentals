@@ -10,6 +10,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 
@@ -23,12 +24,12 @@ import Data.Text
 import Database.Persist.TH
 import Data.UUID(UUID)
 import Data.Aeson(toJSON)
-import Data.Fixed(Centi, showFixed)
 import           Data.Aeson.TH              (deriveJSON, defaultOptions, unwrapUnaryRecords)
 import           Database.Persist
 import           Database.Persist.Sql
 import Text.Blaze(ToMarkup(..))
 import Web.PathPieces
+import Rentals.Tshow (tshow)
 
 
 
@@ -40,6 +41,7 @@ $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Slug)
 instance PersistField Slug where
   toPersistValue = PersistText . unSlug
   fromPersistValue (PersistText slug) = Right $ Slug slug
+  fromPersistValue other = Left $ "unkown val" <> tshow other
 instance PersistFieldSql Slug where
   sqlType _ = SqlString
 

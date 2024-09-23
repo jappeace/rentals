@@ -6,15 +6,10 @@ import Rentals.Database.Listing
 import Rentals.Database.ListingImage
 import Rentals.Database.Event
 
-import Rentals.JSON
-
-import           Control.Monad
 import           Data.List         ((\\))
 import qualified Data.List.GroupBy as GB
-import           Data.Maybe
 import           Data.Time.Clock
 import           Data.Traversable
-import           Text.Hamlet
 import           Text.Julius
 
 getViewListingsR :: Handler Html
@@ -38,7 +33,7 @@ getViewListingsR = do
   defaultUserLayout $(whamletFile "templates/user/listings.hamlet")
 
 getViewListingR :: ListingId -> Slug -> Handler Html
-getViewListingR lid slug = do
+getViewListingR lid _slug = do
   (listing, images, unavailableDates) <- runDB $ do
     listing          <- get404 lid
     images           <- selectList [ListingImageListing ==. lid] []
