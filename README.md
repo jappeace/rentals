@@ -37,6 +37,8 @@ by default it's this:
 CREATE USER rental WITH PASSWORD 'rental';
 CREATE DATABASE rental;
 GRANT ALL ON DATABASE rental TO rental;
+\c rental
+GRANT USAGE, CREATE ON SCHEMA public TO rental;
 ```
 
 ## run the app
