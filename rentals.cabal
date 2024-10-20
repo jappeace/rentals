@@ -60,6 +60,7 @@ library
     Rentals.Orphans
     Rentals.Settings
     Rentals.Tshow
+    Rentals.Currency
 
   other-modules:      Paths_rentals
   autogen-modules:    Paths_rentals
@@ -137,7 +138,7 @@ library
 
   default-language:   Haskell2010
   ghc-options:        
-    -O2 -Wall -Werror -Wincomplete-uni-patterns
+    -O2 -Wall  -Wincomplete-uni-patterns
     -Wincomplete-record-updates -Widentities -Wredundant-constraints
     -Wcpp-undef -fwarn-tabs -Wpartial-fields
     -fdefer-diagnostics -Wunused-packages

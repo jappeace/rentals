@@ -30,6 +30,7 @@ import           Database.Persist.Sql
 import Text.Blaze(ToMarkup(..))
 import Web.PathPieces
 import Rentals.Tshow (tshow)
+import Rentals.Currency (Currency)
 
 
 
@@ -59,6 +60,7 @@ Listing json
   title            Text
   description      Text
   price            Money
+  currency         Currency default='USD'
   cleaning         Money default=0
   country          Text  default=''
   address          Text  default=''

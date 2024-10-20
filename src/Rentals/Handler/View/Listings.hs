@@ -1,5 +1,6 @@
 module Rentals.Handler.View.Listings where
 
+import Rentals.Currency
 import Rentals.Foundation
 import Yesod
 import Rentals.Database.Listing

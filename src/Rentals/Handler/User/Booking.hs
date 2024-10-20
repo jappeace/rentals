@@ -28,6 +28,7 @@ import qualified StripeAPI                                   as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
+import Rentals.Currency (toStripe)
 
 putListingBookR :: ListingId -> Handler TypedContent
 putListingBookR lid = do
@@ -67,7 +68,7 @@ putListingBookR lid = do
   let checkoutLineItem = Stripe.mkPostCheckoutSessionsRequestBodyLineItems'
         { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
         , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData = Just $
-          (Stripe.mkPostCheckoutSessionsRequestBodyLineItems'PriceData' "USD")
+          (Stripe.mkPostCheckoutSessionsRequestBodyLineItems'PriceData' (toStripe (listingCurrency listing)) )
             { Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'Product = Just $ Stripe.productId product'
             , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'UnitAmount = Just amount
             }
