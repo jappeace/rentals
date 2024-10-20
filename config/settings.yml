@@ -1,4 +1,4 @@
-port:  "_env:PORT:3033"
+port:  "_env:PORT:3004"
 email: "_env:EMAIL:info@rental.jappie.me"
 
 admin:
