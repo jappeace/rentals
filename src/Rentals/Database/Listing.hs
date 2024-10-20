@@ -60,7 +60,7 @@ Listing json
   title            Text
   description      Text
   price            Money
-  currency         Currency
+  currency         Currency default='USD'
   cleaning         Money default=0
   country          Text  default=''
   address          Text  default=''

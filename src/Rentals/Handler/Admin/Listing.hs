@@ -24,6 +24,7 @@ import           System.Directory
 import           System.FilePath
 import           System.Random
 import           Text.Slugify
+import Rentals.Currency (Currency(..))
 
 getAdminListingR :: ListingId -> Handler TypedContent
 getAdminListingR lid = do
@@ -130,17 +131,20 @@ putAdminListingNewR = do
     uuid <- liftIO randomIO
     let slug = Slug . slugify $ listingNewTitle listing
 
-    mlid <- insertUnique $ Listing
-      (listingNewTitle listing)
-      (listingNewDescription listing)
-      (listingNewPrice listing)
-      (listingNewCleaning listing)
-      (listingNewCountry listing)
-      (listingNewAddress listing)
-      (listingNewHandlerName listing)
-      (listingNewHandlerPhone listing)
-      slug
-      uuid
+    mlid <- insertUnique $ Listing {
+          listingTitle            =     (listingNewTitle listing)
+        , listingCurrency = UsDollar
+        , listingDescription      =     (listingNewDescription listing)
+        , listingPrice            =     (listingNewPrice listing)
+        , listingCleaning         =     (listingNewCleaning listing)
+        , listingCountry          =     (listingNewCountry listing)
+        , listingAddress          =     (listingNewAddress listing)
+        , listingHandlerName      =     (listingNewHandlerName listing)
+        , listingHandlerPhone     =     (listingNewHandlerPhone listing)
+        , listingSlug             =     slug
+        , listingUuid = uuid
+        }
+
 
     pure (mlid, slug)
 
