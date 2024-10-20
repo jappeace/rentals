@@ -25,6 +25,7 @@ import           Data.Time.Calendar
 import Rentals.Database.Source
 
 
+-- TODO add currency a booking was made in
 mkPersistWith sqlSettings $(discoverEntities)
   [persistLowerCase|
 Event
