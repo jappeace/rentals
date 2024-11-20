@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Rentals.Handler.User.Booking where
 
 import Yesod
@@ -5,6 +6,7 @@ import Rentals.Foundation
 
 import Rentals.Handler.User.Internal
 
+import Text.Blaze(Markup)
 import Rentals.Settings
 import Rentals.JSON
 
@@ -29,6 +31,36 @@ import           System.Random
 import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
 import Rentals.Currency (toStripe)
+import Rentals.Widget
+
+data BookListForm = BookListForm {
+    startDate :: Day
+  , endDate :: Day
+ }
+
+type Form a = Markup -> MForm Handler (FormResult a, Widget)
+
+boookListForm :: Form BookListForm
+boookListForm csrf = do
+  (startRes, startView) <- mreq dayField "start date" Nothing
+  (endRes, endView) <- mreq dayField "end date" Nothing
+
+  let view = $(widgetFile "listing/bookform")
+
+      result = BookListForm <$> startRes <*> endRes
+  pure (result, view)
+
+
+getListingBookR :: ListingId -> Handler Html
+getListingBookR lid = do
+  ((_formRes, form), enc) <- runFormPost boookListForm
+
+  userLayoutNoJs $(widgetFile "listing/book")
+
+postListingBookR :: ListingId -> Handler Html
+postListingBookR lid = do
+  x <- runFormPost boookListForm
+  pure ""
 
 putListingBookR :: ListingId -> Handler TypedContent
 putListingBookR lid = do

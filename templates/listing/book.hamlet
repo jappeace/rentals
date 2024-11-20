@@ -1,0 +1,4 @@
+book
+
+<form method=post action=@{ListingBookR lid} enctype=#{enc}>
+  ^{form}

@@ -1,0 +1,7 @@
+^{csrf}
+<div id="user-datepicker" class="input-daterange input-group mb-2">
+  ^{fvInput startView}
+  <span class="input-group-text">to
+  ^{fvInput endView}
+<div class="d-grid">
+  <button type=submit class="btn btn-primary">book now
