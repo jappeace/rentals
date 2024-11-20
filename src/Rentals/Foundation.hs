@@ -82,7 +82,7 @@ mkYesodData "App" [parseRoutes|
 /view/book/success                             ViewBookSuccessR                GET
 
 /listing/quote/#ListingId                      ListingQuoteR                       POST
-/listing/book/#ListingId                       ListingBookR                             PUT
+/listing/book/#ListingId                       ListingBookR                             PUT GET POST
 /listing/book/#ListingId/payment/success       ListingBookPaymentSuccessR      GET
 /listing/book/#ListingId/payment/cancel        ListingBookPaymentCancelR       GET
 
@@ -230,8 +230,12 @@ defaultEmailLayout w = do
     withUrlRenderer $(hamletFile "templates/default-email-layout.hamlet")
 
 defaultUserLayout :: WidgetFor App () -> Handler Html
-defaultUserLayout w = defaultLayout $ do
+defaultUserLayout w = userLayoutNoJs $ do
   toWidgetHead $(juliusFile "templates/script/user/forms.julius")
+  w
+
+userLayoutNoJs :: WidgetFor App () -> Handler Html
+userLayoutNoJs w = defaultLayout $ do
   toWidgetHead $(luciusFile "templates/style/user.lucius")
   w
 

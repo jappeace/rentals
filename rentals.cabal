@@ -135,6 +135,7 @@ library
     , yesod              >=1.6.2  && <1.7
     , yesod-auth         >=1.6.11 && <1.7
     , yesod-core         >=1.6.25 && <1.7
+    , template-haskell
 
   default-language:   Haskell2010
   ghc-options:        
