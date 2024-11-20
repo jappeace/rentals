@@ -26,15 +26,15 @@
                 <div class="card-title">
                   <div class="row mb-3 gx-0 justify-content-between">
                     <div class="col-6">
-                      <div id="price-total" class="fs-4 text-start">$#{listingPrice listing}
+                      <div id="price-total" class="fs-4 text-start">^{printCurrency (listingCurrency listing)} #{listingPrice listing}
                       <div class="fs-7 lh-1 text-start text-secondary">total
                     <div class="col-6">
                       <div class="row">
                         <div class="col-12">
-                          <div id="price-night" class="fs-4 text-end">$#{listingPrice listing}
+                          <div id="price-night" class="fs-4 text-end">^{printCurrency (listingCurrency listing)} #{listingPrice listing}
                           <div class="fs-7 lh-1 text-end text-secondary">avg per night
                         <div class="col-12">
-                          <div id="price-cleaning" class="fs-6 text-end">$#{listingCleaning listing}
+                          <div id="price-cleaning" class="fs-6 text-end">^{printCurrency (listingCurrency listing)} #{listingCleaning listing}
                           <div class="fs-7 lh-1 text-end text-secondary">cleaning fee
                 <div class="card-text">
                   <form id="new-booking" action=@{ListingBookR lid}>
