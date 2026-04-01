@@ -81,8 +81,7 @@ mkYesodData "App" [parseRoutes|
 /view/listing/#ListingId/#Slug                 ViewListingR                    GET
 /view/book/success                             ViewBookSuccessR                GET
 
-/listing/quote/#ListingId                      ListingQuoteR                       POST
-/listing/book/#ListingId                       ListingBookR                             PUT GET POST
+/listing/book/#ListingId                       ListingBookR                    GET POST
 /listing/book/#ListingId/payment/success       ListingBookPaymentSuccessR      GET
 /listing/book/#ListingId/payment/cancel        ListingBookPaymentCancelR       GET
 
@@ -209,7 +208,6 @@ instance Yesod App where
   isAuthorized ViewListingsR                       _ = pure Authorized
   isAuthorized (ViewListingR _ _)                  _ = pure Authorized
   isAuthorized ViewBookSuccessR                    _ = pure Authorized
-  isAuthorized (ListingQuoteR _)                   _ = pure Authorized
   isAuthorized (ListingBookR _)                    _ = pure Authorized
   isAuthorized (ListingBookPaymentSuccessR _)      _ = pure Authorized
   isAuthorized (ListingBookPaymentCancelR _)       _ = pure Authorized
@@ -230,9 +228,7 @@ defaultEmailLayout w = do
     withUrlRenderer $(hamletFile "templates/default-email-layout.hamlet")
 
 defaultUserLayout :: WidgetFor App () -> Handler Html
-defaultUserLayout w = userLayoutNoJs $ do
-  toWidgetHead $(juliusFile "templates/script/user/forms.julius")
-  w
+defaultUserLayout = userLayoutNoJs
 
 userLayoutNoJs :: WidgetFor App () -> Handler Html
 userLayoutNoJs w = defaultLayout $ do

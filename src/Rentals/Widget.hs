@@ -7,11 +7,8 @@ module Rentals.Widget
   )  where
 
 import Language.Haskell.TH.Syntax (Exp, Q)
-import qualified Text.Cassius.Ordered as Ordered
-import qualified Text.Lucius.Ordered as Ordered
 import Yesod.Default.Util
 import Data.Default(def)
-import Text.Julius (juliusFile, juliusFileReload)
 
 -- | sometimes env doesn't work (supercede jobs)
 --   helpful for deciding reloading

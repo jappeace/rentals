@@ -1,7 +1,9 @@
 ^{csrf}
-<div id="user-datepicker" class="input-daterange input-group mb-2">
+<div class="mb-2">
+  <label class="form-label" for=#{fvId startView}>Start date
   ^{fvInput startView}
-  <span class="input-group-text">to
+<div class="mb-2">
+  <label class="form-label" for=#{fvId endView}>End date
   ^{fvInput endView}
-<div class="d-grid">
-  <button type=submit class="btn btn-primary">book now
+<div class="d-grid mt-3">
+  <button type=submit class="btn btn-primary">Book now

@@ -8,7 +8,6 @@ import Rentals.Handler.User.Internal
 
 import Text.Blaze(Markup)
 import Rentals.Settings
-import Rentals.JSON
 
 import Rentals.Database.Listing
 import Rentals.Database.Source
@@ -30,8 +29,11 @@ import qualified StripeAPI                                   as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
-import Rentals.Currency (toStripe)
+import Rentals.Currency (toStripe, printCurrency)
 import Rentals.Widget
+import qualified Data.List.GroupBy as GB
+import           Data.List         ((\\))
+import           Data.Time.Clock
 
 data BookListForm = BookListForm {
     startDate :: Day
@@ -53,81 +55,101 @@ boookListForm csrf = do
 
 getListingBookR :: ListingId -> Handler Html
 getListingBookR lid = do
-  ((_formRes, form), enc) <- runFormPost boookListForm
+  listing <- runDB $ get404 lid
+  unavailableDates <- runDB $ do
+    unavailable <- map (eventStart . entityVal) <$> selectList
+      (   [EventListing ==. lid, EventBlocked ==. True]
+      ||. [EventListing ==. lid, EventBooked  ==. True]
+      ) []
+
+    today <- utctDay <$> liftIO getCurrentTime
+    let availableDates    = (take 366 [today ..]) \\ unavailable
+        gapDates = mconcat . filter (\x -> length x < 3) $
+          GB.groupBy (\x y -> succ x == y) availableDates
+
+    pure (unavailable <> gapDates)
+
+  (form, enc) <- generateFormPost boookListForm
+  mmsg <- getMessage
 
   userLayoutNoJs $(widgetFile "listing/book")
 
 postListingBookR :: ListingId -> Handler Html
 postListingBookR lid = do
-  x <- runFormPost boookListForm
-  pure ""
+  ((formResult, _form), _enc) <- runFormPost boookListForm
 
-putListingBookR :: ListingId -> Handler TypedContent
-putListingBookR lid = do
-  (start, end) <- parseJsonBody'
-  mlisting     <- runDB $ get lid
+  case formResult of
+    FormSuccess (BookListForm start end) -> do
+      when (start >= end) $ do
+        setMessage "Start date must be before end date."
+        redirect (ListingBookR lid)
 
-  when (length [start .. end] < 3) . sendResponseStatus status400 $ toEncoding
-    ("The minimum amount of days for booking is 3." :: Text)
+      when (length [start .. end] < 3) $ do
+        setMessage "The minimum booking duration is 3 days."
+        redirect (ListingBookR lid)
 
-  listing <- case mlisting of
-    Just listing -> pure listing
-    Nothing -> sendResponseStatus status404 $ toEncoding
-      ("The target listing does not exist, please check the identifier and try again" :: Text)
+      listing <- runDB $ get404 lid
+      (quote, cleaningFee) <- getQuote lid start end
+      stripeKeys <- getsYesod $ appStripe . appSettings
+      render     <- getUrlRender
+      let amount = 100 * ((floor . unMoney $ quote) + (floor . unMoney $ cleaningFee))
 
-  (quote, cleaningFee) <- getQuote lid start end
-  stripeKeys <- getsYesod $ appStripe . appSettings
-  render     <- getUrlRender
-  let amount = 100 * ((floor . unMoney $ quote) + (floor . unMoney $ cleaningFee))
-
-  let conf = Stripe.defaultConfiguration
-        { Stripe.configSecurityScheme = Stripe.basicAuthenticationSecurityScheme Stripe.BasicAuthenticationData
-          { Stripe.basicAuthenticationDataUsername = stripeSecret stripeKeys
-          , Stripe.basicAuthenticationDataPassword = ""
-          }
-        }
-
-  productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
-    $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
-      { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
-  product' <- case responseBody productResponse of
-    Stripe.PostProductsResponse200 product' -> pure product'
-    Stripe.PostProductsResponseDefault err -> sendResponseStatus status503 $ toEncoding
-      ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-    Stripe.PostProductsResponseError   err -> sendResponseStatus status503 $ toEncoding
-      ("An error has ocurred with the payment processor: " <> T.pack err)
-
-  let checkoutLineItem = Stripe.mkPostCheckoutSessionsRequestBodyLineItems'
-        { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
-        , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData = Just $
-          (Stripe.mkPostCheckoutSessionsRequestBodyLineItems'PriceData' (toStripe (listingCurrency listing)) )
-            { Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'Product = Just $ Stripe.productId product'
-            , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'UnitAmount = Just amount
+      let conf = Stripe.defaultConfiguration
+            { Stripe.configSecurityScheme = Stripe.basicAuthenticationSecurityScheme Stripe.BasicAuthenticationData
+              { Stripe.basicAuthenticationDataUsername = stripeSecret stripeKeys
+              , Stripe.basicAuthenticationDataPassword = ""
+              }
             }
-        }
-      checkoutSession = (Stripe.mkPostCheckoutSessionsRequestBody
-        ((render $ ListingBookPaymentCancelR lid)  <> "?session_id={CHECKOUT_SESSION_ID}")
-        ((render $ ListingBookPaymentSuccessR lid) <> "?session_id={CHECKOUT_SESSION_ID}")
-        ){Stripe.postCheckoutSessionsRequestBodyLineItems = Just [checkoutLineItem]
-        , Stripe.postCheckoutSessionsRequestBodyMode = Just Stripe.PostCheckoutSessionsRequestBodyMode'EnumPayment
-        , Stripe.postCheckoutSessionsRequestBodyCustomerCreation = Just Stripe.PostCheckoutSessionsRequestBodyCustomerCreation'EnumAlways
-        , Stripe.postCheckoutSessionsRequestBodyPaymentIntentData = Just $ Stripe.mkPostCheckoutSessionsRequestBodyPaymentIntentData'
-          { Stripe.postCheckoutSessionsRequestBodyPaymentIntentData'Description = Just $ "Thank you for your reservation!"
-          }
-        }
 
-  checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postCheckoutSessions checkoutSession
-  checkout <- case responseBody checkoutSessionResponse of
-    Stripe.PostCheckoutSessionsResponse200 checkout -> pure checkout
-    Stripe.PostCheckoutSessionsResponseDefault err -> sendResponseStatus status503 $ toEncoding
-      ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-    Stripe.PostCheckoutSessionsResponseError   err -> sendResponseStatus status503 $ toEncoding
-      ("An error has ocurred with the payment processor: " <> T.pack err)
+      productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
+        $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
+          { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
+      product' <- case responseBody productResponse of
+        Stripe.PostProductsResponse200 p -> pure p
+        Stripe.PostProductsResponseDefault err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
+        Stripe.PostProductsResponseError   err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> T.pack err)
 
-  case Stripe.checkout'sessionUrl checkout of
-    Just (Stripe.NonNull url) -> sendResponseStatus status200 $ toEncoding url
-    _ -> sendResponseStatus status503 $ toEncoding
-      ("No redirect URL was provided by the payment provider" :: Text)
+      let checkoutLineItem = Stripe.mkPostCheckoutSessionsRequestBodyLineItems'
+            { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
+            , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData = Just $
+              (Stripe.mkPostCheckoutSessionsRequestBodyLineItems'PriceData' (toStripe (listingCurrency listing)) )
+                { Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'Product = Just $ Stripe.productId product'
+                , Stripe.postCheckoutSessionsRequestBodyLineItems'PriceData'UnitAmount = Just amount
+                }
+            }
+          checkoutSession = (Stripe.mkPostCheckoutSessionsRequestBody
+            ((render $ ListingBookPaymentCancelR lid)  <> "?session_id={CHECKOUT_SESSION_ID}")
+            ((render $ ListingBookPaymentSuccessR lid) <> "?session_id={CHECKOUT_SESSION_ID}")
+            ){Stripe.postCheckoutSessionsRequestBodyLineItems = Just [checkoutLineItem]
+            , Stripe.postCheckoutSessionsRequestBodyMode = Just Stripe.PostCheckoutSessionsRequestBodyMode'EnumPayment
+            , Stripe.postCheckoutSessionsRequestBodyCustomerCreation = Just Stripe.PostCheckoutSessionsRequestBodyCustomerCreation'EnumAlways
+            , Stripe.postCheckoutSessionsRequestBodyPaymentIntentData = Just $ Stripe.mkPostCheckoutSessionsRequestBodyPaymentIntentData'
+              { Stripe.postCheckoutSessionsRequestBodyPaymentIntentData'Description = Just $ "Thank you for your reservation!"
+              }
+            }
+
+      checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postCheckoutSessions checkoutSession
+      checkout <- case responseBody checkoutSessionResponse of
+        Stripe.PostCheckoutSessionsResponse200 c -> pure c
+        Stripe.PostCheckoutSessionsResponseDefault err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
+        Stripe.PostCheckoutSessionsResponseError   err -> sendResponseStatus status503 $ toEncoding
+          ("An error has ocurred with the payment processor: " <> T.pack err)
+
+      case Stripe.checkout'sessionUrl checkout of
+        Just (Stripe.NonNull url) -> redirect url
+        _ -> do
+          setMessage "No redirect URL was provided by the payment provider."
+          redirect (ListingBookR lid)
+
+    FormMissing -> do
+      setMessage "Please fill in the booking form."
+      redirect (ListingBookR lid)
+    FormFailure errs -> do
+      setMessage $ toHtml $ T.intercalate ", " errs
+      redirect (ListingBookR lid)
 
 getListingBookPaymentSuccessR :: ListingId -> Handler TypedContent
 getListingBookPaymentSuccessR lid = do
@@ -188,7 +210,7 @@ getListingBookPaymentSuccessR lid = do
                   d end Nothing Nothing Nothing False True
               uuid  <- UUID.toText <$> liftIO randomIO
               uuid' <- UUID.toText <$> liftIO randomIO
-              
+
               confirmBody <- defaultEmailLayout $(whamletFile "templates/email/book-confirm.hamlet")
               _ <- runDB $ do
                 _ <- flip upsert [EventBlocked =. True] $ Event lid Local uuid
@@ -208,9 +230,9 @@ getListingBookPaymentSuccessR lid = do
                           mevent <- getBy $ UniqueEvent lid start
                           case mevent of
                             Just (Entity eid _) -> do
-                              
+
                               _ <- insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
-                              
+
                               liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
                                 { mailTo      = [Address Nothing customerEmail]
                                 , mailHeaders = [("Subject", "Booking confirmed - " <> listingTitle listing)]
@@ -228,8 +250,8 @@ getListingBookPaymentSuccessR lid = do
                   ("An error has ocurred with the payment processor: " <> T.pack err)
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
-              for_ adminEmails $ \adminEmail -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
-                { mailTo      = [Address Nothing adminEmail]
+              for_ adminEmails $ \adminEmail' -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+                { mailTo      = [Address Nothing adminEmail']
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
@@ -244,6 +266,8 @@ getListingBookPaymentSuccessR lid = do
     _ -> sendResponseStatus status400 $ toEncoding
       ("The payment processor did not provide a proper redirect address, missing <session_id> parameter" :: Text)
 
--- | this is passed to stripe for some reason?
-getListingBookPaymentCancelR :: ListingId -> Handler TypedContent
-getListingBookPaymentCancelR _lid = undefined
+-- | Stripe redirects here when the user cancels payment
+getListingBookPaymentCancelR :: ListingId -> Handler Html
+getListingBookPaymentCancelR lid = do
+  setMessage "Payment was cancelled."
+  redirect (ListingBookR lid)
