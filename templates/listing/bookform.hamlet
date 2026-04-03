@@ -1,0 +1,9 @@
+^{csrf}
+<div class="mb-2">
+  <label class="form-label" for=#{fvId startView}>Start date
+  ^{fvInput startView}
+<div class="mb-2">
+  <label class="form-label" for=#{fvId endView}>End date
+  ^{fvInput endView}
+<div class="d-grid mt-3">
+  <button type=submit class="btn btn-primary">Book now

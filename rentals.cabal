@@ -52,7 +52,7 @@ library
     Rentals.Handler.Admin.Listing
     Rentals.Handler.User.Booking
     Rentals.Handler.User.Internal
-    Rentals.Handler.User.Listing
+    Rentals.Widget
     Rentals.Handler.View.Admin
     Rentals.Handler.View.Booking
     Rentals.Handler.View.Listings
@@ -135,6 +135,7 @@ library
     , yesod              >=1.6.2  && <1.7
     , yesod-auth         >=1.6.11 && <1.7
     , yesod-core         >=1.6.25 && <1.7
+    , template-haskell
 
   default-language:   Haskell2010
   ghc-options:        
@@ -199,3 +200,34 @@ executable rentals
     , yesod-auth
 
   default-language:   Haskell2010
+
+test-suite rentals-test
+  type:             exitcode-stdio-1.0
+  main-is:          Spec.hs
+  hs-source-dirs:   test
+  other-modules:
+    TestFoundation
+    BookingSpec
+  default-extensions:
+    OverloadedStrings
+    TemplateHaskell
+
+  ghc-options:
+    -Wall -threaded -rtsopts
+
+  build-depends:
+    , base
+    , rentals
+    , hspec
+    , yesod-test
+    , yesod-core
+    , yesod
+    , persistent
+    , persistent-sqlite
+    , text
+    , time
+    , uuid
+    , mail-pool
+    , monad-logger
+    , directory
+  default-language: Haskell2010

@@ -21,7 +21,6 @@ import Rentals.Handler.Admin.Export
 import Rentals.Handler.Admin.Import
 import Rentals.Handler.Admin.Listing
 import Rentals.Handler.User.Booking
-import Rentals.Handler.User.Listing
 import Rentals.Handler.View.Admin
 import Rentals.Handler.View.Listings
 import Rentals.Handler.View.Booking

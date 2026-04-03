@@ -1,0 +1,30 @@
+$maybe msg <- mmsg
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    #{msg}
+<div class="row g-3">
+  <div class="col-12 fs-3">#{listingTitle listing}
+  <div class="col-12">
+    <div class="row justify-content-between">
+      <div class="col-md-7">
+        <p>#{listingDescription listing}
+        <h5>Unavailable dates
+        $if null unavailableDates
+          <p>All dates are currently available.
+        $else
+          <p class="text-muted">The following dates are not available for booking:
+          <div class="mb-3" style="max-height: 200px; overflow-y: auto;">
+            <ul class="list-unstyled">
+              $forall d <- unavailableDates
+                <li>
+                  <small class="text-muted">#{d}
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">
+              <div class="fs-4">^{printCurrency (listingCurrency listing)} #{listingPrice listing}
+              <div class="fs-7 text-secondary">per night
+              <div class="fs-6 mt-1">^{printCurrency (listingCurrency listing)} #{listingCleaning listing}
+              <div class="fs-7 text-secondary">cleaning fee
+            <hr>
+            <form method=post action=@{ListingBookR lid} enctype=#{enc}>
+              ^{form}
