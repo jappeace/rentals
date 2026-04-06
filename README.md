@@ -1,10 +1,13 @@
+> Never spend more for an acquisition than you have to. 
+>  \- third rule of acquisition
+
 Rentals.
 
 A self hosted airbnb like rental system.
 
 The major advantage is that
 it's a fixed hosting costs instead of payment per booking,
-which would be around $50 per month if done by a third party,
+which would be around $300 per month if done by a third party,
 or if done by yourself whatever price you can rent the hardware.
 Which may range from 2 to 10 dollars.
 
