@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Test application setup using SQLite in-memory database
 module TestFoundation
@@ -11,12 +12,13 @@ import Rentals.Settings
 import Rentals.Database (migrateAll)
 import Database.Persist.Sqlite (createSqlitePool)
 import Database.Persist.Sql (runSqlPool, runMigration, SqlPersistT)
-import Control.Monad.Logger (runNoLoggingT, NoLoggingT)
-import Network.Mail.Pool (smtpPool, defSettings, SmtpCred(..))
+import Control.Monad.Logger (runStderrLoggingT, runNoLoggingT, NoLoggingT, logInfo)
+import Network.Mail.Pool (SmtpCred(..))
+import Network.Mail.Mime (mailTo, mailHeaders, addressEmail)
 import Yesod.Test (YesodExample, getTestYesod)
-import System.Directory (createDirectoryIfMissing, removeFile)
+import System.Directory (createDirectoryIfMissing)
+import System.IO (openTempFile, hClose)
 import Control.Monad.IO.Class (liftIO)
-import Control.Exception (try, SomeException)
 import qualified Data.Text as T
 
 -- | Dummy settings for testing — Stripe and SMTP are never actually called
@@ -46,21 +48,22 @@ testSettings = AppSettings
   , appEnv = EnvDev
   }
 
-testDbPath :: String
-testDbPath = "/tmp/rentals-test.sqlite3"
-
--- | Create a test App with SQLite file-based database
+-- | Create a test App with a unique SQLite file-based database.
+--   Uses the same dev-mode email logging as the real application.
 makeTestApp :: IO App
 makeTestApp = do
   createDirectoryIfMissing True "config"
-  _ <- try (removeFile testDbPath) :: IO (Either SomeException ())
+  (testDbPath, handle) <- openTempFile "/tmp" "rentals-test-.sqlite3"
+  hClose handle
   pool <- runNoLoggingT $ createSqlitePool (T.pack testDbPath) 1
   runNoLoggingT $ runSqlPool (runMigration migrateAll) pool
-  smtpPool' <- smtpPool $ defSettings $ appSmtpCreds testSettings
   pure App
     { appSettings = testSettings
     , appConnPool = pool
-    , appSmtpPool = smtpPool'
+    , appMailSend = \mail -> runStderrLoggingT $ do
+        let subject = lookup "Subject" (mailHeaders mail)
+            recipients = T.intercalate ", " $ map addressEmail (mailTo mail)
+        $logInfo $ "EMAIL (dev, not sent) to=[" <> recipients <> "] subject=[" <> maybe "(none)" id subject <> "]"
     }
 
 -- | Run a database action within a yesod test

@@ -42,13 +42,12 @@ import           Text.Lucius
 import           Text.Julius
 
 import Rentals.Settings
-import Network.Mail.Pool (SMTPConnection)
-import Data.Pool (Pool)
+import Network.Mail.Mime (Mail)
 
 data App = App
   { appSettings :: AppSettings
   , appConnPool :: ConnectionPool
-  , appSmtpPool :: Pool SMTPConnection
+  , appMailSend :: Mail -> IO ()
   }
 
 newtype ICS = ICS { unICS :: UUID }

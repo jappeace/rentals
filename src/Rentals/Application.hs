@@ -32,8 +32,8 @@ import Yesod.Default.Config2
 import System.Environment (getArgs)
 import Data.Maybe (fromMaybe)
 import Rentals.Database.Migration(runMigrations)
-import Network.Mail.Pool (smtpPool)
-import Network.Mail.Pool (defSettings)
+import Network.Mail.Pool (smtpPool, defSettings, sendEmail)
+import Network.Mail.Mime (mailTo, mailHeaders, addressEmail)
 import Rentals.ICallImporter(importIcall)
 
 mkYesodDispatch "App" resourcesApp
@@ -57,12 +57,21 @@ appMain = do
 
     Cron.addJob (runStderrLoggingT $ flip runSqlPool pool $ importIcall) everyHour
 
-  smtpPool' <- liftIO $ smtpPool $ defSettings (appSmtpCreds settings)
+  mailSend <- case appEnv settings of
+    EnvDev -> do
+      runStderrLoggingT $ $logInfo "development mode: emails will be logged instead of sent"
+      pure $ \mail -> runStderrLoggingT $ do
+        let subject = lookup "Subject" (mailHeaders mail)
+            recipients = T.intercalate ", " $ map addressEmail (mailTo mail)
+        $logInfo $ "EMAIL (dev, not sent) to=[" <> recipients <> "] subject=[" <> maybe "(none)" id subject <> "]"
+    EnvProd -> do
+      smtpPool' <- smtpPool $ defSettings (appSmtpCreds settings)
+      pure $ sendEmail smtpPool'
   runStderrLoggingT $ $logInfo "setting up wai app"
   waiApp <- toWaiApp (App
       { appSettings = settings
       , appConnPool = pool
-      , appSmtpPool = smtpPool'
+      , appMailSend = mailSend
       })
   runStderrLoggingT $ $logInfo $ "binding to port " <> T.pack (show (appPort settings))
   run (appPort settings) $

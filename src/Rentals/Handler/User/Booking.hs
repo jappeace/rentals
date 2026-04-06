@@ -24,7 +24,6 @@ import qualified Data.UUID                                   as UUID
 import           Network.HTTP.Client
 import           Network.HTTP.Types.Status
 import           Network.Mail.Mime
-import           Network.Mail.Pool
 import qualified StripeAPI                                   as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
@@ -151,7 +150,7 @@ getListingBookPaymentSuccessR :: ListingId -> Handler TypedContent
 getListingBookPaymentSuccessR lid = do
   params      <- reqGetParams <$> getRequest
   master      <- getsYesod appSettings
-  connPool    <- getsYesod appSmtpPool
+  mailSend    <- getsYesod appMailSend
   let stripeKeys  = appStripe master
       adminEmails = map adminEmail $ appAdmin master
       appEmail'   = appEmail master
@@ -224,7 +223,7 @@ getListingBookPaymentSuccessR lid = do
 
                               _ <- insertUnique_ $ Checkout lid eid checkoutSessionId customerName customerEmail False
 
-                              liftIO $ sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+                              liftIO $ mailSend $ (emptyMail (Address Nothing appEmail'))
                                 { mailTo      = [Address Nothing customerEmail]
                                 , mailHeaders = [("Subject", "Booking confirmed - " <> listingTitle listing)]
                                 , mailParts   = [[htmlPart $ renderHtml confirmBody]]
@@ -237,7 +236,7 @@ getListingBookPaymentSuccessR lid = do
                 Stripe.GetCheckoutSessionsSessionResponseError   err -> error $ "Stripe getCheckoutSessionsSession error: " <> err
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
-              for_ adminEmails $ \adminEmail' -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
+              for_ adminEmails $ \adminEmail' -> liftIO $ mailSend $ (emptyMail (Address Nothing appEmail'))
                 { mailTo      = [Address Nothing adminEmail']
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
