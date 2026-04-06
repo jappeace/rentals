@@ -101,15 +101,13 @@ postListingBookR lid = do
               }
             }
 
-      productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
+      productResponse <- runStripe conf . Stripe.postProducts
         $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
           { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
       product' <- case responseBody productResponse of
         Stripe.PostProductsResponse200 p -> pure p
-        Stripe.PostProductsResponseDefault err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-        Stripe.PostProductsResponseError   err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> T.pack err)
+        Stripe.PostProductsResponseDefault err -> stripeError (T.pack $ show err)
+        Stripe.PostProductsResponseError   err -> stripeError (T.pack err)
 
       let checkoutLineItem = Stripe.mkPostCheckoutSessionsRequestBodyLineItems'
             { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
@@ -130,13 +128,11 @@ postListingBookR lid = do
               }
             }
 
-      checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postCheckoutSessions checkoutSession
+      checkoutSessionResponse <- runStripe conf $ Stripe.postCheckoutSessions checkoutSession
       checkout <- case responseBody checkoutSessionResponse of
         Stripe.PostCheckoutSessionsResponse200 c -> pure c
-        Stripe.PostCheckoutSessionsResponseDefault err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-        Stripe.PostCheckoutSessionsResponseError   err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> T.pack err)
+        Stripe.PostCheckoutSessionsResponseDefault err -> stripeError (T.pack $ show err)
+        Stripe.PostCheckoutSessionsResponseError   err -> stripeError (T.pack err)
 
       case Stripe.checkout'sessionUrl checkout of
         Just (Stripe.NonNull url) -> redirect url
@@ -170,32 +166,27 @@ getListingBookPaymentSuccessR lid = do
               }
             }
 
-      checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSessionLineItems $
+      checkoutSessionResponse <- runStripe conf . Stripe.getCheckoutSessionsSessionLineItems $
         Stripe.mkGetCheckoutSessionsSessionLineItemsParameters checkoutSessionId
 
       items <- case responseBody checkoutSessionResponse of
         Stripe.GetCheckoutSessionsSessionLineItemsResponse200 items -> pure $ Stripe.getCheckoutSessionsSessionLineItemsResponseBody200Data items
-        Stripe.GetCheckoutSessionsSessionLineItemsResponseDefault err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-        Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> sendResponseStatus status503 $ toEncoding
-          ("An error has ocurred with the payment processor: " <> T.pack err)
+        Stripe.GetCheckoutSessionsSessionLineItemsResponseDefault err -> stripeError (T.pack $ show err)
+        Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> stripeError (T.pack err)
 
       for_ items $ \i -> case Stripe.itemPrice i of
         Just (Stripe.NonNull ip) -> do
           product' <- case Stripe.itemPrice'NonNullableProduct ip of
             Just (Stripe.ItemPrice'NonNullableProduct'Text           p) -> do
-              productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.getProductsId $ Stripe.mkGetProductsIdParameters p
+              productResponse <- runStripe conf . Stripe.getProductsId $ Stripe.mkGetProductsIdParameters p
 
               case responseBody productResponse of
                 Stripe.GetProductsIdResponse200 products -> pure $ Stripe.productMetadata products
-                Stripe.GetProductsIdResponseDefault err -> sendResponseStatus status503 $ toEncoding
-                  ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-                Stripe.GetProductsIdResponseError   err -> sendResponseStatus status503 $ toEncoding
-                  ("An error has ocurred with the payment processor: " <> T.pack err)
+                Stripe.GetProductsIdResponseDefault err -> stripeError (T.pack $ show err)
+                Stripe.GetProductsIdResponseError   err -> stripeError (T.pack err)
 
             Just (Stripe.ItemPrice'NonNullableProduct'Product        p) -> pure $ Stripe.productMetadata p
-            Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> sendResponseStatus status503 $ toEncoding
-              ("An error has ocurred with the payment processor, the product was deleted: " <> Stripe.deletedProductId p)
+            Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> stripeError ("product was deleted: " <> Stripe.deletedProductId p)
             other -> error $ "Unxpected " <> show other
 
           let dates = map fromJSON $ A.elems product'
@@ -218,7 +209,7 @@ getListingBookPaymentSuccessR lid = do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
                   (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False
 
-              checkoutSessionResponse' <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSession $
+              checkoutSessionResponse' <- runStripe conf . Stripe.getCheckoutSessionsSession $
                 Stripe.mkGetCheckoutSessionsSessionParameters checkoutSessionId
               case responseBody checkoutSessionResponse' of
                 Stripe.GetCheckoutSessionsSessionResponse200 checkoutSession ->
@@ -240,14 +231,10 @@ getListingBookPaymentSuccessR lid = do
                                 }
                             Nothing -> sendResponseStatus status500 $ toEncoding
                               ("An error has ocurred: no reservation found at " <> showGregorian start)
-                        _ -> sendResponseStatus status503 $ toEncoding
-                          ("An error has ocurred with the payment processor: no email was provided" :: Text)
-                    _ -> sendResponseStatus status503 $ toEncoding
-                      ("An error has ocurred with the payment processor: no email was provided" :: Text)
-                Stripe.GetCheckoutSessionsSessionResponseDefault err -> sendResponseStatus status503 $ toEncoding
-                  ("An error has ocurred with the payment processor: " <> (T.pack $ show err))
-                Stripe.GetCheckoutSessionsSessionResponseError   err -> sendResponseStatus status503 $ toEncoding
-                  ("An error has ocurred with the payment processor: " <> T.pack err)
+                        _ -> stripeError "no email was provided"
+                    _ -> stripeError "no customer details provided"
+                Stripe.GetCheckoutSessionsSessionResponseDefault err -> stripeError (T.pack $ show err)
+                Stripe.GetCheckoutSessionsSessionResponseError   err -> stripeError (T.pack err)
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
               for_ adminEmails $ \adminEmail' -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
