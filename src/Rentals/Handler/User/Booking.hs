@@ -28,11 +28,11 @@ import qualified StripeAPI                                   as Stripe
 import           System.Random
 import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.Time.Clock (getCurrentTime, utctDay)
 import Rentals.Currency (toStripe, printCurrency)
 import Rentals.Widget
-import qualified Data.List.GroupBy as GB
-import           Data.List         ((\\))
-import           Data.Time.Clock
 
 data BookListForm = BookListForm {
     startDate :: Day
@@ -52,22 +52,42 @@ boookListForm csrf = do
   pure (result, view)
 
 
+-- | Format a Day as YYYY-MM-DD text.
+showDay :: Day -> Text
+showDay = T.pack . showGregorian
+
+-- | Find the nearest free range of @duration@ days ending before @boundary@.
+-- Searches backwards from the day before @boundary@, skipping unavailable days.
+-- Returns Nothing if no range fits before @today@.
+findFreeBefore :: Set Day -> Day -> Integer -> Day -> Maybe (Day, Day)
+findFreeBefore unavailable today duration boundary = go (addDays (-1) boundary)
+  where
+    go candidateEnd
+      | candidateStart < today = Nothing
+      | any (`Set.member` unavailable) [candidateStart .. candidateEnd] =
+          go (addDays (-1) candidateEnd)
+      | otherwise = Just (candidateStart, candidateEnd)
+      where
+        candidateStart = addDays (negate duration) candidateEnd
+
+-- | Find the nearest free range of @duration@ days starting after @boundary@.
+-- Searches forwards from the day after @boundary@.
+-- Returns Nothing if no range fits within 365 days.
+findFreeAfter :: Set Day -> Integer -> Day -> Maybe (Day, Day)
+findFreeAfter unavailable duration boundary = go (addDays 1 boundary)
+  where
+    limit = addDays 365 boundary
+    go candidateStart
+      | candidateEnd > limit = Nothing
+      | any (`Set.member` unavailable) [candidateStart .. candidateEnd] =
+          go (addDays 1 candidateStart)
+      | otherwise = Just (candidateStart, candidateEnd)
+      where
+        candidateEnd = addDays duration candidateStart
+
 getListingBookR :: ListingId -> Handler Html
 getListingBookR lid = do
   listing <- runDB $ get404 lid
-  unavailableDates <- runDB $ do
-    unavailable <- map (eventStart . entityVal) <$> selectList
-      (   [EventListing ==. lid, EventBlocked ==. True]
-      ||. [EventListing ==. lid, EventBooked  ==. True]
-      ) []
-
-    today <- utctDay <$> liftIO getCurrentTime
-    let availableDates    = (take 366 [today ..]) \\ unavailable
-        gapDates = mconcat . filter (\x -> length x < 3) $
-          GB.groupBy (\x y -> succ x == y) availableDates
-
-    pure (unavailable <> gapDates)
-
   (form, enc) <- generateFormPost boookListForm
   mmsg <- getMessage
 
@@ -85,6 +105,34 @@ postListingBookR lid = do
 
       when (length [start .. end] < 3) $ do
         setMessage "The minimum booking duration is 3 days."
+        redirect (ListingBookR lid)
+
+      conflicts <- runDB $ selectList
+        ( [EventListing ==. lid, EventStart >=. start, EventStart <=. end, EventBlocked ==. True]
+        ||. [EventListing ==. lid, EventStart >=. start, EventStart <=. end, EventBooked ==. True]
+        ) []
+      unless (null conflicts) $ do
+        today <- liftIO $ utctDay <$> getCurrentTime
+        unavailableSet <- runDB $ do
+          events <- selectList
+            ( [EventListing ==. lid, EventBlocked ==. True]
+            ||. [EventListing ==. lid, EventBooked ==. True]
+            ) []
+          pure . Set.fromList $ map (eventStart . entityVal) events
+        let duration    = diffDays end start
+            before      = findFreeBefore unavailableSet today duration start
+            after       = findFreeAfter  unavailableSet duration end
+            suggestions = case (before, after) of
+              (Just (bStart, bEnd), Just (aStart, aEnd)) ->
+                " Try " <> showDay bStart <> " to " <> showDay bEnd
+                <> " or " <> showDay aStart <> " to " <> showDay aEnd <> "."
+              (Just (bStart, bEnd), Nothing) ->
+                " Try " <> showDay bStart <> " to " <> showDay bEnd <> "."
+              (Nothing, Just (aStart, aEnd)) ->
+                " Try " <> showDay aStart <> " to " <> showDay aEnd <> "."
+              (Nothing, Nothing) -> ""
+        setMessage $ toHtml $
+          ("Some of your selected dates are already booked." <> suggestions :: Text)
         redirect (ListingBookR lid)
 
       listing <- runDB $ get404 lid

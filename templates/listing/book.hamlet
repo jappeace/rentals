@@ -7,16 +7,6 @@ $maybe msg <- mmsg
     <div class="row justify-content-between">
       <div class="col-md-7">
         <p>#{listingDescription listing}
-        <h5>Unavailable dates
-        $if null unavailableDates
-          <p>All dates are currently available.
-        $else
-          <p class="text-muted">The following dates are not available for booking:
-          <div class="mb-3" style="max-height: 200px; overflow-y: auto;">
-            <ul class="list-unstyled">
-              $forall d <- unavailableDates
-                <li>
-                  <small class="text-muted">#{d}
       <div class="col-md-4">
         <div class="card">
           <div class="card-body">
