@@ -30,9 +30,6 @@ import           Text.Blaze.Html.Renderer.Text
 import Data.Foldable (for_)
 import Rentals.Currency (toStripe, printCurrency)
 import Rentals.Widget
-import qualified Data.List.GroupBy as GB
-import           Data.List         ((\\))
-import           Data.Time.Clock
 
 data BookListForm = BookListForm {
     startDate :: Day
@@ -55,19 +52,6 @@ boookListForm csrf = do
 getListingBookR :: ListingId -> Handler Html
 getListingBookR lid = do
   listing <- runDB $ get404 lid
-  unavailableDates <- runDB $ do
-    unavailable <- map (eventStart . entityVal) <$> selectList
-      (   [EventListing ==. lid, EventBlocked ==. True]
-      ||. [EventListing ==. lid, EventBooked  ==. True]
-      ) []
-
-    today <- utctDay <$> liftIO getCurrentTime
-    let availableDates    = (take 366 [today ..]) \\ unavailable
-        gapDates = mconcat . filter (\x -> length x < 3) $
-          GB.groupBy (\x y -> succ x == y) availableDates
-
-    pure (unavailable <> gapDates)
-
   (form, enc) <- generateFormPost boookListForm
   mmsg <- getMessage
 
@@ -85,6 +69,14 @@ postListingBookR lid = do
 
       when (length [start .. end] < 3) $ do
         setMessage "The minimum booking duration is 3 days."
+        redirect (ListingBookR lid)
+
+      conflicts <- runDB $ selectList
+        ( [EventListing ==. lid, EventStart >=. start, EventStart <=. end, EventBlocked ==. True]
+        ||. [EventListing ==. lid, EventStart >=. start, EventStart <=. end, EventBooked ==. True]
+        ) []
+      unless (null conflicts) $ do
+        setMessage "Some of your selected dates are already booked. Please choose different dates."
         redirect (ListingBookR lid)
 
       listing <- runDB $ get404 lid
