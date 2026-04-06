@@ -1,4 +1,5 @@
 > Never spend more for an acquisition than you have to. 
+>
 >  \- third rule of acquisition
 
 Rentals.
