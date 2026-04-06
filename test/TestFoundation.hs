@@ -12,7 +12,7 @@ import Rentals.Database (migrateAll)
 import Database.Persist.Sqlite (createSqlitePool)
 import Database.Persist.Sql (runSqlPool, runMigration, SqlPersistT)
 import Control.Monad.Logger (runNoLoggingT, NoLoggingT)
-import Network.Mail.Pool (smtpPool, defSettings, SmtpCred(..))
+import Network.Mail.Pool (SmtpCred(..))
 import Yesod.Test (YesodExample, getTestYesod)
 import System.Directory (createDirectoryIfMissing, removeFile)
 import Control.Monad.IO.Class (liftIO)
@@ -56,11 +56,10 @@ makeTestApp = do
   _ <- try (removeFile testDbPath) :: IO (Either SomeException ())
   pool <- runNoLoggingT $ createSqlitePool (T.pack testDbPath) 1
   runNoLoggingT $ runSqlPool (runMigration migrateAll) pool
-  smtpPool' <- smtpPool $ defSettings $ appSmtpCreds testSettings
   pure App
     { appSettings = testSettings
     , appConnPool = pool
-    , appSmtpPool = smtpPool'
+    , appMailSend = \_ -> pure ()
     }
 
 -- | Run a database action within a yesod test

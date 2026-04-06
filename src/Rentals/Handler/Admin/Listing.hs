@@ -19,7 +19,6 @@ import           Data.Traversable
 import           Data.UUID
 import           Network.HTTP.Types.Status
 import           Network.Mail.Mime
-import           Network.Mail.Pool
 import           System.Directory
 import           System.FilePath
 import           System.Random
@@ -185,7 +184,7 @@ putAdminListingEmailsR _lid = do
     Just checkout -> do
       master <- getYesod
       let appEmail' = appEmail $ appSettings master
-      sendEmail (appSmtpPool master) $ (emptyMail (Address Nothing appEmail'))
+      liftIO $ appMailSend master $ (emptyMail (Address Nothing appEmail'))
         { mailTo      = [Address Nothing $ checkoutEmail checkout]
         , mailHeaders = [("Subject", "Booking Instructions")]
         , mailParts   = [[plainPart body]]
