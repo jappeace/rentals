@@ -199,6 +199,7 @@ test-suite rentals-test
   other-modules:
     TestFoundation
     BookingSpec
+    EmailSpec
 
   ghc-options:
     -Wno-unused-packages
@@ -216,5 +217,10 @@ test-suite rentals-test
     , time
     , uuid
     , mail-pool
+    , mime-mail
     , monad-logger
     , directory
+    , aeson
+    , bytestring
+    , http-types
+    , yesod-auth
