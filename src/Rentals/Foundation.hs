@@ -168,22 +168,23 @@ instance Yesod App where
 
   errorHandler errorResp = do
     env <- appEnv . appSettings <$> getYesod
-    $logInfo $ "error " <> tshow errorResp
+    $logError $ "errorHandler: " <> tshow errorResp
     let message :: Text
-        message = case errorResp of
-          NotFound -> "Not Found"
-          InternalError err -> case env of
-            EnvDev -> "Internal server error: " <> err
-            EnvProd -> "Internal server error, check the logs"
-          InvalidArgs args -> "invalid " <> tshow args
-          NotAuthenticated -> "not authenticated"
-          PermissionDenied reason -> case env of
-            EnvDev -> "permission denied " <> reason
-            EnvProd -> "permission denied "
-          BadMethod "GET" -> "bad get method"
-          BadMethod "POST" -> "bad post method"
-          BadMethod "PUT" -> "bad put method"
-          BadMethod _ -> "bad method"
+        message = case env of
+          EnvDev -> case errorResp of
+            NotFound -> "Not Found"
+            InternalError err -> "Internal server error: " <> err
+            InvalidArgs args -> "Invalid arguments: " <> tshow args
+            NotAuthenticated -> "Not authenticated"
+            PermissionDenied reason -> "Permission denied: " <> reason
+            BadMethod method -> "Bad method: " <> tshow method
+          EnvProd -> case errorResp of
+            NotFound -> "Not Found"
+            NotAuthenticated -> "Not authenticated"
+            InternalError _err -> "Something went wrong"
+            InvalidArgs _args -> "Something went wrong"
+            PermissionDenied _reason -> "Permission denied"
+            BadMethod _method -> "Something went wrong"
     selectRep $ provideRep $ defaultUserLayout $ $(whamletFile "templates/error.hamlet")
 
   makeSessionBackend _ = Just <$> defaultClientSessionBackend

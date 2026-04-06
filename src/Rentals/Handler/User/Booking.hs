@@ -101,13 +101,13 @@ postListingBookR lid = do
               }
             }
 
-      productResponse <- runStripe conf . Stripe.postProducts
+      productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
         $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
           { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
       product' <- case responseBody productResponse of
         Stripe.PostProductsResponse200 p -> pure p
-        Stripe.PostProductsResponseDefault err -> stripeError (T.pack $ show err)
-        Stripe.PostProductsResponseError   err -> stripeError (T.pack err)
+        Stripe.PostProductsResponseDefault err -> error $ "Stripe postProducts error: " <> show err
+        Stripe.PostProductsResponseError   err -> error $ "Stripe postProducts error: " <> err
 
       let checkoutLineItem = Stripe.mkPostCheckoutSessionsRequestBodyLineItems'
             { Stripe.postCheckoutSessionsRequestBodyLineItems'Quantity = Just 1
@@ -128,11 +128,11 @@ postListingBookR lid = do
               }
             }
 
-      checkoutSessionResponse <- runStripe conf $ Stripe.postCheckoutSessions checkoutSession
+      checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf $ Stripe.postCheckoutSessions checkoutSession
       checkout <- case responseBody checkoutSessionResponse of
         Stripe.PostCheckoutSessionsResponse200 c -> pure c
-        Stripe.PostCheckoutSessionsResponseDefault err -> stripeError (T.pack $ show err)
-        Stripe.PostCheckoutSessionsResponseError   err -> stripeError (T.pack err)
+        Stripe.PostCheckoutSessionsResponseDefault err -> error $ "Stripe postCheckoutSessions error: " <> show err
+        Stripe.PostCheckoutSessionsResponseError   err -> error $ "Stripe postCheckoutSessions error: " <> err
 
       case Stripe.checkout'sessionUrl checkout of
         Just (Stripe.NonNull url) -> redirect url
@@ -166,27 +166,27 @@ getListingBookPaymentSuccessR lid = do
               }
             }
 
-      checkoutSessionResponse <- runStripe conf . Stripe.getCheckoutSessionsSessionLineItems $
+      checkoutSessionResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSessionLineItems $
         Stripe.mkGetCheckoutSessionsSessionLineItemsParameters checkoutSessionId
 
       items <- case responseBody checkoutSessionResponse of
         Stripe.GetCheckoutSessionsSessionLineItemsResponse200 items -> pure $ Stripe.getCheckoutSessionsSessionLineItemsResponseBody200Data items
-        Stripe.GetCheckoutSessionsSessionLineItemsResponseDefault err -> stripeError (T.pack $ show err)
-        Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> stripeError (T.pack err)
+        Stripe.GetCheckoutSessionsSessionLineItemsResponseDefault err -> error $ "Stripe getCheckoutSessionsSessionLineItems error: " <> show err
+        Stripe.GetCheckoutSessionsSessionLineItemsResponseError   err -> error $ "Stripe getCheckoutSessionsSessionLineItems error: " <> err
 
       for_ items $ \i -> case Stripe.itemPrice i of
         Just (Stripe.NonNull ip) -> do
           product' <- case Stripe.itemPrice'NonNullableProduct ip of
             Just (Stripe.ItemPrice'NonNullableProduct'Text           p) -> do
-              productResponse <- runStripe conf . Stripe.getProductsId $ Stripe.mkGetProductsIdParameters p
+              productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.getProductsId $ Stripe.mkGetProductsIdParameters p
 
               case responseBody productResponse of
                 Stripe.GetProductsIdResponse200 products -> pure $ Stripe.productMetadata products
-                Stripe.GetProductsIdResponseDefault err -> stripeError (T.pack $ show err)
-                Stripe.GetProductsIdResponseError   err -> stripeError (T.pack err)
+                Stripe.GetProductsIdResponseDefault err -> error $ "Stripe getProductsId error: " <> show err
+                Stripe.GetProductsIdResponseError   err -> error $ "Stripe getProductsId error: " <> err
 
             Just (Stripe.ItemPrice'NonNullableProduct'Product        p) -> pure $ Stripe.productMetadata p
-            Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> stripeError ("product was deleted: " <> Stripe.deletedProductId p)
+            Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> error $ "Stripe product was deleted: " <> T.unpack (Stripe.deletedProductId p)
             other -> error $ "Unxpected " <> show other
 
           let dates = map fromJSON $ A.elems product'
@@ -209,7 +209,7 @@ getListingBookPaymentSuccessR lid = do
                 flip upsert [EventBlocked =. True] $ Event lid Local uuid'
                   (succ end) (succ end) Nothing Nothing (Just "Unavailable (Local)") True False
 
-              checkoutSessionResponse' <- runStripe conf . Stripe.getCheckoutSessionsSession $
+              checkoutSessionResponse' <- liftIO . Stripe.runWithConfiguration conf . Stripe.getCheckoutSessionsSession $
                 Stripe.mkGetCheckoutSessionsSessionParameters checkoutSessionId
               case responseBody checkoutSessionResponse' of
                 Stripe.GetCheckoutSessionsSessionResponse200 checkoutSession ->
@@ -231,10 +231,10 @@ getListingBookPaymentSuccessR lid = do
                                 }
                             Nothing -> sendResponseStatus status500 $ toEncoding
                               ("An error has ocurred: no reservation found at " <> showGregorian start)
-                        _ -> stripeError "no email was provided"
-                    _ -> stripeError "no customer details provided"
-                Stripe.GetCheckoutSessionsSessionResponseDefault err -> stripeError (T.pack $ show err)
-                Stripe.GetCheckoutSessionsSessionResponseError   err -> stripeError (T.pack err)
+                        _ -> error "Stripe checkout session: no email was provided"
+                    _ -> error "Stripe checkout session: no customer details provided"
+                Stripe.GetCheckoutSessionsSessionResponseDefault err -> error $ "Stripe getCheckoutSessionsSession error: " <> show err
+                Stripe.GetCheckoutSessionsSessionResponseError   err -> error $ "Stripe getCheckoutSessionsSession error: " <> err
 
               emailBody <- defaultEmailLayout $(whamletFile "templates/email/book-alert.hamlet")
               for_ adminEmails $ \adminEmail' -> sendEmail connPool $ (emptyMail (Address Nothing appEmail'))
