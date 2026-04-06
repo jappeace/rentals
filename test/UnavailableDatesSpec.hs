@@ -17,7 +17,7 @@ import Rentals.Database.Money
 import Rentals.Currency
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Time.Calendar (addDays)
+import Data.Time.Calendar (addDays, diffDays, showGregorian)
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Text (pack)
 import Data.UUID (UUID, fromString)
@@ -45,7 +45,8 @@ testListing = Listing
   , listingUuid = testUUID
   }
 
--- | Seed a listing with a future blocked date range.
+-- | Seed a listing with a blocked range at +30 days from today.
+-- Leaves free space before and after for suggestions.
 seedWithBlockedDates :: App -> IO ListingId
 seedWithBlockedDates app = do
   today <- utctDay <$> getCurrentTime
@@ -54,7 +55,7 @@ seedWithBlockedDates app = do
   where
     seed blockedDate = do
       lid <- insert testListing
-      -- Block several consecutive days so the booking range overlaps
+      -- Block 3 consecutive days starting at +30
       _ <- insert $ Event lid Local "blocked-uuid-1"
         blockedDate blockedDate Nothing Nothing
         (Just "Unavailable (Local)") True False
@@ -74,12 +75,21 @@ unavailableDatesSpec = do
   yesodSpec app $ do
     ydescribe "Booking date conflict validation" $ do
 
-      yit "rejects booking when requested dates overlap with blocked dates" $ do
+      yit "rejects overlapping booking and suggests alternative date ranges" $ do
         today <- liftIO $ utctDay <$> getCurrentTime
         let blockedStart = addDays 30 today
-            -- Request a range that overlaps the blocked dates
-            bookStart = addDays (-1) blockedStart  -- 1 day before blocked
-            bookEnd   = addDays 4 blockedStart     -- well past blocked
+            -- Request 6 days overlapping the blocked range
+            bookStart = addDays (-1) blockedStart
+            bookEnd   = addDays 4 blockedStart
+            duration  = diffDays bookEnd bookStart  -- 5 nights
+            -- Expected before suggestion: ends day before bookStart,
+            -- same duration
+            beforeEnd   = addDays (-1) bookStart
+            beforeStart = addDays (negate duration) beforeEnd
+            -- Expected after suggestion: starts day after bookEnd,
+            -- same duration
+            afterStart = addDays 1 bookEnd
+            afterEnd   = addDays duration afterStart
         get $ ListingBookR lid
         request $ do
           setMethod "POST"
@@ -87,7 +97,18 @@ unavailableDatesSpec = do
           addToken
           byLabelExact "Start date" (pack $ show bookStart)
           byLabelExact "End date" (pack $ show bookEnd)
-        statusIs 303  -- redirected with error
+        statusIs 303
+        -- Follow the redirect to see the flash message
+        get $ ListingBookR lid
+        statusIs 200
+        -- The flash message should contain "already booked"
+        htmlAnyContain "div" "already booked"
+        -- The flash message should suggest a range before
+        htmlAnyContain "div" (showGregorian beforeStart)
+        htmlAnyContain "div" (showGregorian beforeEnd)
+        -- The flash message should suggest a range after
+        htmlAnyContain "div" (showGregorian afterStart)
+        htmlAnyContain "div" (showGregorian afterEnd)
 
       yit "accepts booking when requested dates do not overlap" $ do
         today <- liftIO $ utctDay <$> getCurrentTime
@@ -101,13 +122,8 @@ unavailableDatesSpec = do
           addToken
           byLabelExact "Start date" (pack $ show bookStart)
           byLabelExact "End date" (pack $ show bookEnd)
-        -- Would proceed to Stripe (which fails in test env), but NOT 303
-        -- The handler calls Stripe API which will error in tests,
-        -- so we just verify it doesn't redirect with a conflict message.
-        -- A 303 here means it got past validation to Stripe (which errors).
-        -- Actually Stripe will throw, giving a 500. The point is it's not
-        -- a 303 redirect back to the form with our conflict message.
-        statusIs 500  -- Stripe API call fails in test env, but validation passed
+        -- Stripe API call fails in test env, but validation passed
+        statusIs 500
 
       yit "does not show unavailable dates list on the booking page" $ do
         get $ ListingBookR lid
