@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Rentals.Handler.User.Booking where
 
 import Yesod
@@ -16,7 +17,9 @@ import Rentals.Database.Checkout
 import Rentals.Database.Money
 import           Control.Monad
 import           Data.Aeson                                  (Result(..), fromJSON)
+import qualified Data.Aeson.Key                              as AK
 import qualified Data.Aeson.KeyMap                           as A
+import           Data.Maybe                                  (fromMaybe)
 import           Data.Text                                   (Text)
 import qualified Data.Text                                   as T
 import           Data.Time.Calendar
@@ -35,8 +38,9 @@ import Rentals.Currency (toStripe, printCurrency)
 import Rentals.Widget
 
 data BookListForm = BookListForm {
-    startDate :: Day
-  , endDate :: Day
+    startDate  :: Day
+  , endDate    :: Day
+  , guestCount :: Int
  }
 
 type Form a = Markup -> MForm Handler (FormResult a, Widget)
@@ -45,10 +49,11 @@ boookListForm :: Form BookListForm
 boookListForm csrf = do
   (startRes, startView) <- mreq dayField "start date" Nothing
   (endRes, endView) <- mreq dayField "end date" Nothing
+  (guestRes, guestView) <- mreq intField "Number of guests" (Just 1)
 
   let view = $(widgetFile "listing/bookform")
 
-      result = BookListForm <$> startRes <*> endRes
+      result = BookListForm <$> startRes <*> endRes <*> guestRes
   pure (result, view)
 
 
@@ -90,6 +95,8 @@ getListingBookR lid = do
   listing <- runDB $ get404 lid
   (form, enc) <- generateFormPost boookListForm
   mmsg <- getMessage
+  let hasExtraPersonPrice = listingPricePerExtraPerson listing > Money 0
+      hasMultipleGuests   = listingMaxPeople listing > 1
 
   userLayoutNoJs $(widgetFile "listing/book")
 
@@ -98,13 +105,23 @@ postListingBookR lid = do
   ((formResult, _form), _enc) <- runFormPost boookListForm
 
   case formResult of
-    FormSuccess (BookListForm start end) -> do
+    FormSuccess (BookListForm start end guests) -> do
       when (start >= end) $ do
         setMessage "Start date must be before end date."
         redirect (ListingBookR lid)
 
       when (length [start .. end] < 3) $ do
         setMessage "The minimum booking duration is 3 days."
+        redirect (ListingBookR lid)
+
+      listing <- runDB $ get404 lid
+
+      when (guests < 1) $ do
+        setMessage "Number of guests must be at least 1."
+        redirect (ListingBookR lid)
+
+      when (guests > listingMaxPeople listing) $ do
+        setMessage $ toHtml $ ("The maximum number of guests is " <> T.pack (show (listingMaxPeople listing)) <> "." :: Text)
         redirect (ListingBookR lid)
 
       conflicts <- runDB $ selectList
@@ -135,8 +152,7 @@ postListingBookR lid = do
           ("Some of your selected dates are already booked." <> suggestions :: Text)
         redirect (ListingBookR lid)
 
-      listing <- runDB $ get404 lid
-      (quote, cleaningFee) <- getQuote lid start end
+      (quote, cleaningFee) <- getQuote lid start end guests
       stripeKeys <- getsYesod $ appStripe . appSettings
       render     <- getUrlRender
       let amount = 100 * ((floor . unMoney $ quote) + (floor . unMoney $ cleaningFee))
@@ -150,7 +166,7 @@ postListingBookR lid = do
 
       productResponse <- liftIO . Stripe.runWithConfiguration conf . Stripe.postProducts
         $ (Stripe.mkPostProductsRequestBody $ listingTitle listing)
-          { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end)] }
+          { Stripe.postProductsRequestBodyMetadata = Just $ A.fromList [("start", toJSON start), ("end", toJSON end), ("guests", toJSON guests)] }
       product' <- case responseBody productResponse of
         Stripe.PostProductsResponse200 p -> pure p
         Stripe.PostProductsResponseDefault err -> error $ "Stripe postProducts error: " <> show err
@@ -236,10 +252,17 @@ getListingBookPaymentSuccessR lid = do
             Just (Stripe.ItemPrice'NonNullableProduct'DeletedProduct p) -> error $ "Stripe product was deleted: " <> T.unpack (Stripe.deletedProductId p)
             other -> error $ "Unxpected " <> show other
 
-          let dates = map fromJSON $ A.elems product'
-          case dates of
-            [] -> error "Empty dates"
-            [Success start', Success end'] -> do
+          let fromMeta :: FromJSON a => AK.Key -> Maybe a
+              fromMeta key = A.lookup key product' >>= \v -> case fromJSON v of
+                Success d -> Just d
+                _         -> Nothing
+              mstart = fromMeta "start" :: Maybe Day
+              mend   = fromMeta "end"   :: Maybe Day
+              guests = fromMaybe 1 (fromMeta "guests" :: Maybe Int)
+          case (mstart, mend) of
+            (Nothing, _) -> error "Missing start date in metadata"
+            (_, Nothing) -> error "Missing end date in metadata"
+            (Just start', Just end') -> do
               let (start, end) = if start' > end' then (end', start') else (start', end')
 
               for_ [start .. end] $ \d -> do
@@ -289,7 +312,6 @@ getListingBookPaymentSuccessR lid = do
                 , mailHeaders = [("Subject", "New booking - " <> listingTitle listing)]
                 , mailParts   = [[htmlPart $ renderHtml emailBody]]
                 }
-            other -> error $ "Unxpected" <> show other
         other -> error $ "Unxpected" <> show other
 
 

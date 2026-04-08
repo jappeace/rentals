@@ -199,6 +199,7 @@ test-suite rentals-test
     BookingSpec
     EmailSpec
     UnavailableDatesSpec
+    GuestPricingSpec
 
   ghc-options:
     -Wno-unused-packages

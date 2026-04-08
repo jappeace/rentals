@@ -28,5 +28,10 @@
                   <div class="fs-7 lh-1 text-end text-secondary">per night
                   <div class="fs-6 text-end mt-2">^{printCurrency (listingCurrency listing)} #{listingCleaning listing}
                   <div class="fs-7 lh-1 text-end text-secondary">cleaning fee
+                  $if hasExtraPersonPrice
+                    <div class="fs-6 text-end mt-2">^{printCurrency (listingCurrency listing)} #{listingPricePerExtraPerson listing}
+                    <div class="fs-7 lh-1 text-end text-secondary">per extra person per night
+                  $if hasMultipleGuests
+                    <div class="fs-7 mt-1 text-end text-secondary">max #{listingMaxPeople listing} guests
                 <div class="d-grid mt-3">
                   <a href=@{ListingBookR lid} class="btn btn-primary">Book now

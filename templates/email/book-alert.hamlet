@@ -1,2 +1,2 @@
 <p>New booking for #{listingTitle listing}.
-<p>from #{start} to #{end}
+<p>from #{start} to #{end} for #{show guests} guest(s).
