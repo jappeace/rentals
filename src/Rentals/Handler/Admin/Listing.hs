@@ -48,15 +48,17 @@ putAdminListingR lid = do
       let slug = Slug . slugify $ listingNewTitle listing
 
       runDB . replace lid $ original
-        { listingTitle            = listingNewTitle listing
-        , listingDescription      = listingNewDescription listing
-        , listingPrice            = listingNewPrice listing
-        , listingCleaning         = listingNewCleaning listing
-        , listingCountry          = listingNewCountry listing
-        , listingAddress          = listingNewAddress listing
-        , listingHandlerName      = listingNewHandlerName listing
-        , listingHandlerPhone     = listingNewHandlerPhone listing
-        , listingSlug             = slug
+        { listingTitle               = listingNewTitle listing
+        , listingDescription         = listingNewDescription listing
+        , listingPrice               = listingNewPrice listing
+        , listingCleaning            = listingNewCleaning listing
+        , listingCountry             = listingNewCountry listing
+        , listingAddress             = listingNewAddress listing
+        , listingHandlerName         = listingNewHandlerName listing
+        , listingHandlerPhone        = listingNewHandlerPhone listing
+        , listingPricePerExtraPerson = listingNewPricePerExtraPerson listing
+        , listingMaxPeople           = listingNewMaxPeople listing
+        , listingSlug                = slug
         }
 
       sendResponseStatus status200 $ toEncoding slug
@@ -131,16 +133,18 @@ putAdminListingNewR = do
     let slug = Slug . slugify $ listingNewTitle listing
 
     mlid <- insertUnique $ Listing {
-          listingTitle            =     (listingNewTitle listing)
+          listingTitle               =     (listingNewTitle listing)
         , listingCurrency = UsDollar
-        , listingDescription      =     (listingNewDescription listing)
-        , listingPrice            =     (listingNewPrice listing)
-        , listingCleaning         =     (listingNewCleaning listing)
-        , listingCountry          =     (listingNewCountry listing)
-        , listingAddress          =     (listingNewAddress listing)
-        , listingHandlerName      =     (listingNewHandlerName listing)
-        , listingHandlerPhone     =     (listingNewHandlerPhone listing)
-        , listingSlug             =     slug
+        , listingDescription         =     (listingNewDescription listing)
+        , listingPrice               =     (listingNewPrice listing)
+        , listingCleaning            =     (listingNewCleaning listing)
+        , listingCountry             =     (listingNewCountry listing)
+        , listingAddress             =     (listingNewAddress listing)
+        , listingHandlerName         =     (listingNewHandlerName listing)
+        , listingHandlerPhone        =     (listingNewHandlerPhone listing)
+        , listingPricePerExtraPerson =     (listingNewPricePerExtraPerson listing)
+        , listingMaxPeople           =     (listingNewMaxPeople listing)
+        , listingSlug                =     slug
         , listingUuid = uuid
         }
 

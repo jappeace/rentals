@@ -66,6 +66,8 @@ Listing json
   address          Text  default=''
   handlerName      Text  default=''
   handlerPhone     Text  default=''
+  pricePerExtraPerson Money default=0
+  maxPeople        Int   default=1
 
   slug             Slug
   uuid             UUID

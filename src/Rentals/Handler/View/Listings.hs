@@ -6,6 +6,7 @@ import Yesod
 import Rentals.Database.Listing
 import Rentals.Database.ListingImage
 import Rentals.Database.Event
+import Rentals.Database.Money
 
 import           Data.Traversable
 
@@ -38,5 +39,7 @@ getViewListingR lid _slug = do
       ( listing
       , map (listingImageUuid . entityVal) images
       )
+  let hasExtraPersonPrice = listingPricePerExtraPerson listing > Money 0
+      hasMultipleGuests   = listingMaxPeople listing > 1
 
   defaultUserLayout $(whamletFile "templates/user/listing.hamlet")

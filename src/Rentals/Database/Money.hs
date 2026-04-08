@@ -10,7 +10,7 @@ import Text.Blaze(ToMarkup(..))
 import Rentals.Tshow (tshow)
 
 newtype Money = Money { unMoney :: Centi }
-  deriving (Eq, Ord, Num, Fractional)
+  deriving (Eq, Ord, Num, Fractional, Show)
 $(deriveJSON (defaultOptions {unwrapUnaryRecords = True}) ''Money)
 
 instance PersistField Money where

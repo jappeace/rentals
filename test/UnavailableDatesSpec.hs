@@ -41,6 +41,8 @@ testListing = Listing
   , listingAddress = "789 Past St"
   , listingHandlerName = "Test Handler"
   , listingHandlerPhone = "555-0000"
+  , listingPricePerExtraPerson = Money 0
+  , listingMaxPeople = 4
   , listingSlug = testSlug
   , listingUuid = testUUID
   }
@@ -97,6 +99,7 @@ unavailableDatesSpec = do
           addToken
           byLabelExact "Start date" (pack $ show bookStart)
           byLabelExact "End date" (pack $ show bookEnd)
+          byLabelExact "Number of guests" "1"
         statusIs 303
         -- Follow the redirect to see the flash message
         get $ ListingBookR lid
@@ -122,6 +125,7 @@ unavailableDatesSpec = do
           addToken
           byLabelExact "Start date" (pack $ show bookStart)
           byLabelExact "End date" (pack $ show bookEnd)
+          byLabelExact "Number of guests" "1"
         -- Stripe API call fails in test env, but validation passed
         statusIs 500
 

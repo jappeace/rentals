@@ -41,6 +41,8 @@ testListing = Listing
   , listingAddress = "456 Email St"
   , listingHandlerName = "Email Handler"
   , listingHandlerPhone = "555-5678"
+  , listingPricePerExtraPerson = Money 0
+  , listingMaxPeople = 4
   , listingSlug = testSlug
   , listingUuid = testUUID
   }

@@ -1,6 +1,6 @@
 
 <p>Thank you for your booking on #{listingTitle listing}.
-The dates we received is from #{start} to #{end}
+The dates we received is from #{start} to #{end} for #{show guests} guest(s).
 
 <p>For any comments or questions you can contact the property manager #{listingHandlerName listing} on #{listingHandlerPhone listing}.
 
