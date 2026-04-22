@@ -62,7 +62,7 @@ common common-options
     -fno-omit-yields
 
   build-depends:
-      base >=4.17 && <4.22
+      base >=4.17 && <4.22 || ^>=4.22.0
 
   default-language: Haskell2010
 
@@ -102,49 +102,49 @@ library
   hs-source-dirs:     src
 
   build-depends:
-    , aeson              >=2.1.2  && <2.2
-    , annotated-exception >= 0.2.0.5 && <0.2.1
-    , cron
-    , blaze-html         >=0.9.1  && <0.10
-    , blaze-markup       >=0.8.3  && <0.9
-    , bytestring         >=0.11.5 && <0.12
-    , case-insensitive   >=1.2.1  && <1.3
-    , containers         >=0.6.7  && <0.7
-    , data-default       >=0.7.1  && <0.8
-    , directory          >=1.3.7  && <1.4
-    , filepath           >=1.4.2  && <1.5
-    , http-client        >=0.7.15 && <0.8
-    , http-types         >=0.12.3 && <0.13
-    , iCalendar          >=0.4.0  && <0.5
-    , lens               >=5.2.3  && <5.3
-    , mail-pool          >=2.3.1  && <2.4
-    , mime-mail          >=0.5.1  && <0.6
-    , monad-logger       >=0.3.40 && <0.4
-    , mtl                >=2.2.2  && <2.3
-    , network-uri        >=2.6.4  && <2.7
-    , path-pieces        >=0.2.1  && <0.3
-    , persistent         >=2.14.6 && <2.15
-    , persistent-postgresql >=2.13.2 && <2.14
-    , random             >=1.2.1  && <1.3
-    , resource-pool
-    , postgresql-simple
-    , postgresql-migration
-    , unliftio-core
-    , neat-interpolation
-    , shakespeare        >=2.1.0  && <2.2
-    , slugify            >=0.1.0  && <0.2
-    , stripeapi          >=3.0.0  && <3.1
-    , text               >=2.0.2  && <2.1
-    , time               >=1.12.2 && <1.13
-    , transformers       >=0.5.6  && <0.6
-    , uuid               >=1.3.15 && <1.4
-    , wai-cors           >=0.2.7  && <0.3
-    , warp               >=3.3.25 && <3.4
-    , wreq               >=0.5.4  && <0.6
-    , yesod              >=1.6.2  && <1.7
-    , yesod-auth         >=1.6.11 && <1.7
-    , yesod-core         >=1.6.25 && <1.7
-    , template-haskell
+    aeson >=2.1.2 && <2.2 || ^>=2.2.4,
+    annotated-exception >=0.2.0.5 && <0.2.1 || ^>=0.3.0,
+    cron,
+    blaze-html >=0.9.1 && <0.10,
+    blaze-markup >=0.8.3 && <0.9,
+    bytestring >=0.11.5 && <0.12 || ^>=0.12.2,
+    case-insensitive >=1.2.1 && <1.3,
+    containers >=0.6.7 && <0.7 || ^>=0.8,
+    data-default >=0.7.1 && <0.8 || ^>=0.8.0,
+    directory >=1.3.7 && <1.4,
+    filepath >=1.4.2 && <1.5 || ^>=1.5.5,
+    http-client >=0.7.15 && <0.8,
+    http-types >=0.12.3 && <0.13,
+    iCalendar >=0.4.0 && <0.5,
+    lens >=5.2.3 && <5.3 || ^>=5.3.6,
+    mail-pool >=2.3.1 && <2.4,
+    mime-mail >=0.5.1 && <0.6,
+    monad-logger >=0.3.40 && <0.4,
+    mtl >=2.2.2 && <2.3 || ^>=2.3.2,
+    network-uri >=2.6.4 && <2.7,
+    path-pieces >=0.2.1 && <0.3,
+    persistent >=2.14.6 && <2.15 || ^>=2.18.1,
+    persistent-postgresql >=2.13.2 && <2.14 || ^>=2.14.3,
+    random >=1.2.1 && <1.3 || ^>=1.3.1,
+    resource-pool,
+    postgresql-simple,
+    postgresql-migration,
+    unliftio-core,
+    neat-interpolation,
+    shakespeare >=2.1.0 && <2.2 || ^>=2.2.0,
+    slugify >=0.1.0 && <0.2,
+    stripeapi >=3.0.0 && <3.1,
+    text >=2.0.2 && <2.1 || ^>=2.1.4,
+    time >=1.12.2 && <1.13 || ^>=1.15,
+    transformers >=0.5.6 && <0.6 || ^>=0.6.3,
+    uuid >=1.3.15 && <1.4,
+    wai-cors >=0.2.7 && <0.3,
+    warp >=3.3.25 && <3.4 || ^>=3.4.13,
+    wreq >=0.5.4 && <0.6,
+    yesod >=1.6.2 && <1.7,
+    yesod-auth >=1.6.11 && <1.7,
+    yesod-core >=1.6.25 && <1.7,
+    template-haskell
 
 executable rentals
   import: common-options
@@ -157,37 +157,37 @@ executable rentals
     -threaded -rtsopts "-with-rtsopts=-N -M7G -T"
 
   build-depends:
-    , aeson
-    , blaze-markup
-    , bytestring
-    , case-insensitive
-    , containers
-    , data-default
-    , directory
-    , filepath
-    , http-client
-    , http-types
-    , iCalendar
-    , lens
-    , monad-logger
-    , mtl
-    , network-uri
-    , persistent
-    , persistent-sqlite
-    , random
-    , rentals
-    , shakespeare
-    , slugify
-    , stripeapi
-    , text
-    , time
-    , transformers
-    , uuid
-    , wai-cors
-    , warp
-    , wreq
-    , yesod
-    , yesod-auth
+    aeson,
+    blaze-markup,
+    bytestring,
+    case-insensitive,
+    containers,
+    data-default,
+    directory,
+    filepath,
+    http-client,
+    http-types,
+    iCalendar,
+    lens,
+    monad-logger,
+    mtl,
+    network-uri,
+    persistent,
+    persistent-sqlite,
+    random,
+    rentals,
+    shakespeare,
+    slugify,
+    stripeapi,
+    text,
+    time,
+    transformers,
+    uuid,
+    wai-cors,
+    warp,
+    wreq,
+    yesod,
+    yesod-auth
 
 test-suite rentals-test
   import: common-options
@@ -206,21 +206,21 @@ test-suite rentals-test
     -threaded -rtsopts
 
   build-depends:
-    , rentals
-    , hspec
-    , yesod-test
-    , yesod-core
-    , yesod
-    , persistent
-    , persistent-sqlite
-    , text
-    , time
-    , uuid
-    , mail-pool
-    , mime-mail
-    , monad-logger
-    , directory
-    , aeson
-    , bytestring
-    , http-types
-    , yesod-auth
+    rentals,
+    hspec,
+    yesod-test,
+    yesod-core,
+    yesod,
+    persistent,
+    persistent-sqlite,
+    text,
+    time,
+    uuid,
+    mail-pool,
+    mime-mail,
+    monad-logger,
+    directory,
+    aeson,
+    bytestring,
+    http-types,
+    yesod-auth
